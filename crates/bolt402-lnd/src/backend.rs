@@ -10,6 +10,8 @@ use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 
 use crate::lnrpc;
 use crate::lnrpc::lightning_client::LightningClient;
+use crate::routerrpc;
+use crate::routerrpc::router_client::RouterClient;
 
 /// Error type specific to the LND backend.
 #[derive(Debug, thiserror::Error)]
@@ -42,14 +44,17 @@ impl From<LndError> for ClientError {
     }
 }
 
+/// Type alias for an intercepted gRPC channel with macaroon auth.
+type LndChannel = tonic::service::interceptor::InterceptedService<Channel, MacaroonInterceptor>;
+
 /// LND Lightning backend via gRPC.
 ///
 /// Connects to an LND node using TLS and macaroon authentication,
 /// then implements the [`LnBackend`] trait for invoice payments.
+/// Uses `SendPaymentV2` from the router RPC for payment execution.
 pub struct LndBackend {
-    client: LightningClient<
-        tonic::service::interceptor::InterceptedService<Channel, MacaroonInterceptor>,
-    >,
+    client: LightningClient<LndChannel>,
+    router: RouterClient<LndChannel>,
     address: String,
 }
 
@@ -112,10 +117,12 @@ impl LndBackend {
         let interceptor = MacaroonInterceptor {
             macaroon: macaroon_hex,
         };
-        let client = LightningClient::with_interceptor(channel, interceptor);
+        let client = LightningClient::with_interceptor(channel.clone(), interceptor.clone());
+        let router = RouterClient::with_interceptor(channel, interceptor);
 
         Ok(Self {
             client,
+            router,
             address: address.to_string(),
         })
     }
@@ -145,50 +152,51 @@ impl LnBackend for LndBackend {
         bolt11: &str,
         max_fee_sats: u64,
     ) -> Result<PaymentResult, ClientError> {
-        let request = lnrpc::SendRequest {
+        let request = routerrpc::SendPaymentRequest {
             payment_request: bolt11.to_string(),
-            fee_limit: Some(lnrpc::FeeLimit {
-                limit: Some(lnrpc::fee_limit::Limit::Fixed(
-                    i64::try_from(max_fee_sats).unwrap_or(i64::MAX),
-                )),
-            }),
+            fee_limit_sat: i64::try_from(max_fee_sats).unwrap_or(i64::MAX),
+            timeout_seconds: 60,
+            no_inflight_updates: true,
             ..Default::default()
         };
 
-        // SendPaymentSync is deprecated in favor of routerrpc.SendPaymentV2,
-        // but still functional. We'll migrate when we vendor router.proto.
-        #[allow(deprecated)]
-        let response = self
-            .client
+        // SendPaymentV2 returns a stream; with no_inflight_updates=true
+        // we get a single message when the payment completes.
+        let stream = self
+            .router
             .clone()
-            .send_payment_sync(request)
+            .send_payment_v2(request)
+            .await
+            .map_err(LndError::from)?;
+
+        let payment = stream
+            .into_inner()
+            .message()
             .await
             .map_err(LndError::from)?
-            .into_inner();
+            .ok_or_else(|| LndError::Payment("no payment response received".to_string()))?;
 
-        // Check for payment error
-        if !response.payment_error.is_empty() {
-            return Err(LndError::Payment(response.payment_error).into());
+        match payment.status() {
+            lnrpc::payment::PaymentStatus::Succeeded => {
+                let preimage = payment.payment_preimage;
+                let payment_hash = payment.payment_hash;
+
+                // Extract amounts from the payment
+                let value_msat = u64::try_from(payment.value_msat).unwrap_or(0);
+                let fee_msat = u64::try_from(payment.fee_msat).unwrap_or(0);
+
+                Ok(PaymentResult {
+                    preimage,
+                    payment_hash,
+                    amount_sats: value_msat / 1000,
+                    fee_sats: fee_msat / 1000,
+                })
+            }
+            lnrpc::payment::PaymentStatus::Failed => {
+                Err(LndError::Payment(format!("{:?}", payment.failure_reason())).into())
+            }
+            status => Err(LndError::Payment(format!("unexpected status: {status:?}")).into()),
         }
-
-        let preimage = hex::encode(&response.payment_preimage);
-        let payment_hash = hex::encode(&response.payment_hash);
-
-        // Extract fee from the payment route
-        let (amount_sats, fee_sats) = response.payment_route.as_ref().map_or((0, 0), |route| {
-            let total_fees_msat = u64::try_from(route.total_fees_msat).unwrap_or(0);
-            let total_amt_msat = u64::try_from(route.total_amt_msat).unwrap_or(0);
-            let fee = total_fees_msat / 1000;
-            let amount = (total_amt_msat / 1000).saturating_sub(fee);
-            (amount, fee)
-        });
-
-        Ok(PaymentResult {
-            preimage,
-            payment_hash,
-            amount_sats,
-            fee_sats,
-        })
     }
 
     async fn get_balance(&self) -> Result<u64, ClientError> {
@@ -200,9 +208,7 @@ impl LnBackend for LndBackend {
             .map_err(LndError::from)?
             .into_inner();
 
-        // Use local_balance (sat-denominated) for spendable balance
         let balance = response.local_balance.map_or(0, |b| b.sat);
-
         Ok(balance)
     }
 
@@ -265,21 +271,5 @@ mod tests {
         unsafe { std::env::set_var("HOME", "/home/test") };
         assert_eq!(expand_home("~/.lnd/tls.cert"), "/home/test/.lnd/tls.cert");
         assert_eq!(expand_home("/absolute/path"), "/absolute/path");
-    }
-
-    #[test]
-    fn debug_format() {
-        // Can't construct without real LND, but verify Debug compiles
-        // by testing the format pattern with a proxy
-        #[derive(Debug)]
-        struct Proxy {
-            #[allow(dead_code)]
-            address: String,
-        }
-        let p = Proxy {
-            address: "https://localhost:10009".to_string(),
-        };
-        let formatted = format!("{p:?}");
-        assert!(formatted.contains("localhost:10009"));
     }
 }

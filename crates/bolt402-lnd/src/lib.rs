@@ -40,7 +40,7 @@
 
 mod backend;
 
-/// Generated LND gRPC types.
+/// Generated LND Lightning gRPC types.
 #[allow(
     clippy::all,
     clippy::pedantic,
@@ -51,6 +51,19 @@ mod backend;
 )]
 pub mod lnrpc {
     tonic::include_proto!("lnrpc");
+}
+
+/// Generated LND Router gRPC types.
+#[allow(
+    clippy::all,
+    clippy::pedantic,
+    missing_docs,
+    unused_qualifications,
+    unreachable_pub,
+    rustdoc::invalid_html_tags
+)]
+pub mod routerrpc {
+    tonic::include_proto!("routerrpc");
 }
 
 pub use backend::LndBackend;
