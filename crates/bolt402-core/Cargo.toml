@@ -13,10 +13,12 @@ keywords = ["l402", "lightning", "bitcoin", "payments", "sdk"]
 [dependencies]
 bolt402-proto = { workspace = true }
 async-trait = { workspace = true }
+bytes = { version = "1" }
 reqwest = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["sync", "time"] }
+tracing = { workspace = true }
 
 [lints]
 workspace = true
