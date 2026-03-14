@@ -3,6 +3,8 @@ resolver = "2"
 members = [
     "crates/bolt402-proto",
     "crates/bolt402-core",
+    "crates/bolt402-lnd",
+    "crates/bolt402-mock",
 ]
 
 [workspace.lints.rust]
@@ -33,6 +35,8 @@ authors = ["Dario Anongba Varela <dario.anongba@gmail.com>"]
 # Internal crates
 bolt402-proto = { path = "crates/bolt402-proto" }
 bolt402-core = { path = "crates/bolt402-core" }
+bolt402-lnd = { path = "crates/bolt402-lnd" }
+bolt402-mock = { path = "crates/bolt402-mock" }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
@@ -50,8 +54,16 @@ thiserror = "2"
 # Logging
 tracing = "0.1"
 
+# Lightning / gRPC
+fedimint-tonic-lnd = { version = "0.4", default-features = false, features = ["lightningrpc"] }
+
+# HTTP server
+axum = "0.8"
+
 # Crypto
 base64 = "0.22"
+hex = "0.4"
+sha2 = "0.10"
 
 # Async traits
 async-trait = "0.1"
