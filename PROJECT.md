@@ -49,10 +49,12 @@ Renamed from `lnpay` (name already taken by other projects). Full original propo
 - [x] GitHub repository created (github.com/bitcoin-numeraire/bolt402)
 - [x] AGENTS.md, CLAUDE.md, README.md at repo root
 - [x] Daily cron job (bolt402-development, 14:00 UTC)
-- [ ] **BLOCKED**: Signed commits required by repo ruleset, no GPG in container
-- [ ] bolt402-core: L402Client (client.rs, the core engine)
-- [ ] bolt402-lnd: LND gRPC backend adapter
-- [ ] bolt402-mock: Mock L402 server for testing
-- [ ] CI/CD pipeline (GitHub Actions: fmt, clippy, test, doc)
+- [x] CI/CD pipeline (GitHub Actions: fmt, clippy, test, doc) — PR #1
+- [x] bolt402-core: L402Client (client.rs, the core engine) — PR #6
+- [ ] bolt402-lnd: LND gRPC backend adapter — Issue #4
+- [ ] bolt402-mock: Mock L402 server for testing — Issue #3
+- [ ] Integration tests using bolt402-mock — Issue #5
 - [ ] CONTRIBUTING.md, issue templates, CHANGELOG.md
 - [ ] Comprehensive documentation and tutorials
+
+**Note on signed commits**: Repo ruleset requires signed commits on `main`. Workaround: push unsigned commits to feature branches, create PRs, squash-merge via GitHub (GitHub signs the merge commit automatically).
