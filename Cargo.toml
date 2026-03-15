@@ -5,6 +5,7 @@ members = [
     "crates/bolt402-core",
     "crates/bolt402-lnd",
     "crates/bolt402-mock",
+    "crates/bolt402-swissknife",
 ]
 
 [workspace.lints.rust]
@@ -37,6 +38,7 @@ bolt402-proto = { path = "crates/bolt402-proto" }
 bolt402-core = { path = "crates/bolt402-core" }
 bolt402-lnd = { path = "crates/bolt402-lnd" }
 bolt402-mock = { path = "crates/bolt402-mock" }
+bolt402-swissknife = { path = "crates/bolt402-swissknife" }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
