@@ -1,24 +1,33 @@
-/** A service from the satring.com directory. */
+/** A service from 402index.io. */
 export interface L402Service {
-  id: number;
+  id: string;
   name: string;
-  slug: string;
-  url: string;
   description: string;
-  pricing_sats: number;
-  pricing_model: string;
+  url: string;
   protocol: string;
-  owner_name: string;
-  avg_rating: number;
-  rating_count: number;
-  domain_verified: boolean;
-  categories: { id: number; name: string; slug: string; description: string }[];
-  created_at: string;
+  price_sats: number | null;
+  price_usd: number | null;
+  payment_asset: string | null;
+  payment_network: string | null;
+  category: string;
+  provider: string;
+  source: string;
+  featured: number;
+  health_status: 'healthy' | 'degraded' | 'down' | 'unknown';
+  uptime_30d: number | null;
+  latency_p50_ms: number | null;
+  last_checked: string | null;
+  registered_at: string;
+  http_method: string;
+  reliability_score: number | null;
 }
 
-/** Response from satring.com API. */
-export interface SatringResponse {
+/** Response from 402index.io API. */
+export interface IndexResponse {
   services: L402Service[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 /** The step-by-step protocol flow for display. */

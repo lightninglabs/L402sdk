@@ -67,9 +67,9 @@ function getConfig() {
   const { provider, model, apiKeySet } = detectProvider();
   const lndUrl = process.env.LND_URL || '(not set)';
   const swissKnifeUrl = process.env.SWISSKNIFE_URL || '(not set)';
-  const satringUrl = process.env.SATRING_API_URL || 'https://satring.com/api/v1';
+  const indexUrl = process.env.INDEX_API_URL || 'https://402index.io/api/v1';
 
-  return { backendType, provider, model, apiKeySet, lndUrl, swissKnifeUrl, satringUrl };
+  return { backendType, provider, model, apiKeySet, lndUrl, swissKnifeUrl, indexUrl };
 }
 
 function createBackend(): LnBackend {
@@ -96,38 +96,11 @@ function createBackend(): LnBackend {
   return new MockBackend();
 }
 
-// Well-known L402 API endpoint mappings for services where the satring URL
-// is just the base URL and the AI needs to know specific endpoints.
-const ENDPOINT_HINTS: Record<string, string> = {
-  'https://oracle.neofreight.net': [
-    'GET /api/price — BTC/USD price with Nostr-signed attestation',
-    'GET /api/fees — Current mempool fee estimates (1/3/6/144 blocks)',
-    'GET /api/blockheight — Current Bitcoin block height',
-    'GET /api/verify?q=<txid|address|bolt11> — Verify transaction, address, or invoice',
-  ].join('\n    '),
-  'https://l402.services': [
-    'GET /geoip/<ip> — IP geolocation (1 sat/10min)',
-    'GET /ln/node/<pubkey> — Lightning node info (10 sats/min)',
-    'GET /ln/health/<pubkey> — Node health score (15 sats/min)',
-    'GET /ln/fees — Network fee statistics (25 sats/min)',
-    'GET /predictions/signals — Polymarket prediction signals (10 sats/min)',
-    'GET /predictions/oracle — AI-analyzed prediction data (250 sats)',
-  ].join('\n    '),
-  'https://l402.directory': [
-    'GET /api/services — Browse all L402 services (free)',
-    'GET /api/report/<service_id> — Detailed health report (10 sats)',
-  ].join('\n    '),
-};
-
-function buildSystemPrompt(services: Array<{ name: string; url: string; description: string; pricing_sats: number; pricing_model: string; categories: Array<{ name: string }> }>) {
+function buildSystemPrompt(services: Array<{ name: string; url: string; description: string; price_sats: number | null; category: string; provider: string }>) {
   const serviceList = services
     .map((s) => {
-      const baseUrl = s.url.replace(/\/$/, '');
-      // Check for endpoint hints by matching the base URL
-      const hintKey = Object.keys(ENDPOINT_HINTS).find((k) => baseUrl.startsWith(k));
-      const endpoints = hintKey ? `\n  Endpoints:\n    ${ENDPOINT_HINTS[hintKey]}` : '';
-
-      return `- **${s.name}**: ${s.description}\n  URL: ${s.url}\n  Price: ${s.pricing_sats} sats/${s.pricing_model.replace('per-', '')}\n  Categories: ${s.categories.map((c) => c.name).join(', ')}${endpoints}`;
+      const price = s.price_sats != null ? `${s.price_sats} sats` : 'unknown';
+      return `- **${s.name}**: ${s.description || 'No description'}\n  URL: ${s.url}\n  Price: ${price}\n  Category: ${s.category}\n  Provider: ${s.provider || 'Unknown'}`;
     })
     .join('\n');
 

@@ -1,15 +1,17 @@
-import { fetchServices, extractCategories } from '@/lib/satring';
+import { fetchServices, fetchCategories } from '@/lib/index-api';
 import ServiceBrowser from '@/components/ServiceBrowser';
 
 export default async function Home() {
   let services: Awaited<ReturnType<typeof fetchServices>> = [];
+  let categories: Awaited<ReturnType<typeof fetchCategories>> = [];
   try {
-    services = await fetchServices();
+    [services, categories] = await Promise.all([
+      fetchServices(),
+      fetchCategories(),
+    ]);
   } catch {
-    // Fall back to empty list if API is unreachable
+    // Fall back to empty lists if API is unreachable
   }
-
-  const categories = extractCategories(services);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -37,12 +39,12 @@ export default async function Home() {
               GitHub
             </a>
             <a
-              href="https://satring.com"
+              href="https://402index.io"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg bg-[#F7931A]/10 px-3 py-1.5 text-xs font-medium text-[#F7931A] hover:bg-[#F7931A]/20 transition-colors"
             >
-              Satring.com
+              402index.io
             </a>
           </div>
         </div>
@@ -63,11 +65,11 @@ export default async function Home() {
             <div className="mt-4 flex items-center gap-4 text-xs text-zinc-500">
               <span className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {services.length} services indexed
+                {services.length} L402 services
               </span>
               <span className="flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#F7931A]" />
-                Data from satring.com
+                Data from 402index.io
               </span>
             </div>
           </div>
@@ -92,14 +94,14 @@ export default async function Home() {
             >
               bolt402
             </a>
-            . Service data sourced from{' '}
+            . Service data from{' '}
             <a
-              href="https://satring.com"
+              href="https://402index.io"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-500 hover:text-[#F7931A] transition-colors"
             >
-              satring.com
+              402index.io
             </a>
             .
           </p>

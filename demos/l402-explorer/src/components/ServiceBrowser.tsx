@@ -27,7 +27,7 @@ export default function ServiceBrowser({
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter((s) =>
-        s.categories.some((c) => c.slug === selectedCategory),
+        s.category === selectedCategory || s.category.startsWith(selectedCategory + '/'),
       );
     }
 
@@ -37,7 +37,7 @@ export default function ServiceBrowser({
         (s) =>
           s.name.toLowerCase().includes(q) ||
           s.description.toLowerCase().includes(q) ||
-          s.owner_name.toLowerCase().includes(q),
+          (s.provider || '').toLowerCase().includes(q),
       );
     }
 

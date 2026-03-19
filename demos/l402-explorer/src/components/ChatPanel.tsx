@@ -64,9 +64,9 @@ export default function ChatPanel({ services, onSpend }: ChatPanelProps) {
             name: s.name,
             url: s.url,
             description: s.description,
-            pricing_sats: s.pricing_sats,
-            pricing_model: s.pricing_model,
-            categories: s.categories.map((c: { name: string }) => ({ name: c.name })),
+            price_sats: s.price_sats,
+            category: s.category,
+            provider: s.provider,
           })),
         }),
       }),
@@ -308,7 +308,7 @@ function ToolCallDisplay({
         {matchedService && (
           <div className="text-[10px] text-zinc-400 mb-1.5">
             Service: <span className="text-[#F7931A]">{matchedService.name}</span>
-            <span className="text-zinc-600"> &middot; {matchedService.pricing_sats} sats/{matchedService.pricing_model.replace('per-', '')}</span>
+            <span className="text-zinc-600"> &middot; {matchedService.price_sats ?? '?'} sats</span>
           </div>
         )}
 
