@@ -31,6 +31,8 @@
 export { L402Client, L402Error, parseL402Challenge } from './l402-client.js';
 export { createBolt402Tools, type Bolt402ToolsConfig } from './tools.js';
 export { InMemoryTokenStore } from './token-store.js';
+export { LocalStorageTokenStore } from './local-storage-token-store.js';
+export { FileTokenStore } from './file-token-store.js';
 export { BudgetTracker, BudgetExceededError } from './budget.js';
 
 // Backends
