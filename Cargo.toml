@@ -6,6 +6,7 @@ members = [
     "crates/bolt402-lnd",
     "crates/bolt402-mock",
     "crates/bolt402-swissknife",
+    "crates/bolt402-mcp",
     "crates/bolt402-python",
     "examples/basic-mock",
     "examples/budget-control",
@@ -18,6 +19,7 @@ default-members = [
     "crates/bolt402-lnd",
     "crates/bolt402-mock",
     "crates/bolt402-swissknife",
+    "crates/bolt402-mcp",
     "examples/basic-mock",
     "examples/budget-control",
 ]

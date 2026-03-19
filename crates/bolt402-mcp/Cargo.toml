@@ -1,0 +1,41 @@
+[package]
+name = "bolt402-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "MCP server for bolt402 — exposes L402 payment tools to any MCP-compatible AI agent"
+
+[[bin]]
+name = "bolt402-mcp"
+path = "src/main.rs"
+
+[dependencies]
+bolt402-core = { path = "../bolt402-core" }
+bolt402-proto = { path = "../bolt402-proto" }
+bolt402-lnd = { path = "../bolt402-lnd" }
+bolt402-mock = { path = "../bolt402-mock" }
+
+# MCP
+rmcp = { version = "1.2", features = ["server", "transport-io"] }
+
+# CLI
+clap = { version = "4.6", features = ["derive", "env"] }
+
+# Async
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[lints]
+workspace = true

@@ -58,5 +58,7 @@ Renamed from `lnpay` (name already taken by other projects). Full original propo
 - [x] Vercel AI SDK integration — Issue #8 / PR #15
 - [x] CONTRIBUTING.md, issue templates, CHANGELOG.md — PR #18
 - [x] Comprehensive documentation and tutorials — Issue #17 / PR #19
+- [x] bolt402-ai-sdk: LocalStorage + File token stores — Issue #27, #28 / PR #32
+- [x] bolt402-mcp: MCP server for universal AI agent integration — Issue #26 / PR #33
 
 **Note on signed commits**: Repo ruleset requires signed commits on `main`. Workaround: push unsigned commits to feature branches, create PRs, squash-merge via GitHub (GitHub signs the merge commit automatically).
