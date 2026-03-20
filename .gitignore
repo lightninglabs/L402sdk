@@ -22,6 +22,9 @@ dist/
 *.whl
 .pytest_cache/
 
+# Go bindings (built from CI)
+bindings/bolt402-go/lib/
+
 # TypeScript packages
 packages/*/node_modules/
 packages/*/dist/

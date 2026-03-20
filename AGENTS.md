@@ -20,7 +20,14 @@ bolt402/
 │   │                      # Ports: LnBackend, TokenStore (trait definitions)
 │   │                      # Adapters: InMemoryTokenStore, BudgetTracker
 │   ├── bolt402-lnd/       # LND gRPC backend adapter
-│   └── bolt402-mock/      # Mock L402 server for testing and development
+│   ├── bolt402-mock/      # Mock L402 server for testing and development
+│   ├── bolt402-swissknife/# SwissKnife REST API backend adapter
+│   ├── bolt402-ffi/       # C-compatible FFI layer (cdylib/staticlib)
+│   └── bolt402-python/    # Python bindings via PyO3
+├── bindings/
+│   └── bolt402-go/        # Go bindings via CGo
+├── packages/
+│   └── bolt402-ai-sdk/    # TypeScript/Vercel AI SDK integration
 ├── AGENTS.md              # This file
 ├── CLAUDE.md              # Instructions for Claude Code / Codex agents
 ├── PROJECT.md             # Project brief, initial request, status tracker
@@ -38,6 +45,10 @@ bolt402-core   (depends on proto: client engine, ports, adapters)
 bolt402-lnd    (depends on core: implements LnBackend for LND)
 
 bolt402-mock   (depends on proto: standalone mock L402 server)
+
+bolt402-ffi    (depends on core + mock: C ABI for FFI bindings)
+     ↑
+bolt402-go     (CGo wrapper calling bolt402-ffi)
 ```
 
 ### Design Principles

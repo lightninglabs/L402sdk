@@ -74,6 +74,27 @@ jobs:
       - run: .venv/bin/maturin develop
       - run: .venv/bin/pytest tests/ -v
 
+  go:
+    name: Go Bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+        with:
+          go-version: '1.21'
+      - run: sudo apt-get install -y protobuf-compiler
+      - name: Build FFI static library
+        run: cargo build -p bolt402-ffi --release
+      - name: Copy library to Go bindings
+        run: |
+          mkdir -p bindings/bolt402-go/lib
+          cp target/release/libbolt402_ffi.a bindings/bolt402-go/lib/
+      - name: Run Go tests
+        working-directory: bindings/bolt402-go
+        run: go test -v ./...
+
   typescript:
     name: TypeScript (bolt402-ai-sdk)
     runs-on: ubuntu-latest
