@@ -47,6 +47,10 @@ See [docs/architecture.md](docs/architecture.md) for the full design breakdown.
 | [`bolt402-swissknife`](crates/bolt402-swissknife) | SwissKnife REST backend adapter | ✅ Complete |
 | [`bolt402-mock`](crates/bolt402-mock) | Mock L402 server for testing (no real Lightning needed) | ✅ Complete |
 | [`bolt402-ai-sdk`](packages/bolt402-ai-sdk) | Vercel AI SDK tools (TypeScript) | ✅ Complete |
+| [`bolt402-ffi`](crates/bolt402-ffi) | C-compatible FFI layer for Go/Swift/Kotlin bindings | ✅ Complete |
+| [`bolt402-python`](crates/bolt402-python) | Python bindings via PyO3 | ✅ Complete |
+| [`bolt402-go`](bindings/bolt402-go) | Go bindings via CGo | ✅ Complete |
+| [`bolt402-wasm`](crates/bolt402-wasm) | WebAssembly bindings via wasm-pack | ✅ Complete |
 
 ## Quick Start (Rust)
 

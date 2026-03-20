@@ -8,11 +8,14 @@ members = [
     "crates/bolt402-swissknife",
     "crates/bolt402-ffi",
     "crates/bolt402-python",
+    "crates/bolt402-wasm",
     "examples/basic-mock",
     "examples/budget-control",
 ]
-# Exclude bolt402-python from default builds (requires Python dev libs for linking).
-# Use `maturin develop` + `pytest` to test it.
+# Exclude bolt402-python and bolt402-wasm from default builds.
+# bolt402-python requires Python dev libs for linking.
+# bolt402-wasm requires wasm32-unknown-unknown target.
+# Use `maturin develop` + `pytest` for Python, `wasm-pack` for WASM.
 default-members = [
     "crates/bolt402-proto",
     "crates/bolt402-core",

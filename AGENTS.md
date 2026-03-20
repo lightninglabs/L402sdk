@@ -23,7 +23,8 @@ bolt402/
 │   ├── bolt402-mock/      # Mock L402 server for testing and development
 │   ├── bolt402-swissknife/# SwissKnife REST API backend adapter
 │   ├── bolt402-ffi/       # C-compatible FFI layer (cdylib/staticlib)
-│   └── bolt402-python/    # Python bindings via PyO3
+│   ├── bolt402-python/    # Python bindings via PyO3
+│   └── bolt402-wasm/      # WebAssembly bindings via wasm-pack
 ├── bindings/
 │   └── bolt402-go/        # Go bindings via CGo
 ├── packages/

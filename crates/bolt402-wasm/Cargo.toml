@@ -1,0 +1,31 @@
+[package]
+name = "bolt402-wasm"
+description = "WebAssembly bindings for bolt402 L402 client SDK via wasm-pack"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories = ["api-bindings", "wasm"]
+keywords = ["l402", "lightning", "bitcoin", "wasm", "webassembly"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+bolt402-proto = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+sha2 = { workspace = true }
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+serde-wasm-bindgen = "0.6"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[lints]
+workspace = true

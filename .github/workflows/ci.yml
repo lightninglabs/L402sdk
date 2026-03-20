@@ -31,7 +31,7 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo clippy --workspace --exclude bolt402-python --all-targets -- -D warnings
+      - run: cargo clippy --workspace --exclude bolt402-python --exclude bolt402-wasm --all-targets -- -D warnings
 
   test:
     name: Tests
@@ -41,7 +41,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo test --workspace --exclude bolt402-python
+      - run: cargo test --workspace --exclude bolt402-python --exclude bolt402-wasm
 
   doc:
     name: Documentation
@@ -53,7 +53,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo doc --workspace --exclude bolt402-python --no-deps
+      - run: cargo doc --workspace --exclude bolt402-python --exclude bolt402-wasm --no-deps
 
   python:
     name: Python Bindings
@@ -94,6 +94,24 @@ jobs:
       - name: Run Go tests
         working-directory: bindings/bolt402-go
         run: go test -v ./...
+
+  wasm:
+    name: WASM Bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Build WASM (web target)
+        run: wasm-pack build crates/bolt402-wasm --target web
+      - name: Run native unit tests
+        run: cargo test -p bolt402-wasm
+      - name: Run WASM browser tests
+        run: wasm-pack test --headless --chrome crates/bolt402-wasm
 
   typescript:
     name: TypeScript (bolt402-ai-sdk)

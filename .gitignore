@@ -25,6 +25,9 @@ dist/
 # Go bindings (built from CI)
 bindings/bolt402-go/lib/
 
+# WASM (built from wasm-pack)
+crates/bolt402-wasm/pkg/
+
 # TypeScript packages
 packages/*/node_modules/
 packages/*/dist/
@@ -33,3 +36,8 @@ packages/*/dist/
 examples/*/node_modules/
 examples/*/.yarn/
 examples/*/.pnp.*
+
+# Demos
+demos/*/node_modules/
+demos/*/.yarn/
+demos/*/.pnp.*
