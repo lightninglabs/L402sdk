@@ -142,7 +142,13 @@ export async function POST(req: NextRequest) {
       latencyMs,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    let message = error instanceof Error ? error.message : 'Unknown error';
+
+    // Improve common error messages
+    if (message.includes('HTTP request to an HTTPS server')) {
+      message += '. Check that LND_URL uses https:// (e.g. https://umbrel.local:8080)';
+    }
+
     return NextResponse.json(
       {
         url: '',

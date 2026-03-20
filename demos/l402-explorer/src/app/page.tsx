@@ -1,17 +1,15 @@
-import { fetchServices, fetchCategories } from '@/lib/index-api';
+import { fetchServices, extractCategories } from '@/lib/index-api';
 import ServiceBrowser from '@/components/ServiceBrowser';
 
 export default async function Home() {
   let services: Awaited<ReturnType<typeof fetchServices>> = [];
-  let categories: Awaited<ReturnType<typeof fetchCategories>> = [];
   try {
-    [services, categories] = await Promise.all([
-      fetchServices(),
-      fetchCategories(),
-    ]);
+    services = await fetchServices();
   } catch {
-    // Fall back to empty lists if API is unreachable
+    // Fall back to empty list if API is unreachable
   }
+
+  const categories = extractCategories(services);
 
   return (
     <div className="flex flex-col min-h-screen">

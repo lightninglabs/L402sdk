@@ -59,16 +59,6 @@ export default function ChatPanel({ services, onSpend }: ChatPanelProps) {
     () =>
       new DefaultChatTransport({
         api: '/api/chat',
-        body: () => ({
-          services: services.map((s) => ({
-            name: s.name,
-            url: s.url,
-            description: s.description,
-            price_sats: s.price_sats,
-            category: s.category,
-            provider: s.provider,
-          })),
-        }),
       }),
   );
 
@@ -375,6 +365,59 @@ function ToolCallDisplay({
             <span className="text-zinc-600"> across {result.paymentCount} payments</span>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // 402index MCP tools
+  if (toolName === 'search_services') {
+    const query = (args.q as string) || (args.category as string) || 'L402 services';
+    return (
+      <div className="my-2 rounded-lg border border-zinc-700/50 bg-zinc-900/80 p-2.5 text-xs">
+        <div className="flex items-center gap-2 mb-1">
+          <span>🔍</span>
+          <span className="font-medium text-zinc-300">
+            {isRunning ? 'Searching services...' : 'Service Discovery'}
+          </span>
+          {isRunning && (
+            <svg className="h-3 w-3 animate-spin text-[#F7931A]" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" className="opacity-25" />
+              <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor" className="opacity-75" />
+            </svg>
+          )}
+        </div>
+        <div className="text-[10px] text-zinc-500">Query: {query}</div>
+        {result && (
+          <div className="mt-1 text-[10px] text-zinc-400">
+            Found services via 402index.io
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (toolName === 'get_service_detail') {
+    return (
+      <div className="my-2 rounded-lg border border-zinc-700/50 bg-zinc-900/80 p-2.5 text-xs">
+        <div className="flex items-center gap-2">
+          <span>📋</span>
+          <span className="font-medium text-zinc-300">
+            {isRunning ? 'Checking service details...' : 'Service Detail'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (toolName === 'list_categories' || toolName === 'get_directory_stats') {
+    return (
+      <div className="my-2 rounded-lg border border-zinc-700/50 bg-zinc-900/80 p-2.5 text-xs">
+        <div className="flex items-center gap-2">
+          <span>📊</span>
+          <span className="font-medium text-zinc-300">
+            {isRunning ? `Running ${toolName}...` : toolName.replace(/_/g, ' ')}
+          </span>
+        </div>
       </div>
     );
   }

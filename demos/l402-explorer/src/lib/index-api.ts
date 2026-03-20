@@ -22,20 +22,18 @@ export async function fetchServices(
   return data.services ?? [];
 }
 
-/** Fetch categories from 402index.io with L402 counts. */
-export async function fetchCategories(): Promise<CategoryOption[]> {
-  const res = await fetch(`${INDEX_API}/categories`, { next: { revalidate: 600 } });
-  if (!res.ok) throw new Error(`402index categories error: ${res.status}`);
+/** Extract categories from fetched services (so counts match the displayed grid). */
+export function extractCategories(services: L402Service[]): CategoryOption[] {
+  const counts = new Map<string, number>();
 
-  const data = await res.json();
-  const categories: CategoryOption[] = [];
-
-  for (const [slug, counts] of Object.entries(data.categories)) {
-    const l402Count = (counts as Record<string, number>).L402 ?? 0;
-    if (l402Count > 0) {
-      categories.push({ slug, name: slug, count: l402Count });
-    }
+  for (const svc of services) {
+    const cat = svc.category || 'uncategorized';
+    // Use top-level category (before the slash) for grouping
+    const topLevel = cat.split('/')[0];
+    counts.set(topLevel, (counts.get(topLevel) || 0) + 1);
   }
 
-  return categories.sort((a, b) => b.count - a.count);
+  return Array.from(counts.entries())
+    .map(([slug, count]) => ({ slug, name: slug, count }))
+    .sort((a, b) => b.count - a.count);
 }

@@ -30,6 +30,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ai-sdk/mcp@npm:1.0.25":
+  version: 1.0.25
+  resolution: "@ai-sdk/mcp@npm:1.0.25"
+  dependencies:
+    "@ai-sdk/provider": "npm:3.0.8"
+    "@ai-sdk/provider-utils": "npm:4.0.19"
+    pkce-challenge: "npm:^5.0.0"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/8b625b5a984d8ab2ad04bf32da91e1852b532c81a022b1a11a3de5eccefba0fbcd2ff553cafa2f48ecce634ef79d60e715783d28a6a3119d2eff05afb22bfefc
+  languageName: node
+  linkType: hard
+
 "@ai-sdk/openai-compatible@npm:2.0.35":
   version: 2.0.35
   resolution: "@ai-sdk/openai-compatible@npm:2.0.35"
@@ -1602,11 +1615,11 @@ __metadata:
 
 "bolt402-ai-sdk@file:../../packages/bolt402-ai-sdk::locator=l402-explorer%40workspace%3A.":
   version: 0.1.0
-  resolution: "bolt402-ai-sdk@file:../../packages/bolt402-ai-sdk#../../packages/bolt402-ai-sdk::hash=94ad1c&locator=l402-explorer%40workspace%3A."
+  resolution: "bolt402-ai-sdk@file:../../packages/bolt402-ai-sdk#../../packages/bolt402-ai-sdk::hash=44748b&locator=l402-explorer%40workspace%3A."
   peerDependencies:
     ai: ">=4.0.0"
     zod: ">=3.0.0"
-  checksum: 10c0/8c42734eacea3d4c917ac02f470ab0b3519aa5d041818c6b6e46297c9aee3fd9d7002a9c98f8733c1d410e66eb0a6d52fcec52c0777e9a892ccd92a63cf8dbfd
+  checksum: 10c0/ef94d6227140b1f9c46181705b235fc113a0bdc2d24cd23ad4af5a014863c880be4e36c887e5c6a6cd6efa7d66c636978caa1cafa53ef41df200931b7814e38f
   languageName: node
   linkType: hard
 
@@ -3118,6 +3131,7 @@ __metadata:
   resolution: "l402-explorer@workspace:."
   dependencies:
     "@ai-sdk/anthropic": "npm:3.0.58"
+    "@ai-sdk/mcp": "npm:1.0.25"
     "@ai-sdk/openai": "npm:3.0.41"
     "@ai-sdk/react": "npm:3.0.118"
     "@ai-sdk/xai": "npm:3.0.67"
@@ -3662,6 +3676,13 @@ __metadata:
   version: 4.0.3
   resolution: "picomatch@npm:4.0.3"
   checksum: 10c0/9582c951e95eebee5434f59e426cddd228a7b97a0161a375aed4be244bd3fe8e3a31b846808ea14ef2c8a2527a6eeab7b3946a67d5979e81694654f939473ae2
+  languageName: node
+  linkType: hard
+
+"pkce-challenge@npm:^5.0.0":
+  version: 5.0.1
+  resolution: "pkce-challenge@npm:5.0.1"
+  checksum: 10c0/207f4cb976682f27e8324eb49cf71937c98fbb8341a0b8f6142bc6f664825b30e049a54a21b5c034e823ee3c3d412f10d74bd21de78e17452a6a496c2991f57c
   languageName: node
   linkType: hard
 
