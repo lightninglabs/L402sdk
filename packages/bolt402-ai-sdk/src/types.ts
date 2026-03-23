@@ -118,12 +118,6 @@ export interface L402ClientConfig {
   maxFeeSats?: number;
   /** Custom fetch function (for testing or custom HTTP handling). */
   fetchFn?: typeof fetch;
-  /**
-   * Use the Rust/WASM engine for L402 protocol logic.
-   * Default: `true` (when WebAssembly is available).
-   * Set to `false` to force the pure TypeScript implementation.
-   */
-  useWasm?: boolean;
 }
 
 /** Response from an L402-aware HTTP request. */

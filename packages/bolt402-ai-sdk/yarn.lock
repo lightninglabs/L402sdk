@@ -624,7 +624,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:^25.5.0"
     ai: "npm:^6.0.116"
-    bolt402-wasm: "file:../../crates/bolt402-wasm/pkg"
     eslint: "npm:^9.0.0"
     prettier: "npm:^3.8.1"
     typescript: "npm:^5.9.3"
@@ -635,13 +634,6 @@ __metadata:
     zod: ^3.25.76 || ^4.1.8
   languageName: unknown
   linkType: soft
-
-"bolt402-wasm@file:../../crates/bolt402-wasm/pkg::locator=bolt402-ai-sdk%40workspace%3A.":
-  version: 0.1.0
-  resolution: "bolt402-wasm@file:../../crates/bolt402-wasm/pkg#../../crates/bolt402-wasm/pkg::hash=ef1a58&locator=bolt402-ai-sdk%40workspace%3A."
-  checksum: 10c0/5db01fb9d3525bfba6de954cd3ffa603c4430ec8c244750f9319fd117ca29b42c5bed40c4e54efa893a2e0ee3092f7789896cb8e0eb5f5c5a095688831c6a3d1
-  languageName: node
-  linkType: hard
 
 "brace-expansion@npm:^1.1.7":
   version: 1.1.12

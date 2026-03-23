@@ -11,7 +11,6 @@
 
 import { BudgetTracker } from './budget.js';
 import { InMemoryTokenStore } from './token-store.js';
-import { WasmL402EngineAdapter, isWasmAvailable } from './wasm-engine.js';
 import type {
   L402Challenge,
   L402ClientConfig,
@@ -71,8 +70,6 @@ export class L402Client {
   private readonly maxFeeSats: number;
   private readonly fetchFn: typeof fetch;
   private readonly receipts: Receipt[] = [];
-  private readonly wasmEngine: WasmL402EngineAdapter | null;
-  private readonly useWasm: boolean;
 
   constructor(config: L402ClientConfig) {
     this.backend = config.backend;
@@ -80,17 +77,6 @@ export class L402Client {
     this.budgetTracker = new BudgetTracker(config.budget);
     this.maxFeeSats = config.maxFeeSats ?? 100;
     this.fetchFn = config.fetchFn ?? fetch;
-
-    // Use WASM engine by default when available (opt-out via useWasm: false)
-    this.useWasm = config.useWasm !== false && isWasmAvailable();
-    this.wasmEngine = this.useWasm
-      ? new WasmL402EngineAdapter({
-          backend: this.backend,
-          budget: config.budget,
-          maxFeeSats: this.maxFeeSats,
-          fetchFn: this.fetchFn,
-        })
-      : null;
   }
 
   /**
@@ -111,19 +97,6 @@ export class L402Client {
       headers?: Record<string, string>;
     } = {},
   ): Promise<L402Response> {
-    // Delegate to WASM engine when available
-    if (this.wasmEngine) {
-      const result = await this.wasmEngine.fetch(url, options);
-      if (result) {
-        if (result.receipt) {
-          this.receipts.push(result.receipt);
-        }
-        return result;
-      }
-      // WASM unavailable at runtime, fall through to TS implementation
-    }
-
-    // Pure TypeScript fallback
     const method = options.method ?? 'GET';
     const startTime = Date.now();
 
@@ -215,26 +188,17 @@ export class L402Client {
 
   /** Get all recorded payment receipts. */
   getReceipts(): Receipt[] {
-    // Receipts accumulate in this.receipts regardless of engine
-    // (WASM fetch pushes to this.receipts too, and TS fallback does as well)
     return [...this.receipts];
   }
 
   /** Get the total amount spent in satoshis. */
   getTotalSpent(): number {
-    return this.receipts.reduce((sum, r) => sum + r.totalCostSats, 0);
+    return this.budgetTracker.getTotalSpent();
   }
 
   /** Get the Lightning backend (for direct access to balance/info). */
   getBackend(): LnBackend {
     return this.backend;
-  }
-
-  /** Clear the L402 token cache. */
-  clearCache(): void {
-    if (this.wasmEngine) {
-      this.wasmEngine.clearCache();
-    }
   }
 
   private async sendRequest(

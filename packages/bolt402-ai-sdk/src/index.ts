@@ -39,9 +39,6 @@ export { BudgetTracker, BudgetExceededError } from './budget.js';
 export { LndBackend, type LndBackendConfig } from './backends/lnd.js';
 export { SwissKnifeBackend, type SwissKnifeBackendConfig } from './backends/swissknife.js';
 
-// WASM engine (advanced usage — most users don't need this)
-export { WasmL402EngineAdapter, isWasmAvailable, type WasmEngineAdapterConfig } from './wasm-engine.js';
-
 // Types
 export type {
   Budget,
