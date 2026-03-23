@@ -6,7 +6,7 @@
 
 ## Problem
 
-bolt402 is a Rust-first L402 client SDK. To reach Go developers and integrate with Go-based AI agent frameworks (notably Lightning Labs' [agent-kit](https://github.com/lightninglabs/agent-kit)), we need native Go bindings.
+bolt402 is a Rust-first L402 client SDK. To reach Go developers and integrate with Go-based AI agent frameworks (notably Lightning Labs' [lightning-agent-tools](https://github.com/lightninglabs/lightning-agent-tools)), we need native Go bindings.
 
 ## Proposed Design
 

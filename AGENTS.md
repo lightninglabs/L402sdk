@@ -128,6 +128,6 @@ See `CLAUDE.md` for specific instructions when working on this codebase.
 
 - [L402 Protocol](https://docs.lightning.engineering/the-lightning-network/l402)
 - [Original proposal](../lnpay-proposal.md)
-- [Lightning Labs agent-kit](https://github.com/lightninglabs/agent-kit)
+- [Lightning Labs lightning-agent-tools](https://github.com/lightninglabs/lightning-agent-tools)
 - [Aperture (L402 reverse proxy)](https://github.com/lightninglabs/aperture)
 - [Numeraire Swissknife](https://github.com/bitcoin-numeraire/swissknife) — reference for CLN REST/LND REST adapters

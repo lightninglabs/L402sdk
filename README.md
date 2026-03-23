@@ -6,7 +6,7 @@ bolt402 gives AI agents (LangChain, Vercel AI SDK, CrewAI, etc.) the ability to 
 
 ## Why?
 
-Lightning Labs' [agent-kit](https://github.com/lightninglabs/agent-kit) provides `lnget`, a CLI tool for L402 payments. Great for shell-based agents, but the AI agent ecosystem is library-based. LangChain has 200M+ monthly PyPI downloads. These frameworks need a native library, not a shell command.
+Lightning Labs' [lightning-agent-tools](https://github.com/lightninglabs/lightning-agent-tools) provides `lnget`, a CLI tool for L402 payments. Great for shell-based agents, but the AI agent ecosystem is library-based. LangChain has 200M+ monthly PyPI downloads. These frameworks need a native library, not a shell command.
 
 bolt402 fills that gap.
 
