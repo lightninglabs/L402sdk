@@ -1,18 +1,16 @@
 //! Errors that can occur during L402 client operations.
+//!
+//! Defined in `bolt402-proto` so that adapter crates can use these error types
+//! without depending on `bolt402-core` (which pulls in tokio/reqwest).
 
-use bolt402_proto::L402Error;
-use thiserror::Error;
+use crate::L402Error;
 
 /// Errors that can occur during L402 client operations.
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum ClientError {
     /// L402 protocol error (challenge parsing, token construction).
     #[error("L402 protocol error: {0}")]
     Protocol(#[from] L402Error),
-
-    /// HTTP request failed.
-    #[error("HTTP error: {0}")]
-    Http(#[from] reqwest::Error),
 
     /// Lightning payment failed.
     #[error("payment failed: {reason}")]
@@ -47,6 +45,13 @@ pub enum ClientError {
     #[error("backend error: {reason}")]
     Backend {
         /// Description of the backend error.
+        reason: String,
+    },
+
+    /// HTTP request failed.
+    #[error("HTTP error: {reason}")]
+    Http {
+        /// Description of the HTTP error.
         reason: String,
     },
 }

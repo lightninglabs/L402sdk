@@ -77,7 +77,7 @@ bolt402-mock     (depends on proto: standalone mock L402 server)
 1. **Ports & Adapters**: Core business logic has zero external dependencies. Lightning backends and token stores are traits (ports). Implementations are adapters in separate crates.
 2. **Domain types in proto**: `L402Challenge`, `L402Token`, `L402Error` live in `bolt402-proto` so both client and server implementations can share them.
 3. **Error handling**: `thiserror` for typed errors, no `anyhow` in library code (only in binaries/tests).
-4. **Async-first**: All port traits are `async_trait`. Runtime-agnostic where possible, but `tokio` for concrete adapters.
+4. **Async-first**: All port traits are `async_trait` (with `?Send` on WASM). `bolt402-core` has no async runtime dependency — uses `std::sync::RwLock` and `web_time::Instant`. Only `bolt402-lnd[grpc]` requires tokio (via tonic).
 
 ## Development Workflow
 

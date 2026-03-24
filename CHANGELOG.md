@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **bolt402-core**: Removed tokio runtime dependency. Replaced `tokio::sync::RwLock` with `std::sync::RwLock` and `std::time::Instant` with `web_time::Instant`. The core library now compiles to WASM without an async runtime. (#63)
+- **bolt402-ai-sdk**: Stripped all pure-TypeScript L402 reimplementation (l402-client, budget, token stores, backends, types). Now a thin wrapper around `WasmL402Client` from `bolt402-wasm`. (#63)
+- **bolt402-wasm**: Added `WasmL402Client` wrapping the real `bolt402-core::L402Client`. Factory methods `withLndRest()` and `withSwissKnife()` for constructing clients with Rust backends. (#63)
+
 ### Added
 
 - **bolt402-cln**: Core Lightning (CLN) gRPC backend adapter implementing `LnBackend`. (#53)

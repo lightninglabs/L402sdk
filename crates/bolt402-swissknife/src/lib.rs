@@ -2,7 +2,7 @@
 //!
 //! SwissKnife REST API backend adapter for the bolt402 L402 client SDK.
 //!
-//! This crate implements the [`bolt402_core::LnBackend`] trait using
+//! This crate implements the [`bolt402_proto::LnBackend`] trait using
 //! Numeraire SwissKnife's REST API, enabling the L402 client to pay invoices,
 //! query balances, and retrieve wallet information through a custodial
 //! SwissKnife instance.
@@ -17,7 +17,7 @@
 //!
 //! ```rust,no_run
 //! use bolt402_swissknife::SwissKnifeBackend;
-//! use bolt402_core::LnBackend;
+//! use bolt402_proto::LnBackend;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Connect with explicit credentials
@@ -40,7 +40,7 @@
 //! ## Architecture
 //!
 //! This crate is an adapter in the hexagonal architecture. It depends on
-//! `bolt402-core` for the [`bolt402_core::LnBackend`] port trait and uses
+//! `bolt402-core` for the [`bolt402_proto::LnBackend`] port trait and uses
 //! `reqwest` for HTTP communication with the SwissKnife REST API.
 //!
 //! ## SwissKnife vs LND

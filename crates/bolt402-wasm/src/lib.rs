@@ -6,17 +6,33 @@
 //!
 //! # Architecture
 //!
-//! The WASM module provides an in-process mock L402 environment that runs
-//! entirely within the browser or WASM runtime — no HTTP server required.
-//! This is ideal for testing, demos, and development.
+//! The WASM module wraps the Rust `L402Client` from `bolt402-core`, providing
+//! the full L402 protocol engine (challenge parsing, budget enforcement, token
+//! caching, receipt tracking) compiled to WebAssembly. All protocol logic runs
+//! in Rust — no TypeScript reimplementation needed.
 //!
-//! The mock flow simulates the full L402 protocol:
-//! 1. Client requests a protected resource
-//! 2. Mock server issues a 402 challenge (macaroon + invoice)
-//! 3. Mock backend "pays" the invoice (looks up preimage)
-//! 4. Client retries with the L402 authorization token
+//! Additionally, an in-process mock L402 environment is provided for testing,
+//! demos, and development without a real Lightning node.
 //!
-//! # Example (JavaScript)
+//! # Example — Real L402 Client (JavaScript)
+//!
+//! ```javascript
+//! import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
+//!
+//! await init();
+//!
+//! const client = WasmL402Client.withLndRest(
+//!   "https://localhost:8080",
+//!   "deadbeef...",
+//!   WasmBudgetConfig.unlimited(),
+//!   100,
+//! );
+//!
+//! const response = await client.get("https://api.example.com/data");
+//! console.log(response.status, response.paid, response.body);
+//! ```
+//!
+//! # Example — Mock (JavaScript)
 //!
 //! ```javascript
 //! import init, { WasmMockServer, WasmMockClient } from 'bolt402-wasm';
@@ -31,6 +47,21 @@
 //! console.log(response.paid);      // true
 //! console.log(response.receipt);   // { amountSats: 10, ... }
 //! ```
+
+/// Real Lightning backend wrappers (LND REST, SwissKnife).
+pub mod backends;
+
+/// L402 client wrapper (full protocol engine from bolt402-core).
+pub mod client;
+
+/// Install a panic hook that logs the panic message to `console.error`.
+///
+/// Call this once before using any other WASM functions to get human-readable
+/// Rust panic messages instead of opaque `RuntimeError: unreachable`.
+#[wasm_bindgen(js_name = "setPanicHook")]
+pub fn set_panic_hook() {
+    console_error_panic_hook::set_once();
+}
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -201,6 +232,10 @@ pub struct WasmReceipt {
     /// HTTP status code of the final response.
     #[wasm_bindgen(readonly, js_name = "responseStatus")]
     pub response_status: u16,
+
+    /// Total latency from initial request to final response (milliseconds).
+    #[wasm_bindgen(readonly, js_name = "latencyMs")]
+    pub latency_ms: u64,
 
     /// Endpoint path that was accessed.
     endpoint: String,
@@ -753,6 +788,7 @@ impl WasmMockClient {
             payment_hash,
             preimage,
             response_status: retry_status,
+            latency_ms: 0, // mock has no real latency tracking
         };
 
         self.receipts.borrow_mut().push(receipt.clone());

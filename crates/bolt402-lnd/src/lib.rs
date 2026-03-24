@@ -1,26 +1,28 @@
 //! # bolt402-lnd
 //!
-//! LND gRPC backend adapter for the bolt402 L402 client SDK.
+//! LND backend adapters for the bolt402 L402 client SDK.
 //!
-//! This crate implements the [`bolt402_core::LnBackend`] trait using
-//! LND's gRPC API, enabling the L402 client to pay invoices, query balances,
-//! and retrieve node information through a connected LND node.
+//! This crate provides two implementations of [`bolt402_proto::LnBackend`]:
 //!
-//! ## Setup
+//! - **gRPC** (feature `grpc`, enabled by default): Uses LND's gRPC API via
+//!   `tonic` with vendored proto files. Requires a TLS certificate and
+//!   macaroon file.
 //!
-//! Connecting to LND requires:
-//! - gRPC endpoint (e.g. `https://localhost:10009`)
-//! - TLS certificate (`tls.cert`)
-//! - Admin macaroon (`admin.macaroon`)
+//! - **REST** (feature `rest`): Uses LND's REST API via `reqwest`. Simpler
+//!   to configure (no proto files), works in WASM/browser environments, and
+//!   only requires a hex-encoded macaroon.
 //!
-//! ## Example
+//! Both features can be enabled simultaneously.
+//!
+//! ## gRPC Example
 //!
 //! ```rust,no_run
-//! use bolt402_lnd::LndBackend;
-//! use bolt402_core::LnBackend;
-//!
+//! # #[cfg(feature = "grpc")]
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let backend = LndBackend::connect(
+//! use bolt402_lnd::LndGrpcBackend;
+//! use bolt402_proto::LnBackend;
+//!
+//! let backend = LndGrpcBackend::connect(
 //!     "https://localhost:10009",
 //!     "/path/to/tls.cert",
 //!     "/path/to/admin.macaroon",
@@ -32,15 +34,40 @@
 //! # }
 //! ```
 //!
+//! ## REST Example
+//!
+//! ```rust,no_run
+//! # #[cfg(feature = "rest")]
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! use bolt402_lnd::LndRestBackend;
+//! use bolt402_proto::LnBackend;
+//!
+//! let backend = LndRestBackend::new(
+//!     "https://localhost:8080",
+//!     "0201036c6e640258030a...",
+//! )?;
+//!
+//! let info = backend.get_info().await?;
+//! println!("Connected to: {} ({})", info.alias, info.pubkey);
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! ## Architecture
 //!
-//! This crate is an adapter in the hexagonal architecture. It depends on
-//! `bolt402-core` for the [`bolt402_core::LnBackend`] port trait and uses
-//! `tonic` with vendored LND proto files for gRPC communication.
+//! This crate is an adapter in the hexagonal architecture. Both backends
+//! implement the [`bolt402_proto::LnBackend`] port trait.
 
-mod backend;
+pub mod error;
+
+#[cfg(feature = "grpc")]
+mod grpc;
+
+#[cfg(feature = "rest")]
+mod rest;
 
 /// Generated LND Lightning gRPC types.
+#[cfg(feature = "grpc")]
 #[allow(
     clippy::all,
     clippy::pedantic,
@@ -54,6 +81,7 @@ pub mod lnrpc {
 }
 
 /// Generated LND Router gRPC types.
+#[cfg(feature = "grpc")]
 #[allow(
     clippy::all,
     clippy::pedantic,
@@ -66,5 +94,15 @@ pub mod routerrpc {
     tonic::include_proto!("routerrpc");
 }
 
-pub use backend::LndBackend;
-pub use backend::LndError;
+// Re-exports
+pub use error::LndError;
+
+#[cfg(feature = "grpc")]
+pub use grpc::LndGrpcBackend;
+
+#[cfg(feature = "rest")]
+pub use rest::LndRestBackend;
+
+// Backwards compatibility: when only grpc is enabled, also export as LndBackend
+#[cfg(all(feature = "grpc", not(feature = "rest")))]
+pub use grpc::LndGrpcBackend as LndBackend;

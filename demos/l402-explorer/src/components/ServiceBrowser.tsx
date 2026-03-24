@@ -36,6 +36,8 @@ export default function ServiceBrowser({
   const [selectedService, setSelectedService] = useState<L402Service | null>(null);
   const [spending, setSpending] = useState<SpendingEntry[]>([]);
   const [activeTab, setActiveTab] = useState<'services' | 'chat'>('services');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 24;
   const lastPaymentCount = useRef(0);
 
   // Poll /api/l402-receipts for spending data from the shared backend
@@ -97,6 +99,15 @@ export default function ServiceBrowser({
 
     return filtered;
   }, [initialServices, selectedCategory, search]);
+
+  // Reset to first page when filters change
+  const totalPages = Math.ceil(filteredServices.length / PAGE_SIZE);
+  const paginatedServices = filteredServices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, search]);
 
 
   return (
@@ -174,16 +185,41 @@ export default function ServiceBrowser({
           </div>
 
           {/* Service grid */}
-          {filteredServices.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {filteredServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  onSelect={setSelectedService}
-                />
-              ))}
-            </div>
+          {paginatedServices.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {paginatedServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onSelect={setSelectedService}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ← Prev
+                  </button>
+                  <span className="text-xs text-zinc-500">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/30 py-16 text-center">
               <span className="text-3xl mb-3">🔍</span>

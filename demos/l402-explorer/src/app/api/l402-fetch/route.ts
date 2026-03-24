@@ -4,7 +4,7 @@ import { getSharedL402Client } from '@/lib/l402-shared';
 /**
  * API route that performs a full L402 flow server-side.
  *
- * Uses the shared L402Client so receipts accumulate across all routes
+ * Uses the shared L402 client so receipts accumulate across all routes
  * and can be queried via /api/l402-receipts.
  */
 export async function POST(req: NextRequest) {
@@ -18,7 +18,10 @@ export async function POST(req: NextRequest) {
     const client = getSharedL402Client();
 
     const startTime = Date.now();
-    const response = await client.fetch(url, { method });
+    const response =
+      method === 'POST'
+        ? await client.post(url)
+        : await client.get(url);
     const latencyMs = Date.now() - startTime;
 
     // Try to pretty-format JSON bodies
@@ -48,7 +51,7 @@ export async function POST(req: NextRequest) {
         id: 'payment',
         label: 'Lightning Payment',
         status: 'complete',
-        detail: `Hash: ${response.receipt.paymentHash.substring(0, 20)}... (${response.receipt.latencyMs}ms)`,
+        detail: `Hash: ${response.receipt.paymentHash.substring(0, 20)}... (${Number(response.receipt.latencyMs)}ms)`,
       });
       steps.push({
         id: 'retry',
@@ -121,18 +124,19 @@ export async function POST(req: NextRequest) {
       paid: response.paid,
       receipt: response.receipt
         ? {
-            amountSats: response.receipt.amountSats,
-            feeSats: response.receipt.feeSats,
-            totalCostSats: response.receipt.totalCostSats,
+            amountSats: Number(response.receipt.amountSats),
+            feeSats: Number(response.receipt.feeSats),
+            totalCostSats: Number(response.receipt.totalCostSats()),
             paymentHash: response.receipt.paymentHash,
-            latencyMs: response.receipt.latencyMs,
+            latencyMs: Number(response.receipt.latencyMs),
           }
         : null,
       steps,
       latencyMs,
     });
   } catch (error) {
-    let message = error instanceof Error ? error.message : 'Unknown error';
+    // WASM errors may be strings or JsValues, not Error instances
+    let message = error instanceof Error ? error.message : String(error);
     const cause = error instanceof Error ? (error.cause as Error)?.message ?? '' : '';
 
     // Improve common error messages

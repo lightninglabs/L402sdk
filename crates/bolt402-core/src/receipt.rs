@@ -1,7 +1,7 @@
 //! Payment receipts for audit and cost analysis.
 
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::{SystemTime, UNIX_EPOCH};
 
 /// A structured receipt for an L402 payment.
 #[derive(Debug, Clone, Serialize, Deserialize)]

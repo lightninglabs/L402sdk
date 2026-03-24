@@ -2,6 +2,10 @@
 //!
 //! These traits define the boundaries of the core domain.
 //! External adapters implement these traits.
+//!
+//! Defined in `bolt402-proto` (rather than `bolt402-core`) so that adapter
+//! crates can implement them without pulling in tokio or reqwest, enabling
+//! WASM compilation.
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -41,7 +45,8 @@ pub struct NodeInfo {
 ///
 /// Implementations provide the ability to pay invoices and query node state.
 /// Each backend crate (bolt402-lnd, bolt402-cln, etc.) provides an implementation.
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait LnBackend: Send + Sync {
     /// Pay a BOLT11 Lightning invoice.
     ///
@@ -69,7 +74,8 @@ pub trait LnBackend: Send + Sync {
 /// Token storage port.
 ///
 /// Implementations cache L402 tokens to avoid re-paying for the same resource.
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait TokenStore: Send + Sync {
     /// Store a token for a given endpoint.
     async fn put(&self, endpoint: &str, macaroon: &str, preimage: &str) -> Result<(), ClientError>;

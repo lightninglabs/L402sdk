@@ -3,8 +3,8 @@
 use std::fmt;
 
 use async_trait::async_trait;
-use bolt402_core::ClientError;
-use bolt402_core::port::{LnBackend, NodeInfo, PaymentResult};
+use bolt402_proto::ClientError;
+use bolt402_proto::port::{LnBackend, NodeInfo, PaymentResult};
 use reqwest::Client as HttpClient;
 use reqwest::header::{AUTHORIZATION, HeaderValue};
 
@@ -71,7 +71,7 @@ impl From<SwissKnifeError> for ClientError {
 ///
 /// ```rust,no_run
 /// use bolt402_swissknife::SwissKnifeBackend;
-/// use bolt402_core::LnBackend;
+/// use bolt402_proto::LnBackend;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let backend = SwissKnifeBackend::new(
@@ -84,6 +84,7 @@ impl From<SwissKnifeError> for ClientError {
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Clone)]
 pub struct SwissKnifeBackend {
     client: HttpClient,
     base_url: String,
@@ -160,7 +161,8 @@ impl SwissKnifeBackend {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl LnBackend for SwissKnifeBackend {
     async fn pay_invoice(
         &self,

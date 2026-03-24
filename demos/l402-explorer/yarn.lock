@@ -1686,11 +1686,27 @@ __metadata:
 
 "bolt402-ai-sdk@file:../../packages/bolt402-ai-sdk::locator=l402-explorer%40workspace%3A.":
   version: 0.1.0
-  resolution: "bolt402-ai-sdk@file:../../packages/bolt402-ai-sdk#../../packages/bolt402-ai-sdk::hash=abfe98&locator=l402-explorer%40workspace%3A."
+  resolution: "bolt402-ai-sdk@file:../../packages/bolt402-ai-sdk#../../packages/bolt402-ai-sdk::hash=76f041&locator=l402-explorer%40workspace%3A."
+  dependencies:
+    bolt402-wasm: "file:../../crates/bolt402-wasm/pkg"
   peerDependencies:
     ai: ">=6.0.0"
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/171f3486ff9a28105c4ba5ae4f03ba187158149bf1dd9e3633bfdbc363f1562db8a47b26c16a923cadc65e64a3ccb6cb08acaaef89469c618f34b7f1a6cfd975
+  checksum: 10c0/f12c8239dbb1898e6040a648bd845dd824787b36e626ad8f6ad6ca0a1f5680d6ea9b93bdcc82a62671bffa7121cc289bdca0cc5fe1ab2e958415c84f05b4b759
+  languageName: node
+  linkType: hard
+
+"bolt402-wasm@file:../../crates/bolt402-wasm/pkg::locator=bolt402-ai-sdk%40file%3A..%2F..%2Fpackages%2Fbolt402-ai-sdk%23..%2F..%2Fpackages%2Fbolt402-ai-sdk%3A%3Ahash%3D76f041%26locator%3Dl402-explorer%2540workspace%253A.":
+  version: 0.1.0
+  resolution: "bolt402-wasm@file:../../crates/bolt402-wasm/pkg#../../crates/bolt402-wasm/pkg::hash=832c06&locator=bolt402-ai-sdk%40file%3A..%2F..%2Fpackages%2Fbolt402-ai-sdk%23..%2F..%2Fpackages%2Fbolt402-ai-sdk%3A%3Ahash%3D76f041%26locator%3Dl402-explorer%2540workspace%253A."
+  checksum: 10c0/2e80657135007ceecb53ed55807ef8c7c21263f7ae6d36d7be9e52d5e99a2f9b96e31ef2719ada4638a54a1e7e9225c80eb67c5992707bced811994d6559a93c
+  languageName: node
+  linkType: hard
+
+"bolt402-wasm@file:../../crates/bolt402-wasm/pkg::locator=l402-explorer%40workspace%3A.":
+  version: 0.1.0
+  resolution: "bolt402-wasm@file:../../crates/bolt402-wasm/pkg#../../crates/bolt402-wasm/pkg::hash=832c06&locator=l402-explorer%40workspace%3A."
+  checksum: 10c0/2e80657135007ceecb53ed55807ef8c7c21263f7ae6d36d7be9e52d5e99a2f9b96e31ef2719ada4638a54a1e7e9225c80eb67c5992707bced811994d6559a93c
   languageName: node
   linkType: hard
 
@@ -3370,6 +3386,7 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     ai: "npm:6.0.116"
     bolt402-ai-sdk: "file:../../packages/bolt402-ai-sdk"
+    bolt402-wasm: "file:../../crates/bolt402-wasm/pkg"
     eslint: "npm:^9"
     eslint-config-next: "npm:16.2.0"
     next: "npm:16.2.0"

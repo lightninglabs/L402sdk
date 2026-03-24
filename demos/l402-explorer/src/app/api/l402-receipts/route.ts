@@ -9,21 +9,23 @@ import { getSharedL402Client } from '@/lib/l402-shared';
  */
 export async function GET() {
   const client = getSharedL402Client();
-  const receipts = client.getReceipts();
-  const totalSpent = client.getTotalSpent();
+  const receipts = await client.receipts();
+  const totalSpent = await client.totalSpent;
+
+  const receiptList = Array.isArray(receipts) ? receipts : [];
 
   return NextResponse.json({
-    totalSpentSats: totalSpent,
-    paymentCount: receipts.length,
-    receipts: receipts.map((r) => ({
-      url: r.url,
-      amountSats: r.amountSats,
-      feeSats: r.feeSats,
-      totalCostSats: r.totalCostSats,
+    totalSpentSats: Number(totalSpent),
+    paymentCount: receiptList.length,
+    receipts: receiptList.map((r: any) => ({
+      url: r.endpoint,
+      amountSats: Number(r.amountSats),
+      feeSats: Number(r.feeSats),
+      totalCostSats: Number(r.totalCostSats()),
       paymentHash: r.paymentHash,
-      httpStatus: r.httpStatus,
-      latencyMs: r.latencyMs,
-      timestamp: r.timestamp,
+      httpStatus: r.responseStatus,
+      latencyMs: Number(r.latencyMs),
+      timestamp: Number(r.timestamp),
     })),
   });
 }

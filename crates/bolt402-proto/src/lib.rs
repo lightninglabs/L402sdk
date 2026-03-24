@@ -39,13 +39,21 @@ pub mod bolt11;
 /// L402 challenge parsing from `WWW-Authenticate` headers.
 pub mod challenge;
 
+/// Client error types shared across all crates.
+pub mod client_error;
+
 /// Protocol-level error types.
 pub mod error;
+
+/// Port definitions (traits) for hexagonal architecture.
+pub mod port;
 
 /// L402 authorization token construction and parsing.
 pub mod token;
 
 pub use bolt11::{InvoiceAmount, decode_bolt11_amount};
 pub use challenge::L402Challenge;
+pub use client_error::ClientError;
 pub use error::L402Error;
+pub use port::{LnBackend, NodeInfo, PaymentResult, TokenStore};
 pub use token::L402Token;

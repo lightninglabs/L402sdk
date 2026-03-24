@@ -4,13 +4,12 @@
 //! per-request, hourly, daily, and total budget caps.
 
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, RwLock};
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
 
-use crate::ClientError;
+use bolt402_proto::ClientError;
 
 /// Budget configuration with multiple limit granularities.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -89,6 +88,7 @@ impl BudgetTracker {
     }
 
     /// Check if a payment is allowed and record it if successful.
+    #[allow(clippy::unused_async)] // Kept async for API consistency; callers .await this
     pub async fn check_and_record(
         &self,
         amount: u64,
@@ -107,7 +107,7 @@ impl BudgetTracker {
 
         effective_budget.check(amount)?;
 
-        let mut state = self.state.write().await;
+        let mut state = self.state.write().expect("RwLock poisoned");
 
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -167,8 +167,9 @@ impl BudgetTracker {
     }
 
     /// Get the total amount spent so far.
+    #[allow(clippy::unused_async)] // Kept async for API consistency; callers .await this
     pub async fn total_spent(&self) -> u64 {
-        self.state.read().await.total
+        self.state.read().expect("RwLock poisoned").total
     }
 }
 

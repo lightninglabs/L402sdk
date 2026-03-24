@@ -1,5 +1,15 @@
 use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64;
+use base64::engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig};
+
+/// Base64 decoder that accepts both padded and unpadded input.
+///
+/// Many L402 servers omit base64 padding (`=`) from macaroons.
+/// The L402 spec doesn't mandate padding, so we accept both.
+const BASE64: GeneralPurpose = GeneralPurpose::new(
+    &base64::alphabet::STANDARD,
+    GeneralPurposeConfig::new()
+        .with_decode_padding_mode(base64::engine::DecodePaddingMode::Indifferent),
+);
 
 use crate::L402Error;
 

@@ -17,8 +17,8 @@ bytes = { version = "1" }
 reqwest = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["sync", "time"] }
 tracing = { workspace = true }
+web-time = "1.1"
 
 [lints]
 workspace = true

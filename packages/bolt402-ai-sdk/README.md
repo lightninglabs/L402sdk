@@ -2,6 +2,8 @@
 
 L402 Lightning payment tools for the [Vercel AI SDK](https://ai-sdk.dev/). Let AI agents autonomously pay for APIs with Bitcoin over the Lightning Network.
 
+All L402 protocol logic runs in Rust via WASM (`bolt402-wasm`). This package provides thin Vercel AI SDK tool wrappers.
+
 ## What is L402?
 
 [L402](https://docs.lightning.engineering/the-lightning-network/l402) is a protocol that uses HTTP 402 (Payment Required) responses to gate API access behind Lightning Network payments. When a server responds with 402, the client pays a Lightning invoice and retries with proof of payment.
@@ -11,27 +13,30 @@ bolt402-ai-sdk wraps this flow into [Vercel AI SDK tools](https://ai-sdk.dev/doc
 ## Install
 
 ```bash
-npm install bolt402-ai-sdk ai zod
+npm install bolt402-ai-sdk bolt402-wasm ai zod
 ```
 
 ## Quick Start
 
 ```typescript
-import { createBolt402Tools, LndBackend } from 'bolt402-ai-sdk';
+import { createBolt402Tools } from 'bolt402-ai-sdk';
+import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
-// Configure Lightning backend
-const backend = new LndBackend({
-  url: 'https://localhost:8080',
-  macaroon: process.env.LND_MACAROON!,
-});
+// Initialize WASM module
+await init();
 
-// Create AI SDK tools with budget limits
-const tools = createBolt402Tools({
-  backend,
-  budget: { perRequestMax: 1000, dailyMax: 50_000 },
-});
+// Create L402 client backed by LND REST
+const client = WasmL402Client.withLndRest(
+  'https://localhost:8080',
+  process.env.LND_MACAROON!,
+  new WasmBudgetConfig(1000, 0, 50_000, 0),  // per-request, hourly, daily, total
+  100,  // max routing fee (sats)
+);
+
+// Create AI SDK tools
+const tools = createBolt402Tools({ client });
 
 // Use with any Vercel AI SDK model
 const result = await generateText({
@@ -46,7 +51,7 @@ console.log(result.text);
 
 ## Tools
 
-`createBolt402Tools()` returns three tools:
+`createBolt402Tools()` returns two tools:
 
 ### `l402_fetch`
 
@@ -54,17 +59,10 @@ Fetch any URL, automatically handling L402 payment challenges. When the server r
 
 **Parameters:**
 - `url` (string, required): The URL to fetch
-- `method` (string, optional): HTTP method (GET, POST, PUT, DELETE). Default: GET
-- `body` (string, optional): Request body for POST/PUT
-- `headers` (object, optional): Additional HTTP headers
+- `method` (string, optional): HTTP method (GET or POST). Default: GET
+- `body` (string, optional): Request body for POST (JSON-encoded)
 
-**Returns:** Response body, status code, and payment receipt (if paid).
-
-### `l402_get_balance`
-
-Check the Lightning node's spendable balance.
-
-**Returns:** Balance in satoshis, node alias, active channel count.
+**Returns:** Response body, status code, payment flag, and receipt (if paid).
 
 ### `l402_get_receipts`
 
@@ -74,102 +72,71 @@ Get all payment receipts from the current session for cost tracking and auditing
 
 ## Lightning Backends
 
+Backends are configured when creating the `WasmL402Client` (all in Rust/WASM):
+
 ### LND REST
 
 ```typescript
-import { LndBackend } from 'bolt402-ai-sdk';
+import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
 
-const backend = new LndBackend({
-  url: 'https://localhost:8080',
-  macaroon: 'hex-encoded-admin-macaroon',
-});
+await init();
+
+const client = WasmL402Client.withLndRest(
+  'https://localhost:8080',
+  'hex-encoded-admin-macaroon',
+  WasmBudgetConfig.unlimited(),
+  100,
+);
 ```
 
 ### SwissKnife
 
 ```typescript
-import { SwissKnifeBackend } from 'bolt402-ai-sdk';
-
-const backend = new SwissKnifeBackend({
-  url: 'https://app.numeraire.tech',
-  apiKey: 'sk-your-api-key',
-});
-```
-
-### Custom Backend
-
-Implement the `LnBackend` interface:
-
-```typescript
-import type { LnBackend, PaymentResult, NodeInfo } from 'bolt402-ai-sdk';
-
-class MyBackend implements LnBackend {
-  async payInvoice(bolt11: string, maxFeeSats: number): Promise<PaymentResult> {
-    // Your payment logic
-  }
-  async getBalance(): Promise<number> {
-    // Return balance in satoshis
-  }
-  async getInfo(): Promise<NodeInfo> {
-    // Return node info
-  }
-}
+const client = WasmL402Client.withSwissKnife(
+  'https://app.numeraire.tech',
+  'your-api-key',
+  WasmBudgetConfig.unlimited(),
+  100,
+);
 ```
 
 ## Budget Control
 
-Set spending limits to prevent runaway costs:
+Set spending limits via `WasmBudgetConfig` to prevent runaway costs. Pass `0` for any limit to leave it unlimited.
 
 ```typescript
-const tools = createBolt402Tools({
-  backend,
-  budget: {
-    perRequestMax: 1000,   // Max 1000 sats per request
-    hourlyMax: 10_000,     // Max 10k sats per hour
-    dailyMax: 100_000,     // Max 100k sats per day
-    totalMax: 1_000_000,   // Max 1M sats total
-  },
-});
-```
+const budget = new WasmBudgetConfig(
+  1000,       // per-request max (sats)
+  10_000,     // hourly max (sats)
+  100_000,    // daily max (sats)
+  1_000_000,  // total max (sats)
+);
 
-## Using the L402 Client Directly
-
-For non-AI use cases, use `L402Client` directly:
-
-```typescript
-import { L402Client, LndBackend, InMemoryTokenStore } from 'bolt402-ai-sdk';
-
-const client = new L402Client({
-  backend: new LndBackend({ url: '...', macaroon: '...' }),
-  tokenStore: new InMemoryTokenStore(),
-  budget: { perRequestMax: 500 },
-});
-
-const response = await client.get('https://api.example.com/data');
-console.log(response.body);
-
-if (response.paid) {
-  console.log(`Paid ${response.receipt!.totalCostSats} sats`);
-}
+const client = WasmL402Client.withLndRest(url, macaroon, budget, 100);
 ```
 
 ## Architecture
 
-bolt402-ai-sdk follows hexagonal (ports & adapters) architecture, mirroring the [Rust bolt402-core](https://github.com/bitcoin-numeraire/bolt402):
+```
+Vercel AI SDK → createBolt402Tools() → WasmL402Client (WASM)
+                                            │
+                                   ┌────────┴────────┐
+                                   ▼                  ▼
+                              bolt402-core        bolt402-proto
+                              (Rust/WASM)         (Rust/WASM)
+                                   │
+                     ┌─────────────┼─────────────┐
+                     ▼             ▼             ▼
+                  LnBackend    TokenStore    BudgetTracker
+                  (port)       (port)
+                     │             │
+               ┌─────┴─────┐      │
+               ▼           ▼      ▼
+            LND REST   SwissKnife  InMemory
+            (Rust)     (Rust)      (Rust)
+```
 
-```
-Vercel AI SDK → createBolt402Tools() → L402Client
-                                           │
-                              ┌────────────┼────────────┐
-                              ▼            ▼            ▼
-                         LnBackend    TokenStore    BudgetTracker
-                         (port)       (port)
-                              │            │
-                    ┌─────────┴──┐         │
-                    ▼            ▼         ▼
-                   LND      SwissKnife  InMemory
-                   REST       REST      TokenStore
-```
+All protocol logic (challenge parsing, budget enforcement, token caching, receipt tracking) runs in Rust compiled to WASM. The TypeScript layer is a thin wrapper providing Vercel AI SDK tool definitions.
 
 ## License
 

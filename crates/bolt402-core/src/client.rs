@@ -43,19 +43,19 @@
 //! # }
 //! ```
 
-use std::sync::Arc;
-use std::time::Instant;
+use std::sync::{Arc, RwLock};
 
 use reqwest::header::{AUTHORIZATION, HeaderValue, WWW_AUTHENTICATE};
 use reqwest::{Client as HttpClient, StatusCode};
-use tokio::sync::RwLock;
+use web_time::Instant;
 
 use bolt402_proto::{L402Challenge, L402Token, decode_bolt11_amount};
 
 use crate::budget::{Budget, BudgetTracker};
-use crate::error::ClientError;
-use crate::port::{LnBackend, TokenStore};
 use crate::receipt::Receipt;
+use bolt402_proto::ClientError;
+use bolt402_proto::LnBackend;
+use bolt402_proto::port::TokenStore;
 
 /// Configuration for the [`L402Client`].
 #[derive(Debug, Clone)]
@@ -247,6 +247,7 @@ impl L402Client {
                 return Ok(L402Response {
                     inner: response,
                     paid: false,
+                    cached_token: true,
                     receipt: None,
                 });
             }
@@ -264,6 +265,7 @@ impl L402Client {
             return Ok(L402Response {
                 inner: response,
                 paid: false,
+                cached_token: false,
                 receipt: None,
             });
         }
@@ -326,11 +328,15 @@ impl L402Client {
             });
         }
 
-        self.receipts.write().await.push(receipt.clone());
+        self.receipts
+            .write()
+            .expect("RwLock poisoned")
+            .push(receipt.clone());
 
         Ok(L402Response {
             inner: retry_response,
             paid: true,
+            cached_token: false,
             receipt: Some(receipt),
         })
     }
@@ -350,7 +356,9 @@ impl L402Client {
                 .body(body.to_string());
         }
 
-        Ok(builder.send().await?)
+        builder.send().await.map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })
     }
 
     /// Send an HTTP request with L402 authorization.
@@ -375,7 +383,9 @@ impl L402Client {
                 .body(body.to_string());
         }
 
-        Ok(builder.send().await?)
+        builder.send().await.map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })
     }
 
     /// Extract an L402 challenge from a 402 response.
@@ -391,8 +401,9 @@ impl L402Client {
     }
 
     /// Get all recorded payment receipts.
+    #[allow(clippy::unused_async)] // Kept async for API consistency with total_spent()
     pub async fn receipts(&self) -> Vec<Receipt> {
-        self.receipts.read().await.clone()
+        self.receipts.read().expect("RwLock poisoned").clone()
     }
 
     /// Get the total amount spent (in satoshis) across all payments.
@@ -408,6 +419,7 @@ impl L402Client {
 pub struct L402Response {
     inner: reqwest::Response,
     paid: bool,
+    cached_token: bool,
     receipt: Option<Receipt>,
 }
 
@@ -422,6 +434,11 @@ impl L402Response {
         self.paid
     }
 
+    /// Whether a cached L402 token was used (no new payment needed).
+    pub fn cached_token(&self) -> bool {
+        self.cached_token
+    }
+
     /// Get the payment receipt, if a payment was made.
     pub fn receipt(&self) -> Option<&Receipt> {
         self.receipt.as_ref()
@@ -433,7 +450,9 @@ impl L402Response {
     ///
     /// Returns [`ClientError::Http`] if reading the body fails.
     pub async fn text(self) -> Result<String, ClientError> {
-        Ok(self.inner.text().await?)
+        self.inner.text().await.map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })
     }
 
     /// Consume the response and read the body as bytes.
@@ -442,7 +461,9 @@ impl L402Response {
     ///
     /// Returns [`ClientError::Http`] if reading the body fails.
     pub async fn bytes(self) -> Result<bytes::Bytes, ClientError> {
-        Ok(self.inner.bytes().await?)
+        self.inner.bytes().await.map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })
     }
 
     /// Consume the response and deserialize the body as JSON.
@@ -451,7 +472,9 @@ impl L402Response {
     ///
     /// Returns [`ClientError::Http`] if reading or deserializing fails.
     pub async fn json<T: serde::de::DeserializeOwned>(self) -> Result<T, ClientError> {
-        Ok(self.inner.json().await?)
+        self.inner.json().await.map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })
     }
 
     /// Get a reference to the response headers.
@@ -464,8 +487,8 @@ impl L402Response {
 mod tests {
     use super::*;
     use crate::cache::InMemoryTokenStore;
-    use crate::port::{NodeInfo, PaymentResult};
     use async_trait::async_trait;
+    use bolt402_proto::port::{NodeInfo, PaymentResult};
     use std::sync::atomic::{AtomicU32, Ordering};
 
     /// A mock Lightning backend that returns configurable results.

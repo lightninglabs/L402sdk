@@ -1,19 +1,27 @@
 /**
  * Vercel AI SDK tool definitions for L402 payments.
  *
- * Provides `createBolt402Tools()` which returns a set of tools that can be
- * passed directly to the Vercel AI SDK's `generateText` or `streamText`.
+ * All L402 protocol logic runs in Rust via WASM — no TypeScript
+ * reimplementation. This module provides thin tool wrappers around
+ * the `WasmL402Client` from `bolt402-wasm`.
  *
  * @example
  * ```typescript
  * import { createBolt402Tools } from 'bolt402-ai-sdk';
- * import { LndBackend } from 'bolt402-ai-sdk/backends';
  * import { generateText } from 'ai';
+ * import { openai } from '@ai-sdk/openai';
+ * import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
  *
- * const tools = createBolt402Tools({
- *   backend: new LndBackend({ url: 'https://localhost:8080', macaroon: '...' }),
- *   budget: { perRequestMax: 1000 },
- * });
+ * await init();
+ *
+ * const client = WasmL402Client.withLndRest(
+ *   'https://localhost:8080',
+ *   process.env.LND_MACAROON!,
+ *   new WasmBudgetConfig(1000, 0, 50000, 0),
+ *   100,
+ * );
+ *
+ * const tools = createBolt402Tools({ client });
  *
  * const result = await generateText({
  *   model: openai('gpt-4o'),
@@ -26,24 +34,12 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 
-import { L402Client } from './l402-client.js';
-import { InMemoryTokenStore } from './token-store.js';
-import type { Budget, L402ClientConfig, LnBackend, TokenStore } from './types.js';
+import type { WasmL402Client } from 'bolt402-wasm';
 
 /** Configuration for creating bolt402 AI SDK tools. */
 export interface Bolt402ToolsConfig {
-  /** Lightning backend for paying invoices. */
-  backend: LnBackend;
-  /** Token store for caching L402 credentials. Optional, defaults to in-memory. */
-  tokenStore?: TokenStore;
-  /** Budget limits for spending control. Optional, defaults to unlimited. */
-  budget?: Budget;
-  /** Maximum routing fee in satoshis. Default: 100. */
-  maxFeeSats?: number;
-  /** Custom fetch function (for testing). */
-  fetchFn?: typeof fetch;
-  /** Use an existing L402Client instead of creating a new one. When provided, backend/tokenStore/budget/maxFeeSats/fetchFn are ignored. */
-  client?: L402Client;
+  /** A `WasmL402Client` instance from `bolt402-wasm`. */
+  client: WasmL402Client;
 }
 
 /**
@@ -54,18 +50,10 @@ export interface Bolt402ToolsConfig {
  *
  * Tools provided:
  * - `l402_fetch`: Fetch a URL, automatically paying L402 challenges
- * - `l402_get_balance`: Check Lightning node balance
  * - `l402_get_receipts`: Get payment receipts for cost tracking
  */
 export function createBolt402Tools(config: Bolt402ToolsConfig) {
-  const client = config.client ?? new L402Client({
-    backend: config.backend,
-    tokenStore: config.tokenStore ?? new InMemoryTokenStore(),
-    budget: config.budget,
-    maxFeeSats: config.maxFeeSats,
-    fetchFn: config.fetchFn,
-  });
-  const backend = config.client ? config.client.getBackend() : config.backend;
+  const { client } = config;
 
   return {
     l402_fetch: tool({
@@ -77,51 +65,45 @@ export function createBolt402Tools(config: Bolt402ToolsConfig) {
       inputSchema: z.object({
         url: z.string().url().describe('The URL to fetch'),
         method: z
-          .enum(['GET', 'POST', 'PUT', 'DELETE'])
+          .enum(['GET', 'POST'])
           .default('GET')
           .describe('HTTP method to use'),
         body: z
           .string()
           .optional()
-          .describe('Request body (for POST/PUT requests). Should be JSON-encoded.'),
-        headers: z
-          .record(z.string())
-          .optional()
-          .describe('Additional HTTP headers to include in the request'),
+          .describe('Request body (for POST requests). Should be JSON-encoded.'),
       }),
-      execute: async ({ url, method, body, headers }) => {
-        const response = await client.fetch(url, { method, body, headers });
+      execute: async ({ url, method, body }) => {
+        try {
+          const response =
+            method === 'POST'
+              ? await client.post(url, body ?? undefined)
+              : await client.get(url);
 
-        return {
-          status: response.status,
-          body: response.body,
-          paid: response.paid,
-          receipt: response.receipt
-            ? {
-                amountSats: response.receipt.amountSats,
-                feeSats: response.receipt.feeSats,
-                totalCostSats: response.receipt.totalCostSats,
-                paymentHash: response.receipt.paymentHash,
-                latencyMs: response.receipt.latencyMs,
-              }
-            : null,
-        };
-      },
-    }),
+          const receipt = response.receipt;
 
-    l402_get_balance: tool({
-      description:
-        'Get the current Lightning node balance in satoshis. ' +
-        'Use this to check available funds before making L402 payments.',
-      inputSchema: z.object({}),
-      execute: async () => {
-        const balance = await backend.getBalance();
-        const info = await backend.getInfo();
-        return {
-          balanceSats: balance,
-          nodeAlias: info.alias,
-          activeChannels: info.numActiveChannels,
-        };
+          return {
+            status: response.status,
+            body: response.body,
+            paid: response.paid,
+            receipt: receipt
+              ? {
+                  amountSats: Number(receipt.amountSats),
+                  feeSats: Number(receipt.feeSats),
+                  totalCostSats: Number(receipt.totalCostSats()),
+                  paymentHash: receipt.paymentHash,
+                }
+              : null,
+          };
+        } catch (e) {
+          return {
+            status: 0,
+            body: '',
+            paid: false,
+            receipt: null,
+            error: e instanceof Error ? e.message : String(e),
+          };
+        }
       },
     }),
 
@@ -131,21 +113,32 @@ export function createBolt402Tools(config: Bolt402ToolsConfig) {
         'Useful for tracking costs, auditing payments, and reporting spend to the user.',
       inputSchema: z.object({}),
       execute: async () => {
-        const receipts = client.getReceipts();
-        const totalSpent = client.getTotalSpent();
-        return {
-          totalSpentSats: totalSpent,
-          paymentCount: receipts.length,
-          receipts: receipts.map((r) => ({
-            url: r.url,
-            amountSats: r.amountSats,
-            feeSats: r.feeSats,
-            totalCostSats: r.totalCostSats,
-            httpStatus: r.httpStatus,
-            latencyMs: r.latencyMs,
-            timestamp: r.timestamp,
-          })),
-        };
+        try {
+          const totalSpent = await client.totalSpent;
+          const receipts = await client.receipts();
+
+          return {
+            totalSpentSats: Number(totalSpent),
+            paymentCount: Array.isArray(receipts) ? receipts.length : 0,
+            receipts: Array.isArray(receipts)
+              ? receipts.map((r: any) => ({
+                  endpoint: r.endpoint,
+                  amountSats: Number(r.amountSats),
+                  feeSats: Number(r.feeSats),
+                  totalCostSats: Number(r.totalCostSats()),
+                  responseStatus: r.responseStatus,
+                  timestamp: Number(r.timestamp),
+                }))
+              : [],
+          };
+        } catch (e) {
+          return {
+            totalSpentSats: 0,
+            paymentCount: 0,
+            receipts: [],
+            error: e instanceof Error ? e.message : String(e),
+          };
+        }
       },
     }),
   };

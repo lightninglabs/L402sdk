@@ -1,57 +1,50 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createBolt402Tools } from '../src/tools.js';
-import type { LnBackend, NodeInfo, PaymentResult } from '../src/types.js';
 
-/** Creates a mock LnBackend for testing tools. */
-function createMockBackend(): LnBackend {
+/**
+ * Creates a mock WasmL402Client for testing.
+ *
+ * The mock simulates the WASM client's interface without requiring
+ * actual WASM initialization or a Lightning node.
+ */
+function createMockWasmClient() {
+  const receipts: any[] = [];
+
   return {
-    payInvoice: vi.fn().mockResolvedValue({
-      preimage: 'abc123',
-      paymentHash: 'def456',
-      amountSats: 50,
-      feeSats: 1,
-    } satisfies PaymentResult),
-    getBalance: vi.fn().mockResolvedValue(500_000),
-    getInfo: vi.fn().mockResolvedValue({
-      pubkey: '02abc123',
-      alias: 'test-node',
-      numActiveChannels: 3,
-    } satisfies NodeInfo),
+    get: vi.fn().mockImplementation(async (_url: string) => ({
+      status: 200,
+      paid: false,
+      body: '{"data": "free"}',
+      receipt: undefined,
+    })),
+    post: vi.fn().mockImplementation(async (_url: string, _body?: string) => ({
+      status: 200,
+      paid: false,
+      body: '{"data": "free"}',
+      receipt: undefined,
+    })),
+    get totalSpent() {
+      return Promise.resolve(receipts.reduce((sum, r) => sum + r.amountSats + r.feeSats, 0));
+    },
+    receipts: vi.fn().mockImplementation(async () => receipts),
+    _receipts: receipts,
   };
 }
 
-/** Creates a mock fetch for testing. */
-function createMockFetch(responses: Array<{ status: number; headers?: Record<string, string>; body?: string }>) {
-  let callIndex = 0;
-  return vi.fn().mockImplementation(async () => {
-    const resp = responses[callIndex] ?? responses[responses.length - 1];
-    callIndex++;
-    return new Response(resp.body ?? '', {
-      status: resp.status,
-      headers: new Headers(resp.headers ?? {}),
-    });
-  });
-}
-
 describe('createBolt402Tools', () => {
-  it('returns all three tools', () => {
+  it('returns expected tools', () => {
     const tools = createBolt402Tools({
-      backend: createMockBackend(),
-      fetchFn: createMockFetch([]),
+      client: createMockWasmClient() as any,
     });
 
     expect(tools).toHaveProperty('l402_fetch');
-    expect(tools).toHaveProperty('l402_get_balance');
     expect(tools).toHaveProperty('l402_get_receipts');
   });
 
   describe('l402_fetch', () => {
-    it('fetches a free URL', async () => {
-      const mockFetch = createMockFetch([{ status: 200, body: '{"data": "free"}' }]);
-      const tools = createBolt402Tools({
-        backend: createMockBackend(),
-        fetchFn: mockFetch,
-      });
+    it('fetches a free URL via GET', async () => {
+      const mock = createMockWasmClient();
+      const tools = createBolt402Tools({ client: mock as any });
 
       const result = await tools.l402_fetch.execute(
         { url: 'https://api.example.com/free', method: 'GET' },
@@ -62,20 +55,27 @@ describe('createBolt402Tools', () => {
       expect(result.body).toBe('{"data": "free"}');
       expect(result.paid).toBe(false);
       expect(result.receipt).toBeNull();
+      expect(mock.get).toHaveBeenCalledWith('https://api.example.com/free');
     });
 
-    it('handles L402 payment flow', async () => {
-      const mockFetch = createMockFetch([
-        {
-          status: 402,
-          headers: { 'www-authenticate': 'L402 macaroon="bWFj", invoice="lnbc50n1test"' },
+    it('returns receipt when payment is made', async () => {
+      const mock = createMockWasmClient();
+      mock.get.mockResolvedValueOnce({
+        status: 200,
+        paid: true,
+        body: '{"data": "premium"}',
+        receipt: {
+          amountSats: 50,
+          feeSats: 1,
+          totalCostSats: () => 51,
+          paymentHash: 'abc123',
+          endpoint: 'https://api.example.com/paid',
+          timestamp: 1234567890,
+          responseStatus: 200,
         },
-        { status: 200, body: '{"data": "premium"}' },
-      ]);
-      const tools = createBolt402Tools({
-        backend: createMockBackend(),
-        fetchFn: mockFetch,
       });
+
+      const tools = createBolt402Tools({ client: mock as any });
 
       const result = await tools.l402_fetch.execute(
         { url: 'https://api.example.com/paid', method: 'GET' },
@@ -83,38 +83,33 @@ describe('createBolt402Tools', () => {
       );
 
       expect(result.status).toBe(200);
-      expect(result.body).toBe('{"data": "premium"}');
       expect(result.paid).toBe(true);
       expect(result.receipt).not.toBeNull();
       expect(result.receipt!.amountSats).toBe(50);
       expect(result.receipt!.totalCostSats).toBe(51);
     });
-  });
 
-  describe('l402_get_balance', () => {
-    it('returns balance and node info', async () => {
-      const tools = createBolt402Tools({
-        backend: createMockBackend(),
-        fetchFn: createMockFetch([]),
-      });
+    it('sends POST with body', async () => {
+      const mock = createMockWasmClient();
+      const tools = createBolt402Tools({ client: mock as any });
 
-      const result = await tools.l402_get_balance.execute(
-        {},
+      await tools.l402_fetch.execute(
+        {
+          url: 'https://api.example.com/data',
+          method: 'POST',
+          body: '{"query": "test"}',
+        },
         { toolCallId: 'test-3', messages: [] },
       );
 
-      expect(result.balanceSats).toBe(500_000);
-      expect(result.nodeAlias).toBe('test-node');
-      expect(result.activeChannels).toBe(3);
+      expect(mock.post).toHaveBeenCalledWith('https://api.example.com/data', '{"query": "test"}');
     });
   });
 
   describe('l402_get_receipts', () => {
     it('returns empty receipts initially', async () => {
-      const tools = createBolt402Tools({
-        backend: createMockBackend(),
-        fetchFn: createMockFetch([]),
-      });
+      const mock = createMockWasmClient();
+      const tools = createBolt402Tools({ client: mock as any });
 
       const result = await tools.l402_get_receipts.execute(
         {},
@@ -124,37 +119,6 @@ describe('createBolt402Tools', () => {
       expect(result.totalSpentSats).toBe(0);
       expect(result.paymentCount).toBe(0);
       expect(result.receipts).toEqual([]);
-    });
-
-    it('returns receipts after payments', async () => {
-      const mockFetch = createMockFetch([
-        {
-          status: 402,
-          headers: { 'www-authenticate': 'L402 macaroon="bWFj", invoice="lnbc50n1test"' },
-        },
-        { status: 200, body: 'ok' },
-      ]);
-      const tools = createBolt402Tools({
-        backend: createMockBackend(),
-        fetchFn: mockFetch,
-      });
-
-      // Make a paid request first
-      await tools.l402_fetch.execute(
-        { url: 'https://api.example.com/paid', method: 'GET' },
-        { toolCallId: 'test-5', messages: [] },
-      );
-
-      const result = await tools.l402_get_receipts.execute(
-        {},
-        { toolCallId: 'test-6', messages: [] },
-      );
-
-      expect(result.totalSpentSats).toBe(51);
-      expect(result.paymentCount).toBe(1);
-      expect(result.receipts).toHaveLength(1);
-      expect(result.receipts[0].url).toBe('https://api.example.com/paid');
-      expect(result.receipts[0].amountSats).toBe(50);
     });
   });
 });

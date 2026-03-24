@@ -60,7 +60,7 @@ authors = ["Dario Anongba Varela <dario.anongba@gmail.com>"]
 # Internal crates
 bolt402-proto = { path = "crates/bolt402-proto" }
 bolt402-core = { path = "crates/bolt402-core" }
-bolt402-lnd = { path = "crates/bolt402-lnd" }
+bolt402-lnd = { path = "crates/bolt402-lnd", default-features = false }
 bolt402-mock = { path = "crates/bolt402-mock" }
 bolt402-swissknife = { path = "crates/bolt402-swissknife" }
 bolt402-sqlite = { path = "crates/bolt402-sqlite" }

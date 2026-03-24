@@ -11,7 +11,9 @@ categories = ["authentication", "cryptography", "web-programming"]
 keywords = ["l402", "lightning", "macaroon", "bitcoin", "protocol"]
 
 [dependencies]
+async-trait = { workspace = true }
 base64 = { workspace = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 

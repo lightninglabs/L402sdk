@@ -1,13 +1,10 @@
 //! In-memory LRU token cache.
 
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
-use async_trait::async_trait;
-use tokio::sync::RwLock;
-
-use crate::ClientError;
-use crate::port::TokenStore;
+use bolt402_proto::ClientError;
+use bolt402_proto::port::TokenStore;
 
 /// In-memory token cache with a maximum capacity.
 ///
@@ -44,10 +41,11 @@ impl Default for InMemoryTokenStore {
     }
 }
 
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait::async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
 impl TokenStore for InMemoryTokenStore {
     async fn put(&self, endpoint: &str, macaroon: &str, preimage: &str) -> Result<(), ClientError> {
-        let mut inner = self.inner.write().await;
+        let mut inner = self.inner.write().expect("RwLock poisoned");
 
         // Evict oldest entry if at capacity and this is a new key
         if inner.tokens.len() >= inner.capacity && !inner.tokens.contains_key(endpoint) {
@@ -72,19 +70,19 @@ impl TokenStore for InMemoryTokenStore {
     }
 
     async fn get(&self, endpoint: &str) -> Result<Option<(String, String)>, ClientError> {
-        let inner = self.inner.read().await;
+        let inner = self.inner.read().expect("RwLock poisoned");
         Ok(inner.tokens.get(endpoint).cloned())
     }
 
     async fn remove(&self, endpoint: &str) -> Result<(), ClientError> {
-        let mut inner = self.inner.write().await;
+        let mut inner = self.inner.write().expect("RwLock poisoned");
         inner.tokens.remove(endpoint);
         inner.insertion_order.retain(|k| k != endpoint);
         Ok(())
     }
 
     async fn clear(&self) -> Result<(), ClientError> {
-        let mut inner = self.inner.write().await;
+        let mut inner = self.inner.write().expect("RwLock poisoned");
         inner.tokens.clear();
         inner.insertion_order.clear();
         Ok(())
