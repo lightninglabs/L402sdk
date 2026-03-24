@@ -2,7 +2,7 @@
 
 **L402 client SDK for AI agent frameworks**. Pay for APIs with Lightning.
 
-bolt402 gives AI agents (LangChain, Vercel AI SDK, CrewAI, etc.) the ability to autonomously pay for L402-gated APIs using the Lightning Network. Built in Rust with a TypeScript package for the Vercel AI SDK.
+bolt402 gives AI agents the ability to autonomously pay for L402-gated APIs using the Lightning Network. Built in Rust with TypeScript and Python bindings.
 
 ## Why?
 
@@ -15,7 +15,7 @@ bolt402 fills that gap.
 ```
 ┌─────────────────────────────────────┐
 │        Agent Framework              │
-│  (LangChain / Vercel AI / CrewAI)   │
+│  (Vercel AI SDK / LangChain / etc.)  │
 └───────────────┬─────────────────────┘
                 │
 ┌───────────────▼─────────────────────┐
@@ -207,13 +207,7 @@ cargo doc --no-deps  # Build docs
 ### Upcoming
 
 - [ ] CLN REST backend adapter
-- [ ] LlamaIndex Python integration
-- [ ] CrewAI agent toolkit integration
-- [ ] TypeScript bindings via napi-rs (native Node.js addon)
 - [ ] Package publishing (crates.io, PyPI, npm)
-- [ ] OpenAPI / Swagger integration examples
-- [ ] Streaming payment support (pay-per-token)
-- [ ] Multi-backend failover (fallback chain)
 
 ## License
 

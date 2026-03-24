@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **bolt402-lnd**: LND REST backend adapter (`LndRestBackend`) behind `rest` feature flag. WASM-compatible. (#63)
 - **bolt402-cln**: Core Lightning (CLN) gRPC backend adapter implementing `LnBackend`. (#53)
 - **bolt402-nwc**: Nostr Wallet Connect (NIP-47) backend adapter implementing `LnBackend`. (#51)
 - **bolt402-sqlite**: SQLite persistent token store implementing `TokenStore`. (#48)
@@ -24,7 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **bolt402-go** (bindings): Go bindings via CGo + bolt402-ffi. (#44)
 - **bolt402-langchain**: LangChain Python integration with L402FetchTool, L402BudgetTool, PaymentCallbackHandler. (#57)
 - BOLT11 invoice amount decoding for budget enforcement. (#21)
-- LocalStorage and File token stores in bolt402-ai-sdk. (#32)
 - L402 Explorer interactive demo (Next.js). (#34)
 - AI Research Agent demo. (#36)
 - bolt402 vs lnget comparison page. (#37)
@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CONTRIBUTING.md with development setup, coding standards, and PR workflow.
 - GitHub issue templates for bug reports and feature requests.
 - This CHANGELOG.md file.
+
+### Removed
+
+- **bolt402-ai-sdk**: Removed pure-TypeScript L402 client, budget tracker, token stores (InMemory, File, LocalStorage), and backend implementations. All protocol logic now runs in Rust via WASM. (#63)
 
 ## [0.1.0] — 2026-03-16
 
