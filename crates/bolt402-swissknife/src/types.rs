@@ -1,7 +1,7 @@
 //! SwissKnife REST API request and response types.
 //!
 //! These types map to the SwissKnife `/v1/me/*` API endpoints.
-//! Only the fields needed by the [`LnBackend`](bolt402_core::LnBackend) trait
+//! Only the fields needed by the [`LnBackend`](bolt402_proto::port::LnBackend) trait
 //! are included; optional fields are deserialized but not required.
 
 use serde::{Deserialize, Serialize};

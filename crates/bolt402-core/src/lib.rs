@@ -15,9 +15,4 @@ pub mod client;
 /// Payment receipt types.
 pub mod receipt;
 
-// Re-export from bolt402-proto
-pub use bolt402_proto::port;
-pub use bolt402_proto::port::{NodeInfo, PaymentResult, TokenStore};
-pub use bolt402_proto::{ClientError, LnBackend};
-
 pub use client::{L402Client, L402ClientConfig, L402Response};

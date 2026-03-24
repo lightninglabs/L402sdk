@@ -3,7 +3,7 @@
 //! Nostr Wallet Connect ([NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md))
 //! Lightning backend for the bolt402 L402 client SDK.
 //!
-//! This crate implements the [`bolt402_core::port::LnBackend`] trait using the
+//! This crate implements the [`bolt402_proto::port::LnBackend`] trait using the
 //! NWC protocol, enabling bolt402 to pay L402 invoices through any
 //! NWC-compatible wallet without direct Lightning node access.
 //!

@@ -1,6 +1,6 @@
 //! Error types for the NWC backend.
 
-use bolt402_core::ClientError;
+use bolt402_proto::ClientError;
 
 /// Errors specific to the NWC (Nostr Wallet Connect) backend.
 #[derive(Debug, thiserror::Error)]

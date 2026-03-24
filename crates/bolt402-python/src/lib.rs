@@ -348,7 +348,7 @@ impl PyL402Client {
 /// Convert a Rust `L402Response` result to a Python `PyL402Response`.
 fn convert_response(
     rt: &tokio::runtime::Runtime,
-    result: Result<bolt402_core::L402Response, bolt402_core::ClientError>,
+    result: Result<bolt402_core::L402Response, bolt402_proto::ClientError>,
 ) -> PyResult<PyL402Response> {
     match result {
         Ok(resp) => {
@@ -518,15 +518,15 @@ fn create_mock_client(
 // ---------------------------------------------------------------------------
 
 /// Map Rust `ClientError` to Python exceptions.
-fn map_client_error(err: &bolt402_core::ClientError) -> PyErr {
+fn map_client_error(err: &bolt402_proto::ClientError) -> PyErr {
     match err {
-        bolt402_core::ClientError::BudgetExceeded { .. } => {
+        bolt402_proto::ClientError::BudgetExceeded { .. } => {
             PyValueError::new_err(format!("BudgetExceeded: {err}"))
         }
-        bolt402_core::ClientError::PaymentFailed { .. } => {
+        bolt402_proto::ClientError::PaymentFailed { .. } => {
             PyRuntimeError::new_err(format!("PaymentFailed: {err}"))
         }
-        bolt402_core::ClientError::MissingChallenge => {
+        bolt402_proto::ClientError::MissingChallenge => {
             PyRuntimeError::new_err(format!("MissingChallenge: {err}"))
         }
         _ => PyRuntimeError::new_err(err.to_string()),

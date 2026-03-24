@@ -3,7 +3,7 @@
 //! `SQLite` persistent token store for the bolt402 L402 client SDK.
 //!
 //! This crate provides [`SqliteTokenStore`], an implementation of the
-//! [`bolt402_core::port::TokenStore`] trait that persists L402 tokens
+//! [`bolt402_proto::port::TokenStore`] trait that persists L402 tokens
 //! to a `SQLite` database. Tokens survive process restarts, preventing
 //! unnecessary re-payments for resources the agent already has valid
 //! credentials for.
@@ -11,8 +11,8 @@
 //! ## Architecture
 //!
 //! This is an **adapter** in the hexagonal architecture. It depends on
-//! `bolt402-core` for the [`TokenStore`](bolt402_core::port::TokenStore) port
-//! definition and [`ClientError`](bolt402_core::ClientError) type.
+//! `bolt402-proto` for the [`TokenStore`](bolt402_proto::port::TokenStore) port
+//! definition and [`ClientError`](bolt402_proto::ClientError) type.
 //!
 //! Uses `rusqlite` with the `bundled` feature so no system `SQLite` library
 //! is required.
@@ -21,7 +21,7 @@
 //!
 //! ```rust,no_run
 //! use bolt402_sqlite::SqliteTokenStore;
-//! use bolt402_core::port::TokenStore;
+//! use bolt402_proto::port::TokenStore;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Open (or create) a database file

@@ -17,8 +17,8 @@
 use std::fmt;
 
 use async_trait::async_trait;
-use bolt402_core::ClientError;
-use bolt402_core::port::{LnBackend, NodeInfo, PaymentResult};
+use bolt402_proto::ClientError;
+use bolt402_proto::port::{LnBackend, NodeInfo, PaymentResult};
 use nostr::nips::nip47::{NostrWalletConnectURI, PayInvoiceRequest};
 use nwc::NWC;
 use tracing::debug;

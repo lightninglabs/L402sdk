@@ -1,6 +1,6 @@
 //! Error types for the `SQLite` token store.
 
-use bolt402_core::ClientError;
+use bolt402_proto::ClientError;
 
 /// Errors specific to the `SQLite` token store.
 #[derive(Debug, thiserror::Error)]

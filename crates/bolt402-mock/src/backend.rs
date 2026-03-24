@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use bolt402_core::ClientError;
-use bolt402_core::port::{LnBackend, NodeInfo, PaymentResult};
+use bolt402_proto::ClientError;
+use bolt402_proto::port::{LnBackend, NodeInfo, PaymentResult};
 use tokio::sync::RwLock;
 
 use crate::challenge::PendingChallenge;

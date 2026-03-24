@@ -7,8 +7,8 @@ use std::time::Duration;
 use async_trait::async_trait;
 use rusqlite::Connection;
 
-use bolt402_core::ClientError;
-use bolt402_core::port::TokenStore;
+use bolt402_proto::ClientError;
+use bolt402_proto::port::TokenStore;
 
 use crate::SqliteStoreError;
 use crate::migration;
@@ -34,7 +34,7 @@ use crate::migration;
 ///
 /// ```rust,no_run
 /// use bolt402_sqlite::SqliteTokenStore;
-/// use bolt402_core::port::TokenStore;
+/// use bolt402_proto::port::TokenStore;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let store = SqliteTokenStore::new("tokens.db")?;

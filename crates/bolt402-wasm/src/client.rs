@@ -1,4 +1,4 @@
-//! WASM-bindgen wrapper for the Rust [`L402Client`] from `bolt402-core`.
+//! WASM-bindgen wrapper for the Rust [`bolt402_core::L402Client`] from `bolt402-core`.
 //!
 //! Exposes the full L402 protocol engine to JavaScript/TypeScript via
 //! `wasm-bindgen`. The client handles HTTP 402 challenges, Lightning

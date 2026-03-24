@@ -364,7 +364,7 @@ pub unsafe extern "C" fn bolt402_client_post(
 
 fn convert_response(
     rt: &tokio::runtime::Runtime,
-    result: Result<bolt402_core::L402Response, bolt402_core::ClientError>,
+    result: Result<bolt402_core::L402Response, bolt402_proto::ClientError>,
 ) -> *mut Bolt402Response {
     match result {
         Ok(resp) => {
