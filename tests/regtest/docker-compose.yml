@@ -100,10 +100,10 @@ services:
   # Aperture: Lightning Labs' reference L402 reverse proxy.
   # Sits in front of the backend server, requires Lightning payments via lnd-bob.
   # NOTE: Aperture Docker images are amd64-only. For local arm64 development,
-  # build from source: docker build --build-arg checkout=v0.4.2 -t aperture:local
+  # build from source: docker build --build-arg checkout=v0.5.0 -t aperture:local
   # using the Dockerfile at https://github.com/lightninglabs/aperture
   aperture:
-    image: lightninglabs/aperture:v0.4.2
+    image: lightninglabs/aperture:v0.5.0
     restart: unless-stopped
     depends_on:
       lnd-bob:

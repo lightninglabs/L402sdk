@@ -44,7 +44,7 @@ const cached = await client.get('https://api.example.com/paid-resource');
 console.log(cached.paid);  // false (used cached token)
 
 // Track spending
-console.log(await client.totalSpent);
+console.log(await client.totalSpent());
 console.log(await client.receipts());
 ```
 

@@ -23,9 +23,9 @@ function createMockWasmClient() {
       body: '{"data": "free"}',
       receipt: undefined,
     })),
-    get totalSpent() {
-      return Promise.resolve(receipts.reduce((sum, r) => sum + r.amountSats + r.feeSats, 0));
-    },
+    totalSpent: vi.fn().mockImplementation(async () =>
+      receipts.reduce((sum, r) => sum + r.amountSats + r.feeSats, 0),
+    ),
     receipts: vi.fn().mockImplementation(async () => receipts),
     _receipts: receipts,
   };

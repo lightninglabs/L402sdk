@@ -8,7 +8,6 @@
 use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::future_to_promise;
 
 use bolt402_core::budget::Budget;
 use bolt402_core::cache::InMemoryTokenStore;
@@ -80,6 +79,21 @@ impl WasmReceipt {
     #[wasm_bindgen(js_name = "totalCostSats")]
     pub fn total_cost_sats(&self) -> u64 {
         self.amount_sats + self.fee_sats
+    }
+}
+
+impl From<&bolt402_core::receipt::Receipt> for WasmReceipt {
+    fn from(r: &bolt402_core::receipt::Receipt) -> Self {
+        Self {
+            timestamp: r.timestamp,
+            endpoint: r.endpoint.clone(),
+            amount_sats: r.amount_sats,
+            fee_sats: r.fee_sats,
+            payment_hash: r.payment_hash.clone(),
+            preimage: r.preimage.clone(),
+            response_status: r.response_status,
+            latency_ms: r.latency_ms,
+        }
     }
 }
 
@@ -245,11 +259,11 @@ impl WasmL402Client {
         })
     }
 
-    /// Create an L402 client backed by SwissKnife REST.
+    /// Create an L402 client backed by `SwissKnife` REST.
     ///
     /// # Arguments
     ///
-    /// * `url` - SwissKnife API URL (e.g. `https://app.numeraire.tech`)
+    /// * `url` - `SwissKnife` API URL (e.g. `https://app.numeraire.tech`)
     /// * `api_key` - API key for authentication
     /// * `budget` - Budget configuration
     /// * `max_fee_sats` - Maximum routing fee in satoshis
@@ -279,95 +293,56 @@ impl WasmL402Client {
     }
 
     /// Send a GET request, automatically handling L402 payment challenges.
-    ///
-    /// Returns a `Promise<WasmL402Response>`.
-    pub fn get(&self, url: &str) -> js_sys::Promise {
-        let url = url.to_string();
-        let client = Rc::clone(&self.inner);
+    pub async fn get(&self, url: &str) -> Result<WasmL402Response, JsError> {
+        let response = self
+            .inner
+            .get(url)
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let response = client
-                .get(&url)
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(to_wasm_response(response).await?))
-        })
+        to_wasm_response(response).await
     }
 
     /// Send a POST request with an optional JSON body.
-    ///
-    /// Returns a `Promise<WasmL402Response>`.
-    pub fn post(&self, url: &str, body: Option<String>) -> js_sys::Promise {
-        let url = url.to_string();
-        let client = Rc::clone(&self.inner);
+    pub async fn post(&self, url: &str, body: Option<String>) -> Result<WasmL402Response, JsError> {
+        let response = self
+            .inner
+            .post(url, body.as_deref())
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let response = client
-                .post(&url, body.as_deref())
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(to_wasm_response(response).await?))
-        })
+        to_wasm_response(response).await
     }
 
     /// Get the total amount spent in satoshis.
-    #[wasm_bindgen(getter, js_name = "totalSpent")]
-    pub fn total_spent(&self) -> js_sys::Promise {
-        let client = Rc::clone(&self.inner);
-
-        future_to_promise(async move {
-            let spent = client.total_spent().await;
-            Ok(JsValue::from_f64(spent as f64))
-        })
+    #[wasm_bindgen(js_name = "totalSpent")]
+    pub async fn total_spent(&self) -> u64 {
+        self.inner.total_spent().await
     }
 
     /// Get all payment receipts.
-    pub fn receipts(&self) -> js_sys::Promise {
-        let client = Rc::clone(&self.inner);
-
-        future_to_promise(async move {
-            let receipts = client.receipts().await;
-            let arr = js_sys::Array::new();
-            for r in receipts {
-                arr.push(&JsValue::from(WasmReceipt {
-                    timestamp: r.timestamp,
-                    endpoint: r.endpoint.clone(),
-                    amount_sats: r.amount_sats,
-                    fee_sats: r.fee_sats,
-                    payment_hash: r.payment_hash.clone(),
-                    preimage: r.preimage.clone(),
-                    response_status: r.response_status,
-                    latency_ms: r.latency_ms,
-                }));
-            }
-            Ok(arr.into())
-        })
+    pub async fn receipts(&self) -> Vec<WasmReceipt> {
+        self.inner
+            .receipts()
+            .await
+            .iter()
+            .map(WasmReceipt::from)
+            .collect()
     }
 }
 
 /// Convert an [`L402Response`] into a [`WasmL402Response`].
 async fn to_wasm_response(
     response: bolt402_core::L402Response,
-) -> Result<WasmL402Response, JsValue> {
+) -> Result<WasmL402Response, JsError> {
     let paid = response.paid();
     let cached_token = response.cached_token();
-    let receipt = response.receipt().map(|r| WasmReceipt {
-        timestamp: r.timestamp,
-        endpoint: r.endpoint.clone(),
-        amount_sats: r.amount_sats,
-        fee_sats: r.fee_sats,
-        payment_hash: r.payment_hash.clone(),
-        preimage: r.preimage.clone(),
-        response_status: r.response_status,
-        latency_ms: r.latency_ms,
-    });
+    let receipt = response.receipt().map(WasmReceipt::from);
     let status = response.status().as_u16();
     let body = response
         .text()
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(|e| JsError::new(&format!("{e}")))?;
 
     Ok(WasmL402Response {
         status,

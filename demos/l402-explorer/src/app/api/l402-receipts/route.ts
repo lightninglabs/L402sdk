@@ -10,7 +10,7 @@ import { getSharedL402Client } from '@/lib/l402-shared';
 export async function GET() {
   const client = getSharedL402Client();
   const receipts = await client.receipts();
-  const totalSpent = await client.totalSpent;
+  const totalSpent = await client.totalSpent();
 
   const receiptList = Array.isArray(receipts) ? receipts : [];
 

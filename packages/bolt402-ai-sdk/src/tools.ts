@@ -114,7 +114,7 @@ export function createBolt402Tools(config: Bolt402ToolsConfig) {
       inputSchema: z.object({}),
       execute: async () => {
         try {
-          const totalSpent = await client.totalSpent;
+          const totalSpent = await client.totalSpent();
           const receipts = await client.receipts();
 
           return {

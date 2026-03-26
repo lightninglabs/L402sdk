@@ -4,7 +4,6 @@
 //! Rust to JavaScript via wasm-bindgen, using proper typed structs.
 
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::future_to_promise;
 
 use bolt402_cln::ClnRestBackend;
 use bolt402_lnd::LndRestBackend;
@@ -117,62 +116,48 @@ impl WasmLndRestBackend {
     }
 
     /// Pay a BOLT11 Lightning invoice.
-    ///
-    /// Returns a `Promise<WasmPaymentResult>`.
     #[wasm_bindgen(js_name = "payInvoice")]
-    pub fn pay_invoice(&self, bolt11: &str, max_fee_sats: u64) -> js_sys::Promise {
-        let bolt11 = bolt11.to_string();
-        let inner = self.inner.clone();
+    pub async fn pay_invoice(
+        &self,
+        bolt11: &str,
+        max_fee_sats: u64,
+    ) -> Result<WasmPaymentResult, JsError> {
+        let result = self
+            .inner
+            .pay_invoice(bolt11, max_fee_sats)
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let result = inner
-                .pay_invoice(&bolt11, max_fee_sats)
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(WasmPaymentResult {
-                preimage: result.preimage,
-                payment_hash: result.payment_hash,
-                amount_sats: result.amount_sats,
-                fee_sats: result.fee_sats,
-            }))
+        Ok(WasmPaymentResult {
+            preimage: result.preimage,
+            payment_hash: result.payment_hash,
+            amount_sats: result.amount_sats,
+            fee_sats: result.fee_sats,
         })
     }
 
     /// Get the current spendable balance in satoshis.
-    ///
-    /// Returns a `Promise<number>`.
     #[wasm_bindgen(js_name = "getBalance")]
-    pub fn get_balance(&self) -> js_sys::Promise {
-        let inner = self.inner.clone();
-
-        future_to_promise(async move {
-            let balance = inner
-                .get_balance()
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-            Ok(JsValue::from_f64(balance as f64))
-        })
+    pub async fn get_balance(&self) -> Result<u64, JsError> {
+        self.inner
+            .get_balance()
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))
     }
 
     /// Get information about the connected Lightning node.
-    ///
-    /// Returns a `Promise<WasmNodeInfo>`.
     #[wasm_bindgen(js_name = "getInfo")]
-    pub fn get_info(&self) -> js_sys::Promise {
-        let inner = self.inner.clone();
+    pub async fn get_info(&self) -> Result<WasmNodeInfo, JsError> {
+        let info = self
+            .inner
+            .get_info()
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let info = inner
-                .get_info()
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(WasmNodeInfo {
-                pubkey: info.pubkey,
-                alias: info.alias,
-                num_active_channels: info.num_active_channels,
-            }))
+        Ok(WasmNodeInfo {
+            pubkey: info.pubkey,
+            alias: info.alias,
+            num_active_channels: info.num_active_channels,
         })
     }
 }
@@ -231,62 +216,48 @@ impl WasmClnRestBackend {
     }
 
     /// Pay a BOLT11 Lightning invoice.
-    ///
-    /// Returns a `Promise<WasmPaymentResult>`.
     #[wasm_bindgen(js_name = "payInvoice")]
-    pub fn pay_invoice(&self, bolt11: &str, max_fee_sats: u64) -> js_sys::Promise {
-        let bolt11 = bolt11.to_string();
-        let inner = self.inner.clone();
+    pub async fn pay_invoice(
+        &self,
+        bolt11: &str,
+        max_fee_sats: u64,
+    ) -> Result<WasmPaymentResult, JsError> {
+        let result = self
+            .inner
+            .pay_invoice(bolt11, max_fee_sats)
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let result = inner
-                .pay_invoice(&bolt11, max_fee_sats)
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(WasmPaymentResult {
-                preimage: result.preimage,
-                payment_hash: result.payment_hash,
-                amount_sats: result.amount_sats,
-                fee_sats: result.fee_sats,
-            }))
+        Ok(WasmPaymentResult {
+            preimage: result.preimage,
+            payment_hash: result.payment_hash,
+            amount_sats: result.amount_sats,
+            fee_sats: result.fee_sats,
         })
     }
 
     /// Get the current spendable balance in satoshis.
-    ///
-    /// Returns a `Promise<number>`.
     #[wasm_bindgen(js_name = "getBalance")]
-    pub fn get_balance(&self) -> js_sys::Promise {
-        let inner = self.inner.clone();
-
-        future_to_promise(async move {
-            let balance = inner
-                .get_balance()
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-            Ok(JsValue::from_f64(balance as f64))
-        })
+    pub async fn get_balance(&self) -> Result<u64, JsError> {
+        self.inner
+            .get_balance()
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))
     }
 
     /// Get information about the connected Lightning node.
-    ///
-    /// Returns a `Promise<WasmNodeInfo>`.
     #[wasm_bindgen(js_name = "getInfo")]
-    pub fn get_info(&self) -> js_sys::Promise {
-        let inner = self.inner.clone();
+    pub async fn get_info(&self) -> Result<WasmNodeInfo, JsError> {
+        let info = self
+            .inner
+            .get_info()
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let info = inner
-                .get_info()
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(WasmNodeInfo {
-                pubkey: info.pubkey,
-                alias: info.alias,
-                num_active_channels: info.num_active_channels,
-            }))
+        Ok(WasmNodeInfo {
+            pubkey: info.pubkey,
+            alias: info.alias,
+            num_active_channels: info.num_active_channels,
         })
     }
 }
@@ -295,7 +266,7 @@ impl WasmClnRestBackend {
 // WasmSwissKnifeBackend
 // ---------------------------------------------------------------------------
 
-/// SwissKnife REST backend for use in JavaScript/TypeScript.
+/// `SwissKnife` REST backend for use in JavaScript/TypeScript.
 ///
 /// Wraps the Rust `SwissKnifeBackend` which uses `reqwest`.
 ///
@@ -316,11 +287,11 @@ pub struct WasmSwissKnifeBackend {
 
 #[wasm_bindgen]
 impl WasmSwissKnifeBackend {
-    /// Create a new SwissKnife backend.
+    /// Create a new `SwissKnife` backend.
     ///
     /// # Arguments
     ///
-    /// * `url` - SwissKnife API URL (e.g. `https://app.numeraire.tech`)
+    /// * `url` - `SwissKnife` API URL (e.g. `https://app.numeraire.tech`)
     /// * `api_key` - API key for authentication
     #[wasm_bindgen(constructor)]
     pub fn new(url: &str, api_key: &str) -> Self {
@@ -331,55 +302,47 @@ impl WasmSwissKnifeBackend {
 
     /// Pay a BOLT11 Lightning invoice.
     #[wasm_bindgen(js_name = "payInvoice")]
-    pub fn pay_invoice(&self, bolt11: &str, max_fee_sats: u64) -> js_sys::Promise {
-        let bolt11 = bolt11.to_string();
-        let inner = self.inner.clone();
+    pub async fn pay_invoice(
+        &self,
+        bolt11: &str,
+        max_fee_sats: u64,
+    ) -> Result<WasmPaymentResult, JsError> {
+        let result = self
+            .inner
+            .pay_invoice(bolt11, max_fee_sats)
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let result = inner
-                .pay_invoice(&bolt11, max_fee_sats)
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(WasmPaymentResult {
-                preimage: result.preimage,
-                payment_hash: result.payment_hash,
-                amount_sats: result.amount_sats,
-                fee_sats: result.fee_sats,
-            }))
+        Ok(WasmPaymentResult {
+            preimage: result.preimage,
+            payment_hash: result.payment_hash,
+            amount_sats: result.amount_sats,
+            fee_sats: result.fee_sats,
         })
     }
 
     /// Get the current spendable balance in satoshis.
     #[wasm_bindgen(js_name = "getBalance")]
-    pub fn get_balance(&self) -> js_sys::Promise {
-        let inner = self.inner.clone();
-
-        future_to_promise(async move {
-            let balance = inner
-                .get_balance()
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-            Ok(JsValue::from_f64(balance as f64))
-        })
+    pub async fn get_balance(&self) -> Result<u64, JsError> {
+        self.inner
+            .get_balance()
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))
     }
 
     /// Get information about the connected Lightning node.
     #[wasm_bindgen(js_name = "getInfo")]
-    pub fn get_info(&self) -> js_sys::Promise {
-        let inner = self.inner.clone();
+    pub async fn get_info(&self) -> Result<WasmNodeInfo, JsError> {
+        let info = self
+            .inner
+            .get_info()
+            .await
+            .map_err(|e| JsError::new(&format!("{e}")))?;
 
-        future_to_promise(async move {
-            let info = inner
-                .get_info()
-                .await
-                .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-
-            Ok(JsValue::from(WasmNodeInfo {
-                pubkey: info.pubkey,
-                alias: info.alias,
-                num_active_channels: info.num_active_channels,
-            }))
+        Ok(WasmNodeInfo {
+            pubkey: info.pubkey,
+            alias: info.alias,
+            num_active_channels: info.num_active_channels,
         })
     }
 }

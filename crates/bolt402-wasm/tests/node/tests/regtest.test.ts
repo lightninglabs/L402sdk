@@ -156,7 +156,7 @@ describe("Regtest: LND REST backend via WASM", () => {
     );
 
     await client.get(`${L402_SERVER_URL}/api/cheap`);
-    const spent = await client.totalSpent;
+    const spent = await client.totalSpent();
     expect(Number(spent)).toBe(10);
   });
 });

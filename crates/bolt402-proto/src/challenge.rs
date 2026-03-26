@@ -225,8 +225,7 @@ mod tests {
     #[test]
     fn parse_url_safe_base64_macaroon() {
         // URL-safe base64 uses - and _ instead of + and /
-        let header =
-            r#"L402 macaroon="YWJj-ZGVm_YQ", invoice="lnbc100n1pj9nr7mpp5test""#;
+        let header = r#"L402 macaroon="YWJj-ZGVm_YQ", invoice="lnbc100n1pj9nr7mpp5test""#;
         let challenge = L402Challenge::from_header(header).unwrap();
         assert_eq!(challenge.macaroon, "YWJj-ZGVm_YQ");
     }

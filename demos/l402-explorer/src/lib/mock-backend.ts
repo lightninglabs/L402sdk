@@ -52,8 +52,8 @@ export class MockL402Client {
     return this.request(url, 'POST', body);
   }
 
-  get totalSpent(): Promise<number> {
-    return Promise.resolve(this._totalSpent);
+  async totalSpent(): Promise<number> {
+    return this._totalSpent;
   }
 
   async receipts(): Promise<MockReceipt[]> {
