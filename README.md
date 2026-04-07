@@ -41,22 +41,22 @@ See [docs/architecture.md](docs/architecture.md) for the full design breakdown.
 
 ## Packages
 
-| Package | Description | Status |
-|---------|-------------|--------|
-| [`bolt402-proto`](crates/bolt402-proto) | L402 protocol types, port traits (`LnBackend`, `TokenStore`), `ClientError`. WASM-safe, no async runtime dependency. | ✅ Complete |
-| [`bolt402-core`](crates/bolt402-core) | L402 client engine (`L402Client`), budget tracker, in-memory token cache, receipts. No async runtime dependency (WASM-compatible). | ✅ Complete |
-| [`bolt402-lnd`](crates/bolt402-lnd) | LND backend: gRPC (feature `grpc`) + REST (feature `rest`, WASM-compatible) | ✅ Complete |
-| [`bolt402-cln`](crates/bolt402-cln) | Core Lightning (CLN) backends: gRPC (feature `grpc`) + REST (feature `rest`, WASM-compatible) | ✅ Complete |
-| [`bolt402-nwc`](crates/bolt402-nwc) | Nostr Wallet Connect (NIP-47) backend adapter | ✅ Complete |
-| [`bolt402-swissknife`](crates/bolt402-swissknife) | SwissKnife REST backend adapter (WASM-compatible) | ✅ Complete |
-| [`bolt402-mock`](crates/bolt402-mock) | Mock L402 server for testing (no real Lightning needed) | ✅ Complete |
-| [`bolt402-sqlite`](crates/bolt402-sqlite) | SQLite persistent token store (survives restarts) | ✅ Complete |
-| [`bolt402-wasm`](crates/bolt402-wasm) | WebAssembly bindings: Rust L402 client plus direct LND REST, CLN REST, and SwissKnife backend wrappers | ✅ Complete |
-| [`bolt402-ai-sdk`](packages/bolt402-ai-sdk) | Vercel AI SDK tools (TypeScript). Thin wrapper around bolt402-wasm — all L402 logic in Rust/WASM | ✅ Complete |
-| [`bolt402-ffi`](crates/bolt402-ffi) | C-compatible FFI layer for Go/Swift/Kotlin bindings | ✅ Complete |
-| [`bolt402-python`](crates/bolt402-python) | Python bindings via PyO3 | ✅ Complete |
-| [`bolt402-go`](bindings/bolt402-go) | Go bindings via CGo | ✅ Complete |
-| [`bolt402-langchain`](packages/bolt402-langchain) | LangChain Python tools (L402FetchTool, BudgetTool, callbacks) | ✅ Complete |
+| Package | Description |  
+| --------- | ------------- |
+| [`bolt402-proto`](crates/bolt402-proto) | L402 protocol types, port traits (`LnBackend`, `TokenStore`), `ClientError`. WASM-safe, no async runtime dependency. |
+| [`bolt402-core`](crates/bolt402-core) | L402 client engine (`L402Client`), budget tracker, in-memory token cache, receipts. No async runtime dependency (WASM-compatible). |
+| [`bolt402-lnd`](crates/bolt402-lnd) | LND backend: gRPC (feature `grpc`) + REST (feature `rest`, WASM-compatible) |
+| [`bolt402-cln`](crates/bolt402-cln) | Core Lightning (CLN) backends: gRPC (feature `grpc`) + REST (feature `rest`, WASM-compatible) |
+| [`bolt402-nwc`](crates/bolt402-nwc) | Nostr Wallet Connect (NIP-47) backend adapter |
+| [`bolt402-swissknife`](crates/bolt402-swissknife) | SwissKnife REST backend adapter (WASM-compatible) |
+| [`bolt402-mock`](crates/bolt402-mock) | Mock L402 server for testing (no real Lightning needed) |
+| [`bolt402-sqlite`](crates/bolt402-sqlite) | SQLite persistent token store (survives restarts) |
+| [`bolt402-wasm`](crates/bolt402-wasm) | WebAssembly bindings: Rust L402 client plus direct LND REST, CLN REST, and SwissKnife backend wrappers |
+| [`bolt402-ai-sdk`](packages/bolt402-ai-sdk) | Vercel AI SDK tools (TypeScript). Thin wrapper around bolt402-wasm — all L402 logic in Rust/WASM | 
+| [`bolt402-ffi`](crates/bolt402-ffi) | C-compatible FFI layer for Go/Swift/Kotlin bindings |
+| [`bolt402-python`](crates/bolt402-python) | Python bindings via PyO3 |
+| [`bolt402-go`](bindings/bolt402-go) | Go bindings via CGo |
+| [`bolt402-langchain`](packages/bolt402-langchain) | LangChain Python tools (L402FetchTool, BudgetTool, callbacks) |
 
 ## Quick Start (Rust)
 
@@ -154,7 +154,7 @@ See the [Getting Started tutorial](docs/tutorials/getting-started.md) for a full
 ## Examples
 
 | Example | Description | Run |
-|---------|-------------|-----|
+| --------- | ------------- |----- |
 | [basic-mock](examples/basic-mock) | Full L402 flow with mock server | `cargo run -p example-basic-mock` |
 | [budget-control](examples/budget-control) | Budget limits and rejection | `cargo run -p example-budget-control` |
 | [mock demo](crates/bolt402-mock/examples/demo.rs) | Interactive demo (in bolt402-mock) | `cargo run -p bolt402-mock --example demo` |
@@ -179,39 +179,6 @@ cargo fmt --check    # Check formatting
 cargo clippy         # Lint
 cargo doc --no-deps  # Build docs
 ```
-
-## Roadmap
-
-### Completed
-
-- [x] Core L402 client engine (hexagonal architecture)
-- [x] LND gRPC backend adapter
-- [x] CLN (Core Lightning) backends: gRPC + REST
-- [x] Nostr Wallet Connect (NWC/NIP-47) backend adapter
-- [x] SwissKnife REST backend adapter
-- [x] Mock L402 server for testing
-- [x] SQLite persistent token store
-- [x] CI/CD pipeline (fmt, clippy, test, doc, FFI, WASM)
-- [x] Vercel AI SDK integration (TypeScript)
-- [x] Python bindings (PyO3)
-- [x] Go bindings (CGo)
-- [x] WASM bindings (wasm-pack)
-- [x] C FFI layer (bolt402-ffi)
-- [x] MCP server for universal AI agent integration
-- [x] L402 Explorer demo
-- [x] AI Research Agent demo
-- [x] bolt402 vs lnget comparison page
-- [x] Comprehensive documentation and tutorials
-- [x] LangChain Python integration (L402FetchTool, L402BudgetTool, PaymentCallbackHandler)
-- [x] Regtest integration suite against Aperture (LND gRPC/REST, CLN gRPC/REST)
-
-### Upcoming
-
-- [x] Remove backwards-compat re-exports from bolt402-core (#64)
-- [x] Align all crates, examples, and tutorials with proto/core split (#65)
-- [ ] Node.js/TypeScript integration tests for bolt402-wasm (#66)
-- [ ] MPP (Tempo) protocol support (#67)
-- [ ] Package publishing (crates.io, PyPI, npm)
 
 ## License
 

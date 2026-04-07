@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rm -rf node_modules .next out dist build"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.58",
