@@ -1,10 +1,21 @@
-# bolt402 — Python SDK
+<div align="center">
+  <h1>bolt402</h1>
 
-L402 client SDK for AI agent frameworks. Pay for APIs with Lightning.
+  <p>
+    <strong>L402 client SDK for Python — pay for APIs with Lightning</strong>
+  </p>
 
-Built in Rust via [PyO3](https://pyo3.rs), this package gives Python AI frameworks native Lightning payment capabilities for [L402](https://docs.lightning.engineering/the-lightning-network/l402)-gated APIs.
+  <p>
+    <a href="https://pypi.org/project/bolt402/"><img alt="PyPI" src="https://img.shields.io/pypi/v/bolt402.svg"/></a>
+    <a href="https://pypi.org/project/bolt402/"><img alt="PyPI downloads" src="https://img.shields.io/pypi/dm/bolt402.svg"/></a>
+    <a href="https://github.com/lightninglabs/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
+  </p>
 
-## Installation
+</div>
+
+Built in Rust via [PyO3](https://pyo3.rs). Supports LND, CLN, and SwissKnife Lightning backends.
+
+## Install
 
 ```bash
 pip install bolt402
@@ -13,48 +24,50 @@ pip install bolt402
 ## Quick Start
 
 ```python
-from bolt402 import create_mock_client, Budget
+from bolt402 import L402Client, Budget
 
-# Create a test environment (mock server + connected client)
-client, server = create_mock_client(
-    endpoints={"/api/data": 100},  # 100 sats per request
-    budget=Budget(daily_max=5000),
+# Create a client backed by LND REST
+client = L402Client.with_lnd_rest(
+    "https://localhost:8080",
+    "hex-encoded-admin-macaroon",
+    budget=Budget(per_request_max=1000, daily_max=50_000),
 )
 
-# Make an L402-aware request
-response = client.get(f"{server.url}/api/data")
+# L402 negotiation happens automatically
+response = client.get("https://api.example.com/paid-resource")
 print(response.status)  # 200
 print(response.paid)    # True
-print(response.receipt.amount_sats)  # 100
+
+# Payment receipt
+receipt = response.receipt
+print(receipt.amount_sats)    # 100
+print(receipt.payment_hash)   # hex string
 
 # Budget tracking
-print(client.total_spent())  # 100
-print(client.receipts())     # [Receipt(...)]
+print(client.total_spent())   # 100
+print(client.receipts())      # [Receipt(...)]
 ```
 
-## API Reference
-
-### `L402Client`
-
-Main client for L402-aware HTTP requests.
+## Lightning Backends
 
 ```python
-client = L402Client(
-    backend="mock",
-    budget=Budget(per_request_max=100),
-    max_fee_sats=100,
-    mock_server_url="http://localhost:8080",
-)
+from bolt402 import LndRestBackend, ClnRestBackend, SwissKnifeBackend, L402Client
 
-response = client.get("http://localhost:8080/api/data")
-response = client.post("http://localhost:8080/api/data", body='{"key": "value"}')
+# LND REST
+client = L402Client.with_lnd_rest("https://localhost:8080", "macaroon_hex")
+
+# Core Lightning (CLN) REST
+client = L402Client.with_cln_rest("https://localhost:3010", "rune_token")
+
+# SwissKnife
+client = L402Client.with_swissknife("https://app.numeraire.tech", "sk-...")
 ```
 
-### `Budget`
-
-Budget configuration for spending limits.
+## Budget Control
 
 ```python
+from bolt402 import Budget
+
 budget = Budget(
     per_request_max=100,   # Max sats per request
     hourly_max=1000,       # Max sats per hour
@@ -66,22 +79,20 @@ budget = Budget(
 budget = Budget.unlimited()
 ```
 
+## API Reference
+
 ### `L402Response`
 
-Response from an L402-aware request.
-
 ```python
-response.status      # HTTP status code (int)
-response.paid        # Whether a payment was made (bool)
-response.receipt     # Payment receipt or None
-response.text()      # Response body as string
-response.json()      # Response body parsed as JSON
-response.headers     # Response headers (dict)
+response.status        # HTTP status code (int)
+response.body          # Response body (str)
+response.paid          # Whether a payment was made (bool)
+response.cached_token  # Whether a cached token was used (bool)
+response.receipt       # Payment receipt or None
+response.json()        # Response body parsed as JSON
 ```
 
 ### `Receipt`
-
-Payment receipt for audit and cost analysis.
 
 ```python
 receipt.timestamp        # Unix timestamp (seconds)
@@ -91,44 +102,7 @@ receipt.fee_sats         # Routing fee (sats)
 receipt.payment_hash     # Payment hash (hex)
 receipt.preimage         # Preimage (hex)
 receipt.response_status  # HTTP status after payment
-receipt.latency_ms       # Total latency
-receipt.total_cost_sats()  # amount + fee
-receipt.to_json()        # JSON serialization
-```
-
-### `MockL402Server`
-
-Mock server for testing without real Lightning infrastructure.
-
-```python
-server = MockL402Server(endpoints={"/api/data": 100})
-print(server.url)  # http://127.0.0.1:XXXXX
-```
-
-### `create_mock_client()`
-
-Convenience function that creates a connected client + server pair.
-
-```python
-client, server = create_mock_client(
-    endpoints={"/api/data": 100},
-    budget=Budget(daily_max=5000),
-    max_fee_sats=100,
-)
-```
-
-## Development
-
-```bash
-# Build and install locally
-cd crates/bolt402-python
-maturin develop
-
-# Run tests
-pytest tests/ -v
-
-# Build wheels
-maturin build --release
+receipt.total_cost_sats  # amount + fee
 ```
 
 ## License
