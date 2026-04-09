@@ -138,26 +138,6 @@ const balance = await backend.getBalance();
 console.log(balance);
 ```
 
-## Utility Functions
-
-```javascript
-import { parseL402Challenge, buildL402Header, version } from 'bolt402-wasm';
-
-// Parse a WWW-Authenticate header
-const challenge = parseL402Challenge(
-  'L402 macaroon="YWJjZGVm", invoice="lnbc100n1..."'
-);
-console.log(challenge.macaroon); // "YWJjZGVm"
-console.log(challenge.invoice);  // "lnbc100n1..."
-
-// Build an Authorization header
-const header = buildL402Header("YWJjZGVm", "abcdef1234567890");
-// "L402 YWJjZGVm:abcdef1234567890"
-
-// Check version
-console.log(version()); // "0.1.0"
-```
-
 ## Building
 
 ```bash

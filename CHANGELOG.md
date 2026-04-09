@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **bolt402-core**: Removed tokio runtime dependency. Replaced `tokio::sync::RwLock` with `std::sync::RwLock` and `std::time::Instant` with `web_time::Instant`. The core library now compiles to WASM without an async runtime. (#63)
 - **bolt402-ai-sdk**: Stripped all pure-TypeScript L402 reimplementation (l402-client, budget, token stores, backends, types). Now a thin wrapper around `WasmL402Client` from `bolt402-wasm`. (#63)
-- **bolt402-wasm**: Added `WasmL402Client` wrapping the real `bolt402-core::L402Client`. Factory methods `withLndRest()` and `withSwissKnife()` for constructing clients with Rust backends. (#63)
 - **bolt402-regtest**: Expanded the Docker/Aperture integration suite to cover CLN REST in addition to LND gRPC/REST and CLN gRPC.
 
 ### Added
@@ -23,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **bolt402-sqlite**: SQLite persistent token store implementing `TokenStore`. (#48)
 - **bolt402-ffi**: C-compatible FFI layer for cross-language bindings. (#44)
 - **bolt402-python**: Python bindings via PyO3/maturin. (#23)
-- **bolt402-wasm**: WebAssembly bindings via wasm-pack. (#46)
-- **bolt402-wasm**: Direct `WasmClnRestBackend` wrapper for CLN REST in JavaScript/TypeScript environments.
 - **bolt402-go** (bindings): Go bindings via CGo + bolt402-ffi. (#44)
 - **bolt402-langchain**: LangChain Python integration with L402FetchTool, L402BudgetTool, PaymentCallbackHandler. (#57)
 - BOLT11 invoice amount decoding for budget enforcement. (#21)

@@ -30,16 +30,14 @@ jobs:
           prev_commit="${{ github.event.before }}"
           echo "Previous commit: $prev_commit"
 
-          # --- bolt402-wasm (workspace version in Cargo.toml) ---
-          get_workspace_version() {
-            sed -n '/\[workspace.package\]/,/^\[/p' "$1" \
-              | grep -E '^version\s*=' \
-              | head -1 \
-              | sed -E 's/version\s*=\s*"([^"]+)"/\1/'
+          # --- bolt402-wasm (own version in crates/bolt402-wasm/Cargo.toml) ---
+          get_crate_version() {
+            grep -E '^version\s*=' "$1" | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/'
           }
 
-          current_wasm=$(get_workspace_version Cargo.toml)
-          previous_wasm=$(git show "$prev_commit:Cargo.toml" | sed -n '/\[workspace.package\]/,/^\[/p' | grep -E '^version\s*=' | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/')
+          wasm_toml="crates/bolt402-wasm/Cargo.toml"
+          current_wasm=$(get_crate_version "$wasm_toml")
+          previous_wasm=$(git show "$prev_commit:$wasm_toml" | grep -E '^version\s*=' | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/')
           echo "bolt402-wasm: $previous_wasm → $current_wasm"
 
           if [ "$current_wasm" != "$previous_wasm" ]; then

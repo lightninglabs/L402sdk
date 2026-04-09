@@ -210,6 +210,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lightninglabs/bolt402-ai@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@lightninglabs/bolt402-ai@workspace:."
+  dependencies:
+    "@types/node": "npm:^25.5.0"
+    ai: "npm:^6.0.116"
+    bolt402-wasm: "file:../../crates/bolt402-wasm/pkg"
+    eslint: "npm:^9.0.0"
+    prettier: "npm:^3.8.1"
+    typescript: "npm:^5.9.3"
+    vitest: "npm:^4.1.0"
+    zod: "npm:^3.25.76"
+  peerDependencies:
+    ai: ">=6.0.0"
+    zod: ^3.25.76 || ^4.1.8
+  languageName: unknown
+  linkType: soft
+
 "@napi-rs/wasm-runtime@npm:^1.1.1":
   version: 1.1.1
   resolution: "@napi-rs/wasm-runtime@npm:1.1.1"
@@ -618,28 +636,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bolt402-ai-sdk@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "bolt402-ai-sdk@workspace:."
-  dependencies:
-    "@types/node": "npm:^25.5.0"
-    ai: "npm:^6.0.116"
-    bolt402-wasm: "file:../../crates/bolt402-wasm/pkg"
-    eslint: "npm:^9.0.0"
-    prettier: "npm:^3.8.1"
-    typescript: "npm:^5.9.3"
-    vitest: "npm:^4.1.0"
-    zod: "npm:^3.25.76"
-  peerDependencies:
-    ai: ">=6.0.0"
-    zod: ^3.25.76 || ^4.1.8
-  languageName: unknown
-  linkType: soft
-
-"bolt402-wasm@file:../../crates/bolt402-wasm/pkg::locator=bolt402-ai-sdk%40workspace%3A.":
+"bolt402-wasm@file:../../crates/bolt402-wasm/pkg::locator=%40lightninglabs%2Fbolt402-ai%40workspace%3A.":
   version: 0.1.0
-  resolution: "bolt402-wasm@file:../../crates/bolt402-wasm/pkg#../../crates/bolt402-wasm/pkg::hash=d72626&locator=bolt402-ai-sdk%40workspace%3A."
-  checksum: 10c0/357f1f124d226014813fb1e5f3c68830d6e4063a2f9c3a50a2a893d5f0c48e6384284d7e032383268519548bd84ef52b1e4fa8c63e26914b0a2aa12d95400412
+  resolution: "bolt402-wasm@file:../../crates/bolt402-wasm/pkg#../../crates/bolt402-wasm/pkg::hash=cce293&locator=%40lightninglabs%2Fbolt402-ai%40workspace%3A."
+  checksum: 10c0/5d740a22937d6460fb5943477dc0c45781e0058261dbb4039a1dbddf87dab70007e9930d1477133d8ce53a00f705b7941c87eab657f0bbe890e784562fcd5708
   languageName: node
   linkType: hard
 

@@ -36,10 +36,10 @@ doc:
 doc-open:
 	cargo doc --workspace --no-deps --open
 
-# Build WASM package (default: web target)
+# Build WASM package (default: bundler target)
 WASM_TARGET ?= bundler
 wasm:
-	wasm-pack build crates/bolt402-wasm --target $(WASM_TARGET)
+	wasm-pack build crates/bolt402-wasm --target $(WASM_TARGET) --scope lightninglabs
 
 # Clean build artifacts
 clean:
