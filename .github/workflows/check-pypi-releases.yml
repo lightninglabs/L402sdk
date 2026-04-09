@@ -1,0 +1,63 @@
+name: Check PyPI Releases
+
+on:
+  workflow_call:
+    outputs:
+      bolt402_python:
+        description: "True if bolt402 Python bindings version was bumped"
+        value: ${{ jobs.check.outputs.bolt402_python }}
+      bolt402_langchain:
+        description: "True if bolt402-langchain version was bumped"
+        value: ${{ jobs.check.outputs.bolt402_langchain }}
+
+jobs:
+  check:
+    name: Detect version bumps
+    runs-on: ubuntu-latest
+    outputs:
+      bolt402_python: ${{ steps.check-versions.outputs.bolt402_python }}
+      bolt402_langchain: ${{ steps.check-versions.outputs.bolt402_langchain }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+
+      - name: Compare versions
+        id: check-versions
+        run: |
+          prev_commit="${{ github.event.before }}"
+          echo "Previous commit: $prev_commit"
+
+          get_toml_version() {
+            grep -E '^version\s*=' "$1" | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/'
+          }
+
+          # --- bolt402 (Python bindings) ---
+          py_toml="crates/bolt402-python/pyproject.toml"
+          current_py=$(get_toml_version "$py_toml")
+          previous_py=$(git show "$prev_commit:$py_toml" | grep -E '^version\s*=' | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/')
+          echo "bolt402 (python): $previous_py → $current_py"
+
+          if [ "$current_py" != "$previous_py" ]; then
+            echo "bolt402 python version bump detected."
+            echo "bolt402_python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bolt402 python: no version bump."
+            echo "bolt402_python=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # --- bolt402-langchain ---
+          lc_toml="packages/bolt402-langchain/pyproject.toml"
+          current_lc=$(get_toml_version "$lc_toml")
+          previous_lc=$(git show "$prev_commit:$lc_toml" | grep -E '^version\s*=' | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/')
+          echo "bolt402-langchain: $previous_lc → $current_lc"
+
+          if [ "$current_lc" != "$previous_lc" ]; then
+            echo "bolt402-langchain version bump detected."
+            echo "bolt402_langchain=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bolt402-langchain: no version bump."
+            echo "bolt402_langchain=false" >> "$GITHUB_OUTPUT"
+          fi

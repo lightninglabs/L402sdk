@@ -90,19 +90,17 @@ jobs:
           echo "Aperture ready."
 
       - name: Run Rust regtest integration tests
-        run: make regtest-test
+        run: make regtest-test-rust
         env:
           RUST_LOG: info
 
       - name: Run WASM/Node.js regtest integration tests
-        working-directory: crates/bolt402-wasm/tests/node
-        run: yarn vitest run tests/regtest.test.ts
+        run: make regtest-test-wasm
         env:
           NODE_TLS_REJECT_UNAUTHORIZED: "0"
 
       - name: Run Python regtest integration tests
-        working-directory: crates/bolt402-python
-        run: .venv/bin/pytest tests/test_regtest.py -v
+        run: make regtest-test-python
 
       - name: Docker logs (on failure)
         if: failure()

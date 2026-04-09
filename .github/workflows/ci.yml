@@ -217,3 +217,27 @@ jobs:
       id-token: write
     uses: ./.github/workflows/publish-bolt402-ai-sdk.yml
     secrets: inherit
+
+  # --- PyPI releases ---
+
+  check-pypi-releases:
+    name: Check PyPI version bumps
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [fmt, clippy, test, doc, python, langchain]
+    uses: ./.github/workflows/check-pypi-releases.yml
+
+  publish-bolt402-python:
+    name: Publish bolt402 (Python)
+    needs: check-pypi-releases
+    if: needs.check-pypi-releases.outputs.bolt402_python == 'true'
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/publish-bolt402-python.yml
+
+  publish-bolt402-langchain:
+    name: Publish bolt402-langchain
+    needs: check-pypi-releases
+    if: needs.check-pypi-releases.outputs.bolt402_langchain == 'true'
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/publish-bolt402-langchain.yml
