@@ -1,6 +1,6 @@
 {
   "name": "@lightninglabs/bolt402-ai",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "L402 Lightning payment tools for the Vercel AI SDK. Let AI agents pay for APIs with Bitcoin.",
   "type": "module",
   "main": "dist/index.js",
