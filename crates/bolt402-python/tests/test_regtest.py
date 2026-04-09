@@ -42,6 +42,9 @@ L402_SERVER_URL = os.environ.get("L402_SERVER_URL", "http://localhost:8081")
 LND_REST_HOST = os.environ.get("LND_REST_HOST", "https://localhost:8080")
 LND_MACAROON_HEX = os.environ.get("LND_MACAROON_HEX", "")
 
+CLN_REST_URL = os.environ.get("CLN_REST_URL", "https://localhost:3010")
+CLN_RUNE = os.environ.get("CLN_RUNE", "")
+
 SWISSKNIFE_API_URL = os.environ.get("SWISSKNIFE_API_URL", "")
 SWISSKNIFE_API_KEY = os.environ.get("SWISSKNIFE_API_KEY", "")
 
@@ -49,11 +52,15 @@ SWISSKNIFE_API_KEY = os.environ.get("SWISSKNIFE_API_KEY", "")
 def _regtest_available() -> bool:
     """Check if the regtest L402 server is reachable."""
     try:
+        import urllib.error
         import urllib.request
 
         req = urllib.request.Request(f"{L402_SERVER_URL}/health", method="GET")
         resp = urllib.request.urlopen(req, timeout=5)
         return resp.status in (200, 402)
+    except urllib.error.HTTPError as e:
+        # Aperture returns 402 for all routes — that means it's up.
+        return e.code == 402
     except Exception:
         return False
 
@@ -61,6 +68,11 @@ def _regtest_available() -> bool:
 def _has_lnd_credentials() -> bool:
     """Check if LND REST credentials are available."""
     return bool(LND_MACAROON_HEX)
+
+
+def _has_cln_credentials() -> bool:
+    """Check if CLN REST credentials are available."""
+    return bool(CLN_RUNE)
 
 
 def _has_swissknife_credentials() -> bool:
@@ -75,7 +87,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-from bolt402 import Budget, L402Client, LndRestBackend, SwissKnifeBackend
+from bolt402 import Budget, ClnRestBackend, L402Client, LndRestBackend, SwissKnifeBackend
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +260,82 @@ class TestLndRestL402Flow:
             assert response.receipt.amount_sats == expected_sats
 
         assert client.total_spent() == 610
+
+
+# ---------------------------------------------------------------------------
+# CLN REST backend tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not _has_cln_credentials(), reason="CLN credentials not available")
+class TestClnRestBackend:
+    """Tests for the CLN REST backend against regtest."""
+
+    def test_get_info(self):
+        """Verify CLN node connectivity."""
+        backend = ClnRestBackend(CLN_REST_URL, CLN_RUNE)
+        info = backend.get_info()
+        assert info.pubkey
+        assert info.num_active_channels > 0
+
+    def test_get_balance(self):
+        """Verify CLN balance query."""
+        backend = ClnRestBackend(CLN_REST_URL, CLN_RUNE)
+        balance = backend.get_balance()
+        assert balance > 1000
+
+
+@pytest.mark.skipif(not _has_cln_credentials(), reason="CLN credentials not available")
+class TestClnRestL402Flow:
+    """Full L402 protocol flow using CLN REST backend."""
+
+    def test_full_flow(self):
+        """GET request with automatic L402 payment."""
+        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE)
+
+        response = client.get(f"{L402_SERVER_URL}/api/data")
+        assert response.status == 200
+        assert response.paid is True
+        assert response.receipt is not None
+        assert response.receipt.amount_sats == 100
+        assert len(response.receipt.payment_hash) > 0
+        assert len(response.receipt.preimage) > 0
+
+    def test_token_caching(self):
+        """Tokens are cached and reused on subsequent requests."""
+        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE)
+
+        r1 = client.get(f"{L402_SERVER_URL}/api/data")
+        assert r1.paid is True
+        assert r1.cached_token is False
+
+        r2 = client.get(f"{L402_SERVER_URL}/api/data")
+        assert r2.paid is False
+        assert r2.cached_token is True
+        assert r2.status == 200
+
+    def test_budget_enforcement(self):
+        """Budget limits prevent overspending."""
+        budget = Budget(per_request_max=50)
+        client = L402Client.with_cln_rest(
+            CLN_REST_URL,
+            CLN_RUNE,
+            budget=budget,
+        )
+
+        with pytest.raises(ValueError, match="BudgetExceeded"):
+            client.get(f"{L402_SERVER_URL}/api/data")
+
+    def test_receipts(self):
+        """Receipt tracking works with CLN backend."""
+        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE)
+
+        client.get(f"{L402_SERVER_URL}/api/cheap")
+        client.get(f"{L402_SERVER_URL}/api/data")
+
+        receipts = client.receipts()
+        assert len(receipts) == 2
+        assert client.total_spent() == 110
 
 
 # ---------------------------------------------------------------------------

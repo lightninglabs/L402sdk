@@ -65,9 +65,17 @@ regtest-up: regtest-certs
 regtest-init:
 	./tests/regtest/scripts/init-regtest.sh
 
-# Run regtest integration tests
-regtest-test:
+# Run regtest integration tests (all languages)
+regtest-test: regtest-test-rust regtest-test-python regtest-test-wasm
+
+regtest-test-rust:
 	cargo test -p bolt402-regtest -- --nocapture
+
+regtest-test-python:
+	cd crates/bolt402-python && .venv/bin/pytest tests/test_regtest.py -v
+
+regtest-test-wasm:
+	cd crates/bolt402-wasm/tests/node && yarn vitest run tests/regtest.test.ts
 
 # Tear down the regtest stack and remove volumes
 regtest-down:
