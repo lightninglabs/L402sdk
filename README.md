@@ -1,8 +1,37 @@
-# bolt402
+<div align="center">
+  <h1>bolt402</h1>
 
-**L402 client SDK for AI agent frameworks**. Pay for APIs with Lightning.
+  <p>
+    <strong>L402 client SDK for AI agent frameworks. Pay for APIs with Lightning.</strong>
+  </p>
+
+  <p>
+    <a href="https://crates.io/crates/bolt402-core"><img alt="crates.io" src="https://img.shields.io/crates/v/bolt402-core.svg"/></a>
+    <a href="https://www.npmjs.com/package/@lightninglabs/bolt402"><img alt="npm (WASM)" src="https://img.shields.io/npm/v/@lightninglabs/bolt402.svg?label=npm%20(wasm)"/></a>
+    <a href="https://www.npmjs.com/package/@lightninglabs/bolt402-ai"><img alt="npm (AI SDK)" src="https://img.shields.io/npm/v/@lightninglabs/bolt402-ai.svg?label=npm%20(ai-sdk)"/></a>
+    <a href="https://github.com/bitcoin-numeraire/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
+    <a href="https://blog.rust-lang.org/2025/02/20/Rust-1.85.0.html"><img alt="Rustc Version 1.85.0+" src="https://img.shields.io/badge/rustc-1.85.0%2B-lightgrey.svg"/></a>
+  </p>
+
+</div>
 
 bolt402 gives AI agents the ability to autonomously pay for L402-gated APIs using the Lightning Network. Built in Rust with TypeScript and Python bindings.
+
+## Install
+
+```bash
+# Rust
+cargo add bolt402-core bolt402-lnd
+
+# TypeScript (WASM bindings)
+yarn add @lightninglabs/bolt402
+
+# TypeScript (Vercel AI SDK tools)
+yarn add @lightninglabs/bolt402-ai
+
+# Python
+pip install bolt402
+```
 
 ## Why?
 
@@ -42,7 +71,7 @@ See [docs/architecture.md](docs/architecture.md) for the full design breakdown.
 ## Packages
 
 | Package | Description |  
-| --------- | ------------- |
+| ------------ | ------------- |
 | [`bolt402-proto`](crates/bolt402-proto) | L402 protocol types, port traits (`LnBackend`, `TokenStore`), `ClientError`. WASM-safe, no async runtime dependency. |
 | [`bolt402-core`](crates/bolt402-core) | L402 client engine (`L402Client`), budget tracker, in-memory token cache, receipts. No async runtime dependency (WASM-compatible). |
 | [`bolt402-lnd`](crates/bolt402-lnd) | LND backend: gRPC (feature `grpc`) + REST (feature `rest`, WASM-compatible) |
@@ -99,12 +128,9 @@ async fn main() {
 ## Quick Start (Vercel AI SDK)
 
 ```typescript
-import { createBolt402Tools } from 'bolt402-ai-sdk';
-import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
+import { createBolt402Tools, WasmL402Client, WasmBudgetConfig } from '@lightninglabs/bolt402-ai';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-
-await init();
 
 const client = WasmL402Client.withLndRest(
   'https://localhost:8080',

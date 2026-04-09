@@ -1,6 +1,25 @@
-# bolt402-wasm
+<div align="center">
+  <h1>bolt402-wasm</h1>
 
-WebAssembly bindings for the [bolt402](https://github.com/bitcoin-numeraire/bolt402) L402 client SDK. Run L402 Lightning payment flows in browsers, Deno, Cloudflare Workers, and any WASM runtime.
+  <p>
+    <strong>WebAssembly bindings for the bolt402 L402 client SDK</strong>
+  </p>
+
+  <p>
+    <a href="https://www.npmjs.com/package/@lightninglabs/bolt402"><img alt="npm" src="https://img.shields.io/npm/v/@lightninglabs/bolt402.svg"/></a>
+    <a href="https://www.npmjs.com/package/@lightninglabs/bolt402"><img alt="npm downloads" src="https://img.shields.io/npm/dm/@lightninglabs/bolt402.svg"/></a>
+    <a href="https://github.com/bitcoin-numeraire/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
+  </p>
+
+</div>
+
+Run L402 Lightning payment flows in browsers, Deno, Cloudflare Workers, and any WASM runtime.
+
+## Install
+
+```bash
+yarn add @lightninglabs/bolt402
+```
 
 ## Overview
 
