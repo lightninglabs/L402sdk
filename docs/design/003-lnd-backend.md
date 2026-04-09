@@ -2,7 +2,7 @@
 
 **Status:** Implemented
 **Issue:** #4
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 
 ## Problem
 

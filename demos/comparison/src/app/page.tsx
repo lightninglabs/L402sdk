@@ -43,7 +43,7 @@ export default async function Home() {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="https://github.com/bitcoin-numeraire/bolt402"
+              href="https://github.com/lightninglabs/bolt402"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
@@ -370,7 +370,7 @@ export default async function Home() {
           <p className="text-center text-[10px] text-zinc-600">
             bolt402 vs lnget comparison — by{" "}
             <a
-              href="https://github.com/bitcoin-numeraire/bolt402"
+              href="https://github.com/lightninglabs/bolt402"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-500 hover:text-[#F7931A] transition-colors"

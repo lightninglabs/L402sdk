@@ -44,7 +44,7 @@ describe("WasmLndRestBackend", () => {
 describe("WasmSwissKnifeBackend", () => {
   it("constructs with url and api_key", () => {
     const backend = new WasmSwissKnifeBackend(
-      "https://app.numeraire.tech",
+      "https://api.numeraire.tech",
       "sk-test-key",
     );
     expect(backend).toBeDefined();
@@ -52,7 +52,7 @@ describe("WasmSwissKnifeBackend", () => {
 
   it("exposes payInvoice method", () => {
     const backend = new WasmSwissKnifeBackend(
-      "https://app.numeraire.tech",
+      "https://api.numeraire.tech",
       "sk-test-key",
     );
     expect(typeof backend.payInvoice).toBe("function");
@@ -60,7 +60,7 @@ describe("WasmSwissKnifeBackend", () => {
 
   it("exposes getBalance method", () => {
     const backend = new WasmSwissKnifeBackend(
-      "https://app.numeraire.tech",
+      "https://api.numeraire.tech",
       "sk-test-key",
     );
     expect(typeof backend.getBalance).toBe("function");
@@ -68,7 +68,7 @@ describe("WasmSwissKnifeBackend", () => {
 
   it("exposes getInfo method", () => {
     const backend = new WasmSwissKnifeBackend(
-      "https://app.numeraire.tech",
+      "https://api.numeraire.tech",
       "sk-test-key",
     );
     expect(typeof backend.getInfo).toBe("function");

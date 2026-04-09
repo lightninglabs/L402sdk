@@ -39,9 +39,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/bitcoin-numeraire/bolt402"
-Repository = "https://github.com/bitcoin-numeraire/bolt402"
-Documentation = "https://github.com/bitcoin-numeraire/bolt402/tree/main/packages/bolt402-langchain"
+Homepage = "https://github.com/lightninglabs/bolt402"
+Repository = "https://github.com/lightninglabs/bolt402"
+Documentation = "https://github.com/lightninglabs/bolt402/tree/main/packages/bolt402-langchain"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bolt402_langchain"]

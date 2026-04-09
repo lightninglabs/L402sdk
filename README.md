@@ -9,7 +9,7 @@
     <a href="https://crates.io/crates/bolt402-core"><img alt="crates.io" src="https://img.shields.io/crates/v/bolt402-core.svg"/></a>
     <a href="https://www.npmjs.com/package/@lightninglabs/bolt402"><img alt="npm (WASM)" src="https://img.shields.io/npm/v/@lightninglabs/bolt402.svg?label=npm%20(wasm)"/></a>
     <a href="https://www.npmjs.com/package/@lightninglabs/bolt402-ai"><img alt="npm (AI SDK)" src="https://img.shields.io/npm/v/@lightninglabs/bolt402-ai.svg?label=npm%20(ai-sdk)"/></a>
-    <a href="https://github.com/bitcoin-numeraire/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
+    <a href="https://github.com/lightninglabs/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
     <a href="https://blog.rust-lang.org/2025/02/20/Rust-1.85.0.html"><img alt="Rustc Version 1.85.0+" src="https://img.shields.io/badge/rustc-1.85.0%2B-lightgrey.svg"/></a>
   </p>
 

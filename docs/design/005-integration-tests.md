@@ -1,7 +1,7 @@
 # Design: Integration Test Suite
 
 **Issue:** #5
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-15
 **Status:** Implemented (Tier 1 + Tier 2)
 

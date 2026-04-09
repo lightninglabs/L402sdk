@@ -8,7 +8,7 @@
   <p>
     <a href="https://www.npmjs.com/package/@lightninglabs/bolt402"><img alt="npm" src="https://img.shields.io/npm/v/@lightninglabs/bolt402.svg"/></a>
     <a href="https://www.npmjs.com/package/@lightninglabs/bolt402"><img alt="npm downloads" src="https://img.shields.io/npm/dm/@lightninglabs/bolt402.svg"/></a>
-    <a href="https://github.com/bitcoin-numeraire/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
+    <a href="https://github.com/lightninglabs/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
   </p>
 
 </div>
@@ -131,7 +131,7 @@ import init, { WasmSwissKnifeBackend } from 'bolt402-wasm';
 await init();
 
 const backend = new WasmSwissKnifeBackend(
-  'https://app.numeraire.tech',
+  'https://api.numeraire.tech',
   'sk-...',
 );
 const balance = await backend.getBalance();

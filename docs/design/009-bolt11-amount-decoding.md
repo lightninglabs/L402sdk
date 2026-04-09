@@ -1,7 +1,7 @@
 # 009: BOLT11 Invoice Amount Decoding for Budget Enforcement
 
 **Issue:** #20
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-17
 **Status:** Proposed
 

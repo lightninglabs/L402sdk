@@ -54,7 +54,7 @@ fn lnd_rest_backend_constructs() {
 
 #[wasm_bindgen_test]
 fn swissknife_backend_constructs() {
-    let _backend = WasmSwissKnifeBackend::new("https://app.numeraire.tech", "sk-test");
+    let _backend = WasmSwissKnifeBackend::new("https://api.numeraire.tech", "sk-test");
 }
 
 #[wasm_bindgen_test]
@@ -79,6 +79,6 @@ fn l402_client_with_lnd_rest() {
 fn l402_client_with_swissknife() {
     let budget = WasmBudgetConfig::unlimited();
     let client =
-        WasmL402Client::with_swissknife("https://app.numeraire.tech", "sk-test", budget, 100);
+        WasmL402Client::with_swissknife("https://api.numeraire.tech", "sk-test", budget, 100);
     assert!(client.is_ok());
 }

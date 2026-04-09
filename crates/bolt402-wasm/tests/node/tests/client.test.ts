@@ -82,7 +82,7 @@ describe("WasmL402Client", () => {
 
   it("constructs via withSwissKnife", () => {
     const client = WasmL402Client.withSwissKnife(
-      "https://app.numeraire.tech",
+      "https://api.numeraire.tech",
       "sk-test-key",
       WasmBudgetConfig.unlimited(),
       BigInt(100),

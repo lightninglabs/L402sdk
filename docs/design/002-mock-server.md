@@ -2,7 +2,7 @@
 
 **Status:** Proposed
 **Issue:** #3
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 
 ## Problem
 

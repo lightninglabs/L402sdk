@@ -1,6 +1,6 @@
 # bolt402-go
 
-Go bindings for the [bolt402](https://github.com/bitcoin-numeraire/bolt402) L402 client SDK.
+Go bindings for the [bolt402](https://github.com/lightninglabs/bolt402) L402 client SDK.
 
 bolt402 enables Go applications and AI agent frameworks to consume L402-gated APIs with automatic Lightning payments. The core engine is written in Rust; this package calls into it via CGo FFI.
 
@@ -39,7 +39,7 @@ import (
     "fmt"
     "log"
 
-    bolt402 "github.com/bitcoin-numeraire/bolt402/bindings/bolt402-go"
+    bolt402 "github.com/lightninglabs/bolt402/bindings/bolt402-go"
 )
 
 func main() {

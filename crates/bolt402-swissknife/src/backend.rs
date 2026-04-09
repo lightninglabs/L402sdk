@@ -75,7 +75,7 @@ impl From<SwissKnifeError> for ClientError {
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let backend = SwissKnifeBackend::new(
-///     "https://app.numeraire.tech",
+///     "https://api.numeraire.tech",
 ///     "your-api-key",
 /// );
 ///
@@ -104,7 +104,7 @@ impl SwissKnifeBackend {
     ///
     /// # Arguments
     ///
-    /// * `base_url` - Base URL of the SwissKnife instance (e.g. `https://app.numeraire.tech`)
+    /// * `base_url` - Base URL of the SwissKnife instance (e.g. `https://api.numeraire.tech`)
     /// * `api_key` - API key with `read:transaction` and `write:transaction` permissions
     pub fn new(base_url: &str, api_key: &str) -> Self {
         Self {
@@ -117,7 +117,7 @@ impl SwissKnifeBackend {
     /// Create a new `SwissKnifeBackend` using environment variables.
     ///
     /// Reads from:
-    /// - `SWISSKNIFE_API_URL` (default: `https://app.numeraire.tech`)
+    /// - `SWISSKNIFE_API_URL` (default: `https://api.numeraire.tech`)
     /// - `SWISSKNIFE_API_KEY` (required)
     ///
     /// # Errors
@@ -125,7 +125,7 @@ impl SwissKnifeBackend {
     /// Returns [`SwissKnifeError::Config`] if `SWISSKNIFE_API_KEY` is not set.
     pub fn from_env() -> Result<Self, SwissKnifeError> {
         let base_url = std::env::var("SWISSKNIFE_API_URL")
-            .unwrap_or_else(|_| "https://app.numeraire.tech".to_string());
+            .unwrap_or_else(|_| "https://api.numeraire.tech".to_string());
 
         let api_key = std::env::var("SWISSKNIFE_API_KEY")
             .map_err(|_| SwissKnifeError::Config("SWISSKNIFE_API_KEY is not set".to_string()))?;
@@ -386,7 +386,7 @@ mod tests {
         let result = SwissKnifeBackend::from_env();
         assert!(result.is_ok());
         let backend = result.unwrap();
-        assert_eq!(backend.base_url, "https://app.numeraire.tech");
+        assert_eq!(backend.base_url, "https://api.numeraire.tech");
 
         // Scenario 3: Custom URL
         unsafe {

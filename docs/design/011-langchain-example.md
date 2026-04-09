@@ -1,7 +1,7 @@
 # Design Doc 011: LangChain Integration Example
 
 **Issue:** #24
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-18
 
 ## Problem

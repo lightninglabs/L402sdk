@@ -10,7 +10,7 @@
 //! ## Setup
 //!
 //! Connecting to SwissKnife requires:
-//! - Base URL of the SwissKnife instance (e.g. `https://app.numeraire.tech`)
+//! - Base URL of the SwissKnife instance (e.g. `https://api.numeraire.tech`)
 //! - API key with `read:transaction` and `write:transaction` permissions
 //!
 //! ## Example
@@ -22,7 +22,7 @@
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Connect with explicit credentials
 //! let backend = SwissKnifeBackend::new(
-//!     "https://app.numeraire.tech",
+//!     "https://api.numeraire.tech",
 //!     "your-api-key",
 //! );
 //!

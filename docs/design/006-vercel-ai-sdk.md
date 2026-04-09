@@ -2,7 +2,7 @@
 
 **Status:** Superseded by `docs/design/045-wasm-bindings.md`
 **Issue:** #8
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 
 > Historical note: this document captures the original pure-TypeScript proposal. The implemented package no longer ships a native TS `L402Client` or pluggable TS backends. Today `bolt402-ai-sdk` is a thin wrapper around `bolt402-wasm`, and the current public entry point is `createBolt402Tools({ client })` with a `WasmL402Client`.
 

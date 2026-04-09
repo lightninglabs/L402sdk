@@ -2,7 +2,7 @@
 
 **Status:** Implemented (PR #6, merged 2026-03-14)
 **Issue:** #2
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 
 > Note: This design doc was written retroactively. Future features will have
 > design docs reviewed before implementation begins.

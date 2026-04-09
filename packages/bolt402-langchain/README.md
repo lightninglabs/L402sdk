@@ -1,6 +1,6 @@
 # bolt402-langchain
 
-LangChain integration for [bolt402](https://github.com/bitcoin-numeraire/bolt402) — enabling AI agents to autonomously pay for L402-gated APIs using Lightning Network payments.
+LangChain integration for [bolt402](https://github.com/lightninglabs/bolt402) — enabling AI agents to autonomously pay for L402-gated APIs using Lightning Network payments.
 
 ## Overview
 

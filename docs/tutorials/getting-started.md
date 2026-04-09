@@ -20,8 +20,8 @@ Add dependencies to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bolt402-core = { git = "https://github.com/bitcoin-numeraire/bolt402" }
-bolt402-mock = { git = "https://github.com/bitcoin-numeraire/bolt402" }
+bolt402-core = { git = "https://github.com/lightninglabs/bolt402" }
+bolt402-mock = { git = "https://github.com/lightninglabs/bolt402" }
 tokio = { version = "1", features = ["full"] }
 ```
 

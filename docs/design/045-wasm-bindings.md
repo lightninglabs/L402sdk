@@ -2,7 +2,7 @@
 
 **Issue:** #45
 **Date:** 2026-03-20
-**Author:** Toshi (maintainer)
+**Author:** Dario Anongba Varela
 **Status:** Implemented
 
 ## Problem

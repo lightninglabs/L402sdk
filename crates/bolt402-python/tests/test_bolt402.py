@@ -70,7 +70,7 @@ class TestSwissKnifeBackend:
     """Tests for the SwissKnifeBackend class."""
 
     def test_constructor(self):
-        backend = SwissKnifeBackend("https://app.numeraire.tech", "sk-test-key")
+        backend = SwissKnifeBackend("https://api.numeraire.tech", "sk-test-key")
         assert repr(backend) == "SwissKnifeBackend(...)"
 
 
@@ -96,13 +96,13 @@ class TestL402ClientConstructors:
         assert repr(client) == "L402Client(...)"
 
     def test_with_swissknife(self):
-        client = L402Client.with_swissknife("https://app.numeraire.tech", "sk-test")
+        client = L402Client.with_swissknife("https://api.numeraire.tech", "sk-test")
         assert repr(client) == "L402Client(...)"
 
     def test_with_swissknife_custom_budget(self):
         budget = Budget(daily_max=5000)
         client = L402Client.with_swissknife(
-            "https://app.numeraire.tech",
+            "https://api.numeraire.tech",
             "sk-test",
             budget=budget,
             max_fee_sats=200,
@@ -114,7 +114,7 @@ class TestL402ClientConstructors:
         # These should not raise (defaults applied internally)
         L402Client.with_lnd_rest("https://localhost:8080", "deadbeef")
         L402Client.with_cln_rest("https://localhost:3001", "rune")
-        L402Client.with_swissknife("https://app.numeraire.tech", "key")
+        L402Client.with_swissknife("https://api.numeraire.tech", "key")
 
 
 class TestExports:

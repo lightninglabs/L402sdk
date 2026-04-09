@@ -32,7 +32,7 @@ class TestCreateL402Client:
         """SwissKnife backend creates a working client."""
         client = create_l402_client(
             backend="swissknife",
-            url="https://app.numeraire.tech",
+            url="https://api.numeraire.tech",
             api_key="sk-test-key",
         )
         assert isinstance(client, L402Client)
@@ -79,7 +79,7 @@ class TestCreateL402Client:
         with pytest.raises(ValueError, match="api_key"):
             create_l402_client(
                 backend="swissknife",
-                url="https://app.numeraire.tech",
+                url="https://api.numeraire.tech",
             )
 
     def test_unsupported_backend_raises(self):

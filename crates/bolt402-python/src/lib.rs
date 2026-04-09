@@ -461,7 +461,7 @@ impl PyClnRestBackend {
 ///
 ///     from bolt402 import SwissKnifeBackend
 ///
-///     backend = SwissKnifeBackend("https://app.numeraire.tech", "sk-...")
+///     backend = SwissKnifeBackend("https://api.numeraire.tech", "sk-...")
 ///     balance = backend.get_balance()
 ///     print(f"Balance: {balance} sats")
 #[pyclass(name = "SwissKnifeBackend", from_py_object)]
@@ -475,7 +475,7 @@ impl PySwissKnifeBackend {
     /// Create a new SwissKnife backend.
     ///
     /// Args:
-    ///     url: SwissKnife API URL (e.g. ``https://app.numeraire.tech``)
+    ///     url: SwissKnife API URL (e.g. ``https://api.numeraire.tech``)
     ///     api_key: API key for authentication
     #[new]
     fn new(url: &str, api_key: &str) -> Self {
@@ -681,7 +681,7 @@ impl PyL402Client {
     /// Create an L402 client backed by SwissKnife REST.
     ///
     /// Args:
-    ///     url: SwissKnife API URL (e.g. ``https://app.numeraire.tech``)
+    ///     url: SwissKnife API URL (e.g. ``https://api.numeraire.tech``)
     ///     api_key: API key for authentication
     ///     budget: Optional budget configuration (default: unlimited)
     ///     max_fee_sats: Maximum routing fee in satoshis (default: 100)
@@ -925,7 +925,7 @@ mod tests {
 
     #[test]
     fn swissknife_backend_constructor() {
-        let backend = PySwissKnifeBackend::new("https://app.numeraire.tech", "sk-test");
+        let backend = PySwissKnifeBackend::new("https://api.numeraire.tech", "sk-test");
         assert_eq!(backend.__repr__(), "SwissKnifeBackend(...)");
     }
 
@@ -974,7 +974,7 @@ mod tests {
     #[test]
     fn client_with_swissknife_constructor() {
         let result =
-            PyL402Client::with_swissknife("https://app.numeraire.tech", "sk-test", None, 100);
+            PyL402Client::with_swissknife("https://api.numeraire.tech", "sk-test", None, 100);
         assert!(result.is_ok());
     }
 

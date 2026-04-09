@@ -1,7 +1,7 @@
 # Design Doc 008: Comprehensive Documentation and Tutorials
 
 **Issue:** #17
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-16
 
 ## Problem

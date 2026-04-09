@@ -277,7 +277,7 @@ impl WasmClnRestBackend {
 ///
 /// await init();
 ///
-/// const sk = new WasmSwissKnifeBackend("https://app.numeraire.tech", "sk-...");
+/// const sk = new WasmSwissKnifeBackend("https://api.numeraire.tech", "sk-...");
 /// const info = await sk.getInfo();
 /// ```
 #[wasm_bindgen]
@@ -291,7 +291,7 @@ impl WasmSwissKnifeBackend {
     ///
     /// # Arguments
     ///
-    /// * `url` - `SwissKnife` API URL (e.g. `https://app.numeraire.tech`)
+    /// * `url` - `SwissKnife` API URL (e.g. `https://api.numeraire.tech`)
     /// * `api_key` - API key for authentication
     #[wasm_bindgen(constructor)]
     pub fn new(url: &str, api_key: &str) -> Self {

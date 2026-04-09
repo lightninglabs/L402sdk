@@ -1,7 +1,7 @@
 # Design Doc: Go Bindings via CGo FFI
 
 **Issue:** #42
-**Author:** Toshi (maintainer)
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-20
 
 ## Problem

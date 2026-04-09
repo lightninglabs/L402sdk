@@ -29,8 +29,8 @@ classifiers = [
 keywords = ["l402", "lightning", "bitcoin", "payments", "ai-agents"]
 
 [project.urls]
-Homepage = "https://github.com/bitcoin-numeraire/bolt402"
-Repository = "https://github.com/bitcoin-numeraire/bolt402"
+Homepage = "https://github.com/lightninglabs/bolt402"
+Repository = "https://github.com/lightninglabs/bolt402"
 Documentation = "https://docs.rs/bolt402-core"
 
 [tool.maturin]

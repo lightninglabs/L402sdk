@@ -1,7 +1,7 @@
 # Design Doc 007: CONTRIBUTING.md, Issue Templates, and CHANGELOG.md
 
 **Issue:** #16
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-16
 
 ## Problem

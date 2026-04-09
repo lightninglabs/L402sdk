@@ -1,6 +1,6 @@
 # L402 Explorer
 
-Interactive demo showcasing [bolt402](https://github.com/bitcoin-numeraire/bolt402). Browse L402-gated APIs, then ask an AI agent to query them — bolt402 handles the Lightning payments automatically.
+Interactive demo showcasing [bolt402](https://github.com/lightninglabs/bolt402). Browse L402-gated APIs, then ask an AI agent to query them — bolt402 handles the Lightning payments automatically.
 
 ## What it does
 
@@ -99,7 +99,7 @@ If you have a [Numeraire SwissKnife](https://github.com/bitcoin-numeraire/swissk
 
 ```bash
 BACKEND_TYPE=swissknife
-SWISSKNIFE_URL=https://app.numeraire.tech
+SWISSKNIFE_URL=https://api.numeraire.tech
 SWISSKNIFE_API_KEY=your_api_key
 ```
 

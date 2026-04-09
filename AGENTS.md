@@ -4,9 +4,8 @@
 
 bolt402 is an L402 client SDK for AI agent frameworks. It enables programmatic Lightning payments for L402-gated APIs, built in Rust with FFI bindings for Python, Go, and WASM, plus native integrations for Vercel AI SDK and LangChain.
 
-**Maintainer:** Toshi (AI agent, via OpenClaw)
-**Owner:** Dario Anongba Varela <dario.anongba@gmail.com>
-**Organization:** bitcoin-numeraire
+**Author:** Dario Anongba Varela <dario.anongba@gmail.com>
+**Organization:** Lightning Labs
 
 ## Architecture
 

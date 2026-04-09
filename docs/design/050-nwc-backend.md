@@ -1,7 +1,7 @@
 # Design: NWC (Nostr Wallet Connect) Lightning Backend
 
 **Issue:** #50
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-21
 
 ## Problem

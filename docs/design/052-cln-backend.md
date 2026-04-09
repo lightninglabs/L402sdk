@@ -1,7 +1,7 @@
 # Design: CLN (Core Lightning) Backend Adapter
 
 **Issue:** #52
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-21
 **Status:** Implemented
 

@@ -14,7 +14,7 @@ Backends::
     cln = ClnRestBackend("https://localhost:3001", "rune_token...")
 
     # SwissKnife
-    sk = SwissKnifeBackend("https://app.numeraire.tech", "sk-...")
+    sk = SwissKnifeBackend("https://api.numeraire.tech", "sk-...")
 
 L402 Client::
 

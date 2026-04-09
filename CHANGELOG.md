@@ -54,5 +54,5 @@ Initial development release. Not yet published to crates.io or npm.
 - Comprehensive design documents for each feature (`docs/design/001` through `006`).
 - Dual license: MIT OR Apache-2.0.
 
-[Unreleased]: https://github.com/bitcoin-numeraire/bolt402/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/bitcoin-numeraire/bolt402/releases/tag/v0.1.0
+[Unreleased]: https://github.com/lightninglabs/bolt402/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/lightninglabs/bolt402/releases/tag/v0.1.0

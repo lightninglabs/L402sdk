@@ -1,7 +1,7 @@
 # Design: LangChain Python Integration Package
 
 **Issue:** #55
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-22
 **Status:** Implementing
 

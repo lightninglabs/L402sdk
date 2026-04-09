@@ -263,7 +263,7 @@ impl WasmL402Client {
     ///
     /// # Arguments
     ///
-    /// * `url` - `SwissKnife` API URL (e.g. `https://app.numeraire.tech`)
+    /// * `url` - `SwissKnife` API URL (e.g. `https://api.numeraire.tech`)
     /// * `api_key` - API key for authentication
     /// * `budget` - Budget configuration
     /// * `max_fee_sats` - Maximum routing fee in satoshis

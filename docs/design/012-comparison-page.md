@@ -1,7 +1,7 @@
 # 012: bolt402 vs lnget — Side-by-Side Comparison Page
 
 **Issue:** #31
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 **Date:** 2026-03-19
 
 ## Problem

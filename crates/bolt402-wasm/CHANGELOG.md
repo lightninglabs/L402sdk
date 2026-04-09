@@ -15,4 +15,4 @@ Initial release. The full bolt402 L402 client SDK compiled to WebAssembly via `w
 - Automatic L402 negotiation, token caching, and receipt tracking
 - Browser tests and Node.js integration tests
 
-[0.1.0]: https://github.com/bitcoin-numeraire/bolt402/releases/tag/bolt402-wasm-v0.1.0
+[0.1.0]: https://github.com/lightninglabs/bolt402/releases/tag/bolt402-wasm-v0.1.0

@@ -2,7 +2,7 @@
 
 **Status:** Implementing
 **Issue:** #7
-**Author:** Toshi
+**Author:** Dario Anongba Varela
 
 ## Problem
 
@@ -59,7 +59,7 @@ SwissKnifeBackend
    omits the API key to prevent accidental credential leakage in logs.
 
 7. **Environment variable config.** Supports `SWISSKNIFE_API_URL` (optional,
-   defaults to `https://app.numeraire.tech`) and `SWISSKNIFE_API_KEY` (required)
+   defaults to `https://api.numeraire.tech`) and `SWISSKNIFE_API_KEY` (required)
    via `from_env()` constructor.
 
 ### Error Handling

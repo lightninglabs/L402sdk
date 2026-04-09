@@ -15,7 +15,7 @@ Thanks for your interest in contributing to bolt402! This guide covers everythin
 
 ```bash
 # Clone the repository
-git clone https://github.com/bitcoin-numeraire/bolt402.git
+git clone https://github.com/lightninglabs/bolt402.git
 cd bolt402
 
 # Build all Rust crates
@@ -101,7 +101,7 @@ See [CLAUDE.md](CLAUDE.md) for the complete coding rules.
 
 ### 1. Open an Issue First
 
-Before starting work, [open an issue](https://github.com/bitcoin-numeraire/bolt402/issues/new/choose) to discuss the change. This avoids duplicate work and ensures the change aligns with the project direction.
+Before starting work, [open an issue](https://github.com/lightninglabs/bolt402/issues/new/choose) to discuss the change. This avoids duplicate work and ensures the change aligns with the project direction.
 
 ### 2. Create a Feature Branch
 
@@ -217,4 +217,4 @@ By contributing, you agree that your contributions will be licensed under the pr
 
 ## Questions?
 
-Open a [GitHub issue](https://github.com/bitcoin-numeraire/bolt402/issues) for bugs and feature requests. For general questions and discussion, start a conversation in the issue tracker.
+Open a [GitHub issue](https://github.com/lightninglabs/bolt402/issues) for bugs and feature requests. For general questions and discussion, start a conversation in the issue tracker.

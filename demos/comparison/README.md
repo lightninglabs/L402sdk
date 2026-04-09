@@ -1,6 +1,6 @@
 # bolt402 vs lnget — Side-by-Side Comparison
 
-A static comparison page showing the developer experience difference between [bolt402](https://github.com/bitcoin-numeraire/bolt402) (embedded SDK) and [lnget](https://github.com/lightninglabs/lnget) (CLI binary) for consuming L402-gated APIs.
+A static comparison page showing the developer experience difference between [bolt402](https://github.com/lightninglabs/bolt402) (embedded SDK) and [lnget](https://github.com/lightninglabs/lnget) (CLI binary) for consuming L402-gated APIs.
 
 ## What it shows
 
