@@ -1,6 +1,19 @@
-# bolt402-ai-sdk
+<div align="center">
+  <h1>bolt402-ai-sdk</h1>
 
-L402 Lightning payment tools for the [Vercel AI SDK](https://ai-sdk.dev/). Let AI agents autonomously pay for APIs with Bitcoin over the Lightning Network.
+  <p>
+    <strong>L402 Lightning payment tools for the Vercel AI SDK</strong>
+  </p>
+
+  <p>
+    <a href="https://www.npmjs.com/package/@lightninglabs/bolt402-ai"><img alt="npm" src="https://img.shields.io/npm/v/@lightninglabs/bolt402-ai.svg"/></a>
+    <a href="https://www.npmjs.com/package/@lightninglabs/bolt402-ai"><img alt="npm downloads" src="https://img.shields.io/npm/dm/@lightninglabs/bolt402-ai.svg"/></a>
+    <a href="https://github.com/bitcoin-numeraire/bolt402/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
+  </p>
+
+</div>
+
+Let AI agents autonomously pay for APIs with Bitcoin over the Lightning Network.
 
 All L402 protocol logic runs in Rust via WASM (`bolt402-wasm`). This package provides thin Vercel AI SDK tool wrappers.
 
@@ -13,24 +26,17 @@ bolt402-ai-sdk wraps this flow into [Vercel AI SDK tools](https://ai-sdk.dev/doc
 ## Install
 
 ```bash
-# In this repo
-cd packages/bolt402-ai-sdk
-yarn install
-
-# After npm publishing lands
-# npm install bolt402-ai-sdk bolt402-wasm ai zod
+yarn add @lightninglabs/bolt402-ai
 ```
+
+Peer dependencies: `ai` (>=6.0.0) and `zod` (^3.25 or ^4.1).
 
 ## Quick Start
 
 ```typescript
-import { createBolt402Tools } from 'bolt402-ai-sdk';
-import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
+import { createBolt402Tools, WasmL402Client, WasmBudgetConfig } from '@lightninglabs/bolt402-ai';
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-
-// Initialize WASM module
-await init();
 
 // Create L402 client backed by LND REST
 const client = WasmL402Client.withLndRest(
@@ -82,9 +88,7 @@ Backends are configured when creating the `WasmL402Client` (all in Rust/WASM):
 ### LND REST
 
 ```typescript
-import init, { WasmL402Client, WasmBudgetConfig } from 'bolt402-wasm';
-
-await init();
+import { WasmL402Client, WasmBudgetConfig } from '@lightninglabs/bolt402-ai';
 
 const client = WasmL402Client.withLndRest(
   'https://localhost:8080',

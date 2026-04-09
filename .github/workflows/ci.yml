@@ -187,3 +187,33 @@ jobs:
       - run: yarn install --no-immutable  # WASM pkg is rebuilt each CI run, hash always changes
       - run: yarn tsc --noEmit
       - run: yarn vitest run
+
+  # ============================================================
+  # Release orchestration (main branch only, after all tests pass)
+  # ============================================================
+
+  check-npm-releases:
+    name: Check NPM version bumps
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [fmt, clippy, test, doc, wasm, wasm-node-tests, typescript]
+    uses: ./.github/workflows/check-npm-releases.yml
+
+  publish-bolt402-wasm:
+    name: Publish bolt402-wasm
+    needs: check-npm-releases
+    if: needs.check-npm-releases.outputs.bolt402_wasm == 'true'
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-bolt402-wasm.yml
+    secrets: inherit
+
+  publish-bolt402-ai-sdk:
+    name: Publish bolt402-ai-sdk
+    needs: check-npm-releases
+    if: needs.check-npm-releases.outputs.bolt402_ai_sdk == 'true'
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-bolt402-ai-sdk.yml
+    secrets: inherit
