@@ -388,7 +388,7 @@ impl PyLndRestBackend {
 ///     backend = LndGrpcBackend("https://localhost:10009", "/path/to/tls.cert", "/path/to/admin.macaroon")
 ///     info = backend.get_info()
 ///     print(info.alias)
-#[pyclass(name = "LndGrpcBackend")]
+#[pyclass(name = "LndGrpcBackend", from_py_object)]
 #[derive(Debug, Clone)]
 struct PyLndGrpcBackend {
     inner: Arc<LndGrpcBackend>,
@@ -551,7 +551,7 @@ impl PyClnRestBackend {
 ///     )
 ///     info = backend.get_info()
 ///     print(info.alias)
-#[pyclass(name = "ClnGrpcBackend")]
+#[pyclass(name = "ClnGrpcBackend", from_py_object)]
 #[derive(Debug, Clone)]
 struct PyClnGrpcBackend {
     inner: Arc<ClnGrpcBackend>,
