@@ -24,18 +24,12 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           ref: ${{ github.sha }}
+      # setup-python only needed on macOS/Windows — on Linux, maturin-action
+      # runs inside a manylinux container with its own Python interpreters.
       - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5
+        if: runner.os != 'Linux'
         with:
           python-version: "3.12"
-      - name: Install protobuf compiler
-        if: runner.os == 'Linux'
-        run: sudo apt-get update -y && sudo apt-get install -y protobuf-compiler
-      - name: Install protobuf compiler (macOS)
-        if: runner.os == 'macOS'
-        run: brew install protobuf
-      - name: Install protobuf compiler (Windows)
-        if: runner.os == 'Windows'
-        run: choco install protoc -y
       - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.target }}
