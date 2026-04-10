@@ -1,7 +1,7 @@
 [package]
 name = "bolt402-python"
 description = "Python bindings for bolt402 L402 client SDK via PyO3"
-version = "0.1.0"
+version = "0.0.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
