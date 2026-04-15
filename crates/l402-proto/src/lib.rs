@@ -2,9 +2,12 @@
 //!
 //! L402 protocol types, challenge parsing, and token construction.
 //!
-//! This crate provides the foundational types for the L402 protocol:
-//! - [`L402Challenge`]: Parsed `WWW-Authenticate` header from a 402 response
-//! - [`L402Token`]: Authorization token (macaroon + preimage) for authenticated requests
+//! This crate provides the foundational types for L402 and MPP HTTP 402 flows:
+//! - [`L402Challenge`]: Parsed `WWW-Authenticate` header from an L402 response
+//! - [`L402Token`]: L402 authorization token (macaroon + preimage)
+//! - [`MppChallenge`]: Parsed `WWW-Authenticate: Payment` header from an MPP response
+//! - [`MppCredential`]: MPP `Authorization: Payment` credential
+//! - [`MppReceipt`]: Parsed `Payment-Receipt` header
 //! - [`L402Error`]: Protocol-level errors
 //!
 //! ## L402 Protocol Overview
@@ -45,6 +48,9 @@ pub mod client_error;
 /// Protocol-level error types.
 pub mod error;
 
+/// MPP challenge, credential, and receipt parsing.
+pub mod mpp;
+
 /// Port definitions (traits) for hexagonal architecture.
 pub mod port;
 
@@ -55,5 +61,9 @@ pub use bolt11::{InvoiceAmount, decode_bolt11_amount};
 pub use challenge::L402Challenge;
 pub use client_error::ClientError;
 pub use error::L402Error;
+pub use mpp::{
+    MppChallenge, MppCredential, MppCredentialPayload, MppLightningChargeRequest,
+    MppLightningMethodDetails, MppReceipt, MppSettlement,
+};
 pub use port::{LnBackend, NodeInfo, PaymentResult, TokenStore};
 pub use token::L402Token;

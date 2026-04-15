@@ -1,7 +1,7 @@
 """Tests for L402sdk Python bindings.
 
-Run with: pytest tests/test_L402sdk.py -v
-Requires: pip install l402 (or maturin develop)
+Run with: pytest tests/test_bolt402.py -v
+Requires: pip install l402sdk (or maturin develop)
 """
 
 import l402
@@ -135,7 +135,7 @@ class TestExports:
         assert SwissKnifeBackend is not None
 
     def test_version(self):
-        assert L402sdk.__version__  # non-empty version string
+        assert l402.__version__  # non-empty version string
 
     def test_all_exports(self):
         expected = {
@@ -151,4 +151,4 @@ class TestExports:
             "Receipt",
             "SwissKnifeBackend",
         }
-        assert set(L402sdk.__all__) == expected
+        assert set(l402.__all__) == expected
