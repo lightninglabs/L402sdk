@@ -77,4 +77,4 @@ __all__ = [
 
 from importlib.metadata import version as _version
 
-__version__ = _version("l402")
+__version__ = _version("l402sdk")

@@ -3,7 +3,7 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "l402"
+name = "l402sdk"
 version = "0.1.0"
 description = "L402 client SDK for AI agent frameworks — pay for APIs with Lightning"
 readme = "README.md"
