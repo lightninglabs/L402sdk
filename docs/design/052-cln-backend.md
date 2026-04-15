@@ -7,15 +7,15 @@
 
 ## Problem
 
-bolt402 currently supports LND, NWC, and SwissKnife as Lightning backends. Core Lightning (CLN) is the second most widely deployed Lightning implementation, maintained by Blockstream. Users running CLN nodes need first-class support for both CLN's native gRPC interface and the REST API used in browser and edge environments.
+L402sdk currently supports LND, NWC, and SwissKnife as Lightning backends. Core Lightning (CLN) is the second most widely deployed Lightning implementation, maintained by Blockstream. Users running CLN nodes need first-class support for both CLN's native gRPC interface and the REST API used in browser and edge environments.
 
 ## Proposed Design
 
-### Crate: `bolt402-cln`
+### Crate: `l402-cln`
 
-Follows the same adapter pattern as `bolt402-lnd`:
+Follows the same adapter pattern as `l402-lnd`:
 
-- Implements `LnBackend` trait from `bolt402-proto`
+- Implements `LnBackend` trait from `l402-proto`
 - Uses CLN's gRPC interface via `tonic` with vendored proto files
 - Uses CLN REST API with rune authentication
 - Supports mTLS authentication for gRPC and rune authentication for REST
@@ -24,9 +24,9 @@ Follows the same adapter pattern as `bolt402-lnd`:
 ### Architecture
 
 ```
-bolt402-proto (LnBackend trait)
+l402-proto (LnBackend trait)
       ↑
-bolt402-cln
+l402-cln
   ├── ClnGrpcBackend ──► CLN gRPC API
   └── ClnRestBackend ──► CLN REST API
 ```
@@ -51,7 +51,7 @@ The REST backend maps to the same CLN operations through REST endpoints:
 
 1. **`Pay` RPC over `SendPay`**: CLN's `Pay` is the high-level payment command (handles pathfinding, retries). `SendPay` is low-level and requires manual route construction. `Pay` is the right choice for an SDK.
 
-2. **Vendored proto files**: Like `bolt402-lnd`, we vendor `node.proto` and `primitives.proto` from the CLN repository. This avoids depending on the `cln-grpc` crate (which pulls in the entire CLN dependency tree) and gives us control over proto compatibility.
+2. **Vendored proto files**: Like `l402-lnd`, we vendor `node.proto` and `primitives.proto` from the CLN repository. This avoids depending on the `cln-grpc` crate (which pulls in the entire CLN dependency tree) and gives us control over proto compatibility.
 
 3. **mTLS authentication (gRPC)**: CLN's gRPC uses mutual TLS. The client needs:
    - CA certificate (`ca.pem`) — to verify the server
@@ -70,7 +70,7 @@ The REST backend maps to the same CLN operations through REST endpoints:
 ### API Sketch
 
 ```rust
-use bolt402_cln::{ClnGrpcBackend, ClnRestBackend};
+use l402_cln::{ClnGrpcBackend, ClnRestBackend};
 
 // gRPC with mTLS
 let grpc = ClnGrpcBackend::connect(
@@ -120,7 +120,7 @@ Maps to `ClientError` via `From<ClnError>`:
 ### File Structure
 
 ```
-crates/bolt402-cln/
+crates/l402-cln/
 ├── Cargo.toml
 ├── build.rs           # tonic-build for CLN protos
 ├── proto/

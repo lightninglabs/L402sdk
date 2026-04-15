@@ -6,16 +6,16 @@
 
 ## Problem
 
-bolt402 currently supports two Lightning backends: LND (gRPC) and SwissKnife (REST). Both require direct access to a Lightning node or service. Many developers and AI agents don't run their own nodes — they use hosted wallets that support NWC (Nostr Wallet Connect, NIP-47).
+L402sdk currently supports two Lightning backends: LND (gRPC) and SwissKnife (REST). Both require direct access to a Lightning node or service. Many developers and AI agents don't run their own nodes — they use hosted wallets that support NWC (Nostr Wallet Connect, NIP-47).
 
 Adding an NWC backend lowers the barrier to entry dramatically: users just need a `nostr+walletconnect://` connection string from any compatible wallet (Alby Hub, Mutiny, LNbits, Phoenixd, etc.).
 
 ## Proposed Design
 
-### New Crate: `bolt402-nwc`
+### New Crate: `l402-nwc`
 
 ```
-crates/bolt402-nwc/
+crates/l402-nwc/
 ├── Cargo.toml
 └── src/
     ├── lib.rs        # Module root, re-exports
@@ -27,17 +27,17 @@ crates/bolt402-nwc/
 ### Dependency Graph
 
 ```
-bolt402-proto  (no internal deps)
+l402-proto  (no internal deps)
      ↑
-bolt402-core   (depends on proto)
+l402-core   (depends on proto)
      ↑
-bolt402-nwc    (depends on core: implements LnBackend via NIP-47)
+l402-nwc    (depends on core: implements LnBackend via NIP-47)
 ```
 
 ### API Sketch
 
 ```rust
-use bolt402_nwc::NwcBackend;
+use l402_nwc::NwcBackend;
 
 // From a NWC connection URI
 let backend = NwcBackend::new("nostr+walletconnect://...").await?;
@@ -75,7 +75,7 @@ The URI contains:
 ### Communication Flow
 
 ```
-Agent (bolt402-nwc)                     Nostr Relay                     Wallet
+Agent (l402-nwc)                     Nostr Relay                     Wallet
      │                                       │                            │
      │ ─── Encrypted NIP-47 request ────────>│                            │
      │     (kind: 23194)                     │ ─── Forward ──────────────>│
@@ -135,7 +135,7 @@ pub enum NwcError {
 
 ### Workspace Changes
 
-- Add `bolt402-nwc` to `Cargo.toml` workspace members and default-members
+- Add `l402-nwc` to `Cargo.toml` workspace members and default-members
 - Add `nostr-sdk` to workspace dependencies
 - Update README.md package table
 - Update AGENTS.md architecture diagram

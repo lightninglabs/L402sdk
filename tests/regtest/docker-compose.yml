@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # LND Alice: PAYER node. bolt402 client connects here (gRPC + REST).
+  # LND Alice: PAYER node. L402sdk client connects here (gRPC + REST).
   lnd-alice:
     image: lightninglabs/lnd:v0.20.1-beta
     restart: unless-stopped
@@ -63,7 +63,7 @@ services:
       timeout: 5s
       retries: 30
 
-  # CLN: PAYER node. For bolt402-cln backend tests.
+  # CLN: PAYER node. For l402-cln backend tests.
   cln:
     image: elementsproject/lightningd:v25.12.1
     restart: unless-stopped
@@ -125,7 +125,7 @@ services:
 
   # SwissKnife: Numeraire's custodial Lightning wallet.
   # Connected to CLN via clnrest as the Lightning provider.
-  # Provides REST API for bolt402-swissknife backend tests.
+  # Provides REST API for l402-swissknife backend tests.
   swissknife:
     image: bitcoinnumeraire/swissknife-server:0.1.7
     restart: unless-stopped
@@ -134,7 +134,7 @@ services:
         condition: service_healthy
     environment:
       RUN_MODE: production
-      SWISSKNIFE_JWT__SECRET: "bolt402-regtest-jwt-secret-do-not-use-in-production"
+      SWISSKNIFE_JWT__SECRET: "l402-regtest-jwt-secret-do-not-use-in-production"
       SWISSKNIFE_CLN_REST_CONFIG__RUNE: "${CLN_RUNE:-}"
     volumes:
       - ./swissknife/regtest.toml:/config/production.toml:ro

@@ -1,0 +1,21 @@
+[package]
+name = "l402-proto"
+description = "L402 protocol types, macaroon handling, and shared types for Lightning-gated HTTP"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories = ["authentication", "cryptography", "web-programming"]
+keywords = ["l402", "lightning", "macaroon", "bitcoin", "protocol"]
+
+[dependencies]
+async-trait = { workspace = true }
+base64 = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

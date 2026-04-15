@@ -1,5 +1,5 @@
 /**
- * AI Agent Example — bolt402-ai-sdk + Vercel AI SDK
+ * AI Agent Example — l402-ai-sdk + Vercel AI SDK
  *
  * Demonstrates an AI agent that can autonomously pay for L402-gated APIs.
  *
@@ -9,10 +9,10 @@
 
 import { generateText, stepCountIs } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { createBolt402Tools, WasmBudgetConfig, WasmL402Client } from '@lightninglabs/bolt402-ai';
+import { createL402Tools, WasmBudgetConfig, WasmL402Client } from '@lightninglabs/l402-ai';
 
 async function main() {
-  console.log('bolt402 AI Agent Example');
+  console.log('L402sdk AI Agent Example');
   console.log('========================\n');
 
   // Step 1: Configure the Lightning client
@@ -24,7 +24,7 @@ async function main() {
   );
 
   // Step 2: Create tools with the configured client
-  const tools = createBolt402Tools({ client });
+  const tools = createL402Tools({ client });
 
   console.log('Lightning client configured');
   console.log('Budget: max 1,000 sats/request, 10,000 sats/day\n');

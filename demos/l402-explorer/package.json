@@ -15,7 +15,7 @@
     "@ai-sdk/openai": "3.0.41",
     "@ai-sdk/react": "3.0.118",
     "@ai-sdk/xai": "3.0.67",
-    "@lightninglabs/bolt402-ai": "^0.1.0",
+    "@lightninglabs/l402-ai": "^0.1.0",
     "@tailwindcss/typography": "^0.5.19",
     "ai": "6.0.116",
     "next": "16.2.0",

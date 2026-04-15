@@ -118,7 +118,7 @@ export default function ChatPanel({ services }: ChatPanelProps) {
         <span className="text-base">🤖</span>
         <div>
           <h3 className="text-sm font-semibold text-zinc-100">AI Research Assistant</h3>
-          <p className="text-[10px] text-zinc-500">Powered by bolt402 &middot; Pays for APIs with Lightning</p>
+          <p className="text-[10px] text-zinc-500">Powered by L402sdk &middot; Pays for APIs with Lightning</p>
         </div>
       </div>
 

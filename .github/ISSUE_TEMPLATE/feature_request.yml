@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a new feature or improvement for bolt402
+description: Suggest a new feature or improvement for L402sdk
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
@@ -38,12 +38,12 @@ body:
       description: Which part of the project does this affect?
       multiple: true
       options:
-        - bolt402-proto (protocol types)
-        - bolt402-core (client engine)
-        - bolt402-lnd (LND backend)
-        - bolt402-swissknife (SwissKnife backend)
-        - bolt402-mock (mock server)
-        - bolt402-ai-sdk (Vercel AI SDK)
+        - l402-proto (protocol types)
+        - l402-core (client engine)
+        - l402-lnd (LND backend)
+        - l402-swissknife (SwissKnife backend)
+        - l402-mock (mock server)
+        - l402-ai-sdk (Vercel AI SDK)
         - New crate / package
         - Documentation
         - CI / Tooling

@@ -1,4 +1,4 @@
-# Aperture configuration for bolt402 regtest integration tests.
+# Aperture configuration for L402sdk regtest integration tests.
 #
 # Aperture acts as an L402 reverse proxy in front of the backend server.
 # It uses lnd-bob (receiver) to create invoices and verify payments.

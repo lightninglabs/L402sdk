@@ -31,7 +31,7 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo clippy --workspace --exclude bolt402-python --exclude bolt402-wasm --exclude bolt402-regtest --all-targets -- -D warnings
+      - run: cargo clippy --workspace --exclude l402-python --exclude l402-wasm --exclude l402-regtest --all-targets -- -D warnings
 
   test:
     name: Tests
@@ -41,7 +41,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo test --workspace --exclude bolt402-python --exclude bolt402-wasm --exclude bolt402-regtest
+      - run: cargo test --workspace --exclude l402-python --exclude l402-wasm --exclude l402-regtest
 
   doc:
     name: Documentation
@@ -53,14 +53,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo doc --workspace --exclude bolt402-python --exclude bolt402-wasm --exclude bolt402-regtest --no-deps
+      - run: cargo doc --workspace --exclude l402-python --exclude l402-wasm --exclude l402-regtest --no-deps
 
   python:
     name: Python Bindings
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: crates/bolt402-python
+        working-directory: crates/l402-python
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: dtolnay/rust-toolchain@stable
@@ -86,13 +86,13 @@ jobs:
           go-version: '1.21'
       - run: sudo apt-get install -y protobuf-compiler
       - name: Build FFI static library
-        run: cargo build -p bolt402-ffi --release
+        run: cargo build -p l402-ffi --release
       - name: Copy library to Go bindings
         run: |
-          mkdir -p bindings/bolt402-go/lib
-          cp target/release/libbolt402_ffi.a bindings/bolt402-go/lib/
+          mkdir -p bindings/l402-go/lib
+          cp target/release/libl402_ffi.a bindings/l402-go/lib/
       - name: Run Go tests
-        working-directory: bindings/bolt402-go
+        working-directory: bindings/l402-go
         run: go test -v ./...
 
   wasm:
@@ -107,11 +107,11 @@ jobs:
       - name: Install wasm-pack
         run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
       - name: Build WASM (web target)
-        run: wasm-pack build crates/bolt402-wasm --target web
+        run: wasm-pack build crates/l402-wasm --target web
       - name: Run native unit tests
-        run: cargo test -p bolt402-wasm
+        run: cargo test -p l402-wasm
       - name: Run WASM browser tests
-        run: wasm-pack test --headless --chrome crates/bolt402-wasm
+        run: wasm-pack test --headless --chrome crates/l402-wasm
 
   langchain:
     name: LangChain Integration
@@ -125,17 +125,17 @@ jobs:
           python-version: '3.12'
       - run: sudo apt-get install -y protobuf-compiler
       - name: Build Python bindings
-        working-directory: crates/bolt402-python
+        working-directory: crates/l402-python
         run: |
           python -m venv .venv
           .venv/bin/pip install maturin pytest
           .venv/bin/maturin develop
-      - name: Install bolt402-langchain
-        working-directory: crates/bolt402-python
-        run: .venv/bin/pip install -e ../../packages/bolt402-langchain
+      - name: Install l402-langchain
+        working-directory: crates/l402-python
+        run: .venv/bin/pip install -e ../../packages/l402-langchain
       - name: Run LangChain tests
-        working-directory: crates/bolt402-python
-        run: .venv/bin/pytest ../../packages/bolt402-langchain/tests/ -v
+        working-directory: crates/l402-python
+        run: .venv/bin/pytest ../../packages/l402-langchain/tests/ -v
 
   wasm-node-tests:
     name: WASM Node.js Tests
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: crates/bolt402-wasm/tests/node
+        working-directory: crates/l402-wasm/tests/node
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: dtolnay/rust-toolchain@stable
@@ -153,7 +153,7 @@ jobs:
       - name: Install wasm-pack
         run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
       - name: Build WASM package
-        run: wasm-pack build crates/bolt402-wasm --target web
+        run: wasm-pack build crates/l402-wasm --target web
         working-directory: ${{ github.workspace }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -163,12 +163,12 @@ jobs:
       - run: yarn vitest run
 
   typescript:
-    name: TypeScript (bolt402-ai-sdk)
+    name: TypeScript (l402-ai-sdk)
     needs: wasm
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/bolt402-ai-sdk
+        working-directory: packages/l402-ai-sdk
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: dtolnay/rust-toolchain@stable
@@ -178,7 +178,7 @@ jobs:
       - name: Install wasm-pack
         run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
       - name: Build WASM package
-        run: wasm-pack build crates/bolt402-wasm --target web
+        run: wasm-pack build crates/l402-wasm --target web
         working-directory: .
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -198,24 +198,24 @@ jobs:
     needs: [fmt, clippy, test, doc, wasm, wasm-node-tests, typescript]
     uses: ./.github/workflows/check-npm-releases.yml
 
-  publish-bolt402-wasm:
-    name: Publish bolt402-wasm
+  publish-l402-wasm:
+    name: Publish l402-wasm
     needs: check-npm-releases
-    if: needs.check-npm-releases.outputs.bolt402_wasm == 'true'
+    if: needs.check-npm-releases.outputs.l402_wasm == 'true'
     permissions:
       contents: write
       id-token: write
-    uses: ./.github/workflows/publish-bolt402-wasm.yml
+    uses: ./.github/workflows/publish-l402-wasm.yml
     secrets: inherit
 
-  publish-bolt402-ai-sdk:
-    name: Publish bolt402-ai-sdk
+  publish-l402-ai-sdk:
+    name: Publish l402-ai-sdk
     needs: check-npm-releases
-    if: needs.check-npm-releases.outputs.bolt402_ai_sdk == 'true'
+    if: needs.check-npm-releases.outputs.l402_ai_sdk == 'true'
     permissions:
       contents: write
       id-token: write
-    uses: ./.github/workflows/publish-bolt402-ai-sdk.yml
+    uses: ./.github/workflows/publish-l402-ai-sdk.yml
     secrets: inherit
 
   # --- PyPI releases ---
@@ -226,16 +226,16 @@ jobs:
     needs: [fmt, clippy, test, doc, python, langchain]
     uses: ./.github/workflows/check-pypi-releases.yml
 
-  publish-bolt402-python:
-    name: Publish bolt402 (Python)
+  publish-l402-python:
+    name: Publish L402sdk (Python)
     needs: check-pypi-releases
-    if: needs.check-pypi-releases.outputs.bolt402_python == 'true'
-    uses: ./.github/workflows/publish-bolt402-python.yml
+    if: needs.check-pypi-releases.outputs.l402_python == 'true'
+    uses: ./.github/workflows/publish-l402-python.yml
     secrets: inherit
 
-  publish-bolt402-langchain:
-    name: Publish bolt402-langchain
+  publish-l402-langchain:
+    name: Publish l402-langchain
     needs: check-pypi-releases
-    if: needs.check-pypi-releases.outputs.bolt402_langchain == 'true'
-    uses: ./.github/workflows/publish-bolt402-langchain.yml
+    if: needs.check-pypi-releases.outputs.l402_langchain == 'true'
+    uses: ./.github/workflows/publish-l402-langchain.yml
     secrets: inherit

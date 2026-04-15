@@ -1,6 +1,6 @@
-"""bolt402 + LangChain Integration Example.
+"""L402sdk + LangChain Integration Example.
 
-Demonstrates how to create a LangChain tool that uses bolt402 to access
+Demonstrates how to create a LangChain tool that uses L402sdk to access
 L402-gated APIs with automatic Lightning payments.
 
 This example runs fully self-contained using mock infrastructure.
@@ -20,23 +20,23 @@ from typing import ClassVar
 from langchain_core.tools import BaseTool
 from pydantic import ConfigDict
 
-from bolt402 import Budget, L402Client, L402Response, MockL402Server, create_mock_client
+from l402 import Budget, L402Client, L402Response, MockL402Server, create_mock_client
 
 
 # ---------------------------------------------------------------------------
-# L402FetchTool — LangChain tool wrapping bolt402
+# L402FetchTool — LangChain tool wrapping L402sdk
 # ---------------------------------------------------------------------------
 
 
 class L402FetchTool(BaseTool):
     """LangChain tool that fetches data from L402-gated APIs.
 
-    Wraps a ``bolt402.L402Client`` to handle the full L402 payment flow
+    Wraps a ``L402sdk.L402Client`` to handle the full L402 payment flow
     transparently: HTTP 402 → parse challenge → pay Lightning invoice →
     retry with token → return data.
 
     The tool is designed to be given to a LangChain agent so the LLM can
-    decide when and what to fetch, while bolt402 handles payment logic.
+    decide when and what to fetch, while L402sdk handles payment logic.
 
     Example::
 
@@ -91,7 +91,7 @@ class L402FetchTool(BaseTool):
 
 
 class L402CostTool(BaseTool):
-    """LangChain tool that reports the total amount spent via bolt402.
+    """LangChain tool that reports the total amount spent via L402sdk.
 
     Useful for agents that need to be cost-aware or report spending to users.
     """
@@ -132,12 +132,12 @@ def run_mock_demo() -> None:
 
     Demonstrates:
     - Creating a mock L402 server with priced endpoints
-    - Wrapping bolt402 in LangChain tools
+    - Wrapping L402sdk in LangChain tools
     - Invoking tools the same way a LangChain agent would
     - Budget enforcement
     - Cost tracking via receipts
     """
-    print("bolt402 + LangChain Example")
+    print("L402sdk + LangChain Example")
     print("=" * 40)
     print()
 
@@ -222,7 +222,7 @@ def run_agent_example() -> None:
         export OPENAI_API_KEY=sk-...
 
     The agent will autonomously decide which tools to call based on the
-    prompt, using bolt402 to pay for L402-gated APIs.
+    prompt, using L402sdk to pay for L402-gated APIs.
     """
     try:
         from langchain_openai import ChatOpenAI

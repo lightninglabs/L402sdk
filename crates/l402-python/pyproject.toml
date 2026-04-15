@@ -1,0 +1,42 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "l402"
+version = "0.1.0"
+description = "L402 client SDK for AI agent frameworks — pay for APIs with Lightning"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+    { name = "Dario Anongba Varela", email = "dario.anongba@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Libraries",
+]
+keywords = ["l402", "lightning", "bitcoin", "payments", "ai-agents"]
+
+[project.urls]
+Homepage = "https://github.com/lightninglabs/L402sdk"
+Repository = "https://github.com/lightninglabs/L402sdk"
+Documentation = "https://docs.rs/l402-core"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "l402._l402"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

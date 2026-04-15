@@ -1,6 +1,6 @@
 # AI Agent Example
 
-Demonstrates an AI agent that autonomously pays for L402-gated APIs using the Vercel AI SDK and bolt402-ai-sdk.
+Demonstrates an AI agent that autonomously pays for L402-gated APIs using the Vercel AI SDK and l402-ai-sdk.
 
 ## Prerequisites
 
@@ -46,7 +46,7 @@ Vercel AI SDK (generateText)
     ↓
 AI Model (GPT-4o)
     ↓ tool call
-l402_fetch tool (bolt402-ai-sdk)
+l402_fetch tool (l402-ai-sdk)
     ↓
 L402Client → 402 → pay invoice → retry → 200
     ↓

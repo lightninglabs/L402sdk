@@ -6,15 +6,15 @@
 
 ## Problem
 
-bolt402 needs a real Lightning backend to make actual payments. LND is the most
+L402sdk needs a real Lightning backend to make actual payments. LND is the most
 widely deployed Lightning implementation and the one used by Lightning Labs
 (Dario's employer). It's the natural first backend.
 
 ## Design
 
-### Crate: bolt402-lnd
+### Crate: l402-lnd
 
-Implements `LnBackend` from `bolt402-proto` using LND's gRPC API, and now also ships a feature-gated REST adapter for WASM/browser environments.
+Implements `LnBackend` from `l402-proto` using LND's gRPC API, and now also ships a feature-gated REST adapter for WASM/browser environments.
 
 ### Architecture
 

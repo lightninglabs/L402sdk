@@ -6,7 +6,7 @@
 
 ## Problem
 
-LangChain is the most popular Python AI agent framework (~200M monthly PyPI downloads). bolt402 already has Python bindings (`bolt402-python` via PyO3), but no example showing how to use them with LangChain agents. A working LangChain integration is the highest-impact way to demonstrate bolt402 adoption in the AI agent ecosystem.
+LangChain is the most popular Python AI agent framework (~200M monthly PyPI downloads). L402sdk already has Python bindings (`l402-python` via PyO3), but no example showing how to use them with LangChain agents. A working LangChain integration is the highest-impact way to demonstrate L402sdk adoption in the AI agent ecosystem.
 
 ## Proposed Design
 
@@ -22,16 +22,16 @@ examples/
 
 ### Core Component: L402FetchTool
 
-A custom LangChain `BaseTool` that wraps `bolt402-python`. The tool:
+A custom LangChain `BaseTool` that wraps `l402-python`. The tool:
 
 1. Receives a URL from the LangChain agent
-2. Uses `bolt402.L402Client.get()` to make the request
+2. Uses `L402sdk.L402Client.get()` to make the request
 3. Handles the full L402 flow transparently (402 → pay → retry → 200)
 4. Returns the response body (or error) back to the agent
 
 ```python
 from langchain_core.tools import BaseTool
-from bolt402 import create_mock_client, Budget
+from l402 import create_mock_client, Budget
 
 class L402FetchTool(BaseTool):
     name: str = "l402_fetch"
@@ -48,12 +48,12 @@ class L402FetchTool(BaseTool):
 2. Build an `L402FetchTool` wrapping the mock client
 3. Create a LangChain `ChatOpenAI` agent with the tool
 4. Send a prompt asking the agent to fetch paid data
-5. The agent calls `l402_fetch`, bolt402 handles payment, agent gets data
+5. The agent calls `l402_fetch`, L402sdk handles payment, agent gets data
 
 ### Self-Contained Demo Mode
 
 Since the example should work without real Lightning infrastructure or an OpenAI key, the main path uses:
-- `bolt402.create_mock_client()` for the payment backend
+- `L402sdk.create_mock_client()` for the payment backend
 - Direct tool invocation (no LLM call required) to demonstrate the flow
 - An optional section showing how to wire it into a full LangChain agent with an LLM
 
@@ -61,7 +61,7 @@ Since the example should work without real Lightning infrastructure or an OpenAI
 
 ```python
 # Self-contained demo (no API keys needed)
-from bolt402 import create_mock_client, Budget
+from l402 import create_mock_client, Budget
 
 client, server = create_mock_client(
     {"/api/weather": 50, "/api/market-data": 200},
@@ -87,18 +87,18 @@ response = executor.invoke({"input": "Fetch the weather data and market data"})
 
 2. **Mock-first, real-optional**: The example runs fully self-contained with mocks. A clearly documented section shows how to swap in a real backend.
 
-3. **No new crate/package**: This is an example, not a separate `bolt402-langchain` package. That can be a future issue if demand warrants it.
+3. **No new crate/package**: This is an example, not a separate `l402-langchain` package. That can be a future issue if demand warrants it.
 
-4. **requirements.txt over pyproject.toml**: Simpler for an example directory. Lists `langchain`, `langchain-openai`, `bolt402`.
+4. **requirements.txt over pyproject.toml**: Simpler for an example directory. Lists `langchain`, `langchain-openai`, `L402sdk`.
 
 ## Alternatives Considered
 
-- **Full `bolt402-langchain` adapter package**: Overkill for an initial example. Create a separate issue if there is demand.
+- **Full `l402-langchain` adapter package**: Overkill for an initial example. Create a separate issue if there is demand.
 - **Notebook (`.ipynb`)**: More interactive but harder to test in CI. Markdown README with code blocks is simpler.
 - **CrewAI/AutoGen examples too**: Out of scope per the issue. Separate issues exist for those.
 
 ## Testing Plan
 
 1. The example script must run successfully with `python langchain_example.py` using only mock infrastructure (no API keys).
-2. Verify `bolt402-python` builds and the example imports work within CI (optional, could be a follow-up).
+2. Verify `l402-python` builds and the example imports work within CI (optional, could be a follow-up).
 3. Manual test: run the example and confirm the output matches expected flow.

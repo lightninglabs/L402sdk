@@ -3,7 +3,7 @@
 //! Validates that L402 tokens are correctly cached and reused on subsequent
 //! requests, avoiding unnecessary re-payment.
 
-use bolt402_core::cache::InMemoryTokenStore;
+use l402_core::cache::InMemoryTokenStore;
 use regtest_helpers::*;
 
 #[tokio::test]

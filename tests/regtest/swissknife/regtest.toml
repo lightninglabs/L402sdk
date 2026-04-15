@@ -12,4 +12,4 @@ accept_invalid_certs = true
 accept_invalid_hostnames = true
 
 [jwt]
-secret = "bolt402-regtest-jwt-secret-do-not-use-in-production"
+secret = "l402-regtest-jwt-secret-do-not-use-in-production"

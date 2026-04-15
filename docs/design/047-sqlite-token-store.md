@@ -17,10 +17,10 @@ A persistent store is listed in the original proposal as a Month 5 deliverable.
 
 ## Proposed Design
 
-### New Crate: `bolt402-sqlite`
+### New Crate: `l402-sqlite`
 
-A dedicated crate rather than a feature flag in `bolt402-core` because:
-- Keeps `bolt402-core` dependency-free (no `rusqlite` in the core)
+A dedicated crate rather than a feature flag in `l402-core` because:
+- Keeps `l402-core` dependency-free (no `rusqlite` in the core)
 - Follows the hexagonal architecture: `SqliteTokenStore` is an adapter
 - Users who don't need persistence don't pull in SQLite
 
@@ -44,7 +44,7 @@ Single table, `endpoint` as primary key (matching `InMemoryTokenStore` semantics
 ### API
 
 ```rust
-use bolt402_proto::port::TokenStore;
+use l402_proto::port::TokenStore;
 
 pub struct SqliteTokenStore { /* ... */ }
 
@@ -136,7 +136,7 @@ fn migrate(conn: &Connection) -> Result<(), SqliteStoreError> {
 
 ## Alternatives Considered
 
-1. **Feature flag on `bolt402-core`**: Would keep it in one crate but forces `rusqlite` as an optional dependency on the core. Violates clean architecture — the core shouldn't know about specific storage technologies.
+1. **Feature flag on `l402-core`**: Would keep it in one crate but forces `rusqlite` as an optional dependency on the core. Violates clean architecture — the core shouldn't know about specific storage technologies.
 
 2. **`sled` embedded DB**: Faster for some patterns but less mature, no SQL, harder to inspect manually. SQLite is battle-tested and inspectable with standard tools.
 
@@ -144,7 +144,7 @@ fn migrate(conn: &Connection) -> Result<(), SqliteStoreError> {
 
 ## Testing Plan
 
-1. **Unit tests** (in `bolt402-sqlite`):
+1. **Unit tests** (in `l402-sqlite`):
    - `new` creates DB and schema
    - `in_memory` works for tests
    - All `TokenStore` trait methods (put/get/remove/clear)
@@ -159,12 +159,12 @@ fn migrate(conn: &Connection) -> Result<(), SqliteStoreError> {
    - No deadlocks under contention
 
 3. **Integration tests** (in `tests/`):
-   - `L402Client` with `SqliteTokenStore` against `bolt402-mock` server
+   - `L402Client` with `SqliteTokenStore` against `l402-mock` server
    - Token survives "restart" (drop client, recreate with same DB path)
 
 ## Dependencies
 
 - `rusqlite` (with `bundled` feature for zero-system-dependency builds)
-- `bolt402-proto` (for `TokenStore` trait and `ClientError`)
+- `l402-proto` (for `TokenStore` trait and `ClientError`)
 - `tokio` (for `spawn_blocking`)
 - `thiserror` (for error types)

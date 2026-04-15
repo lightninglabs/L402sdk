@@ -9,6 +9,6 @@ name = "budget-control"
 path = "main.rs"
 
 [dependencies]
-bolt402-core = { path = "../../crates/bolt402-core" }
-bolt402-mock = { path = "../../crates/bolt402-mock" }
+l402-core = { path = "../../crates/l402-core" }
+l402-mock = { path = "../../crates/l402-mock" }
 tokio = { version = "1", features = ["full"] }

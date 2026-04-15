@@ -1,34 +1,34 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/bolt402-proto",
-    "crates/bolt402-core",
-    "crates/bolt402-lnd",
-    "crates/bolt402-cln",
-    "crates/bolt402-mock",
-    "crates/bolt402-swissknife",
-    "crates/bolt402-sqlite",
-    "crates/bolt402-nwc",
-    "crates/bolt402-ffi",
-    "crates/bolt402-python",
-    "crates/bolt402-wasm",
+    "crates/l402-proto",
+    "crates/l402-core",
+    "crates/l402-lnd",
+    "crates/l402-cln",
+    "crates/l402-mock",
+    "crates/l402-swissknife",
+    "crates/l402-sqlite",
+    "crates/l402-nwc",
+    "crates/l402-ffi",
+    "crates/l402-python",
+    "crates/l402-wasm",
     "examples/basic-mock",
     "examples/budget-control",
     "tests/regtest",
 ]
-# Exclude bolt402-python and bolt402-wasm from default builds.
-# bolt402-python requires Python dev libs for linking.
-# bolt402-wasm requires wasm32-unknown-unknown target.
+# Exclude l402-python and l402-wasm from default builds.
+# l402-python requires Python dev libs for linking.
+# l402-wasm requires wasm32-unknown-unknown target.
 # Use `maturin develop` + `pytest` for Python, `wasm-pack` for WASM.
 default-members = [
-    "crates/bolt402-proto",
-    "crates/bolt402-core",
-    "crates/bolt402-lnd",
-    "crates/bolt402-cln",
-    "crates/bolt402-mock",
-    "crates/bolt402-swissknife",
-    "crates/bolt402-sqlite",
-    "crates/bolt402-nwc",
+    "crates/l402-proto",
+    "crates/l402-core",
+    "crates/l402-lnd",
+    "crates/l402-cln",
+    "crates/l402-mock",
+    "crates/l402-swissknife",
+    "crates/l402-sqlite",
+    "crates/l402-nwc",
     "examples/basic-mock",
     "examples/budget-control",
 ]
@@ -51,23 +51,23 @@ missing_panics_doc = "allow"
 version = "0.0.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/lightninglabs/bolt402"
-homepage = "https://github.com/lightninglabs/bolt402"
-documentation = "https://docs.rs/bolt402-core"
+repository = "https://github.com/lightninglabs/L402sdk"
+homepage = "https://github.com/lightninglabs/L402sdk"
+documentation = "https://docs.rs/l402-core"
 rust-version = "1.85"
 authors = ["Dario Anongba Varela <dario.anongba@gmail.com>"]
 
 [workspace.dependencies]
 # Internal crates
-bolt402-proto = { path = "crates/bolt402-proto" }
-bolt402-core = { path = "crates/bolt402-core" }
-bolt402-lnd = { path = "crates/bolt402-lnd", default-features = false }
-bolt402-mock = { path = "crates/bolt402-mock" }
-bolt402-swissknife = { path = "crates/bolt402-swissknife" }
-bolt402-sqlite = { path = "crates/bolt402-sqlite" }
-bolt402-nwc = { path = "crates/bolt402-nwc" }
-bolt402-cln = { path = "crates/bolt402-cln", default-features = false }
-bolt402-ffi = { path = "crates/bolt402-ffi" }
+l402-proto = { path = "crates/l402-proto" }
+l402-core = { path = "crates/l402-core" }
+l402-lnd = { path = "crates/l402-lnd", default-features = false }
+l402-mock = { path = "crates/l402-mock" }
+l402-swissknife = { path = "crates/l402-swissknife" }
+l402-sqlite = { path = "crates/l402-sqlite" }
+l402-nwc = { path = "crates/l402-nwc" }
+l402-cln = { path = "crates/l402-cln", default-features = false }
+l402-ffi = { path = "crates/l402-ffi" }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

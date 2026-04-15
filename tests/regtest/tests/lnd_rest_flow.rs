@@ -14,7 +14,7 @@ async fn full_l402_flow_rest() {
     let backend = lnd_rest_backend();
 
     // Verify REST backend connectivity
-    let info = bolt402_proto::LnBackend::get_info(&backend).await.unwrap();
+    let info = l402_proto::LnBackend::get_info(&backend).await.unwrap();
     tracing::info!("Connected to LND (REST): {} ({})", info.alias, info.pubkey);
     assert!(!info.pubkey.is_empty());
     assert!(
@@ -22,9 +22,7 @@ async fn full_l402_flow_rest() {
         "LND must have active channels"
     );
 
-    let balance = bolt402_proto::LnBackend::get_balance(&backend)
-        .await
-        .unwrap();
+    let balance = l402_proto::LnBackend::get_balance(&backend).await.unwrap();
     tracing::info!("LND balance (REST): {} sats", balance);
     assert!(balance > 1000);
 

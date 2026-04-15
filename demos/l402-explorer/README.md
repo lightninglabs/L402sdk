@@ -1,14 +1,14 @@
 # L402 Explorer
 
-Interactive demo showcasing [bolt402](https://github.com/lightninglabs/bolt402). Browse L402-gated APIs, then ask an AI agent to query them — bolt402 handles the Lightning payments automatically.
+Interactive demo showcasing [L402sdk](https://github.com/lightninglabs/L402sdk). Browse L402-gated APIs, then ask an AI agent to query them — L402sdk handles the Lightning payments automatically.
 
 ## What it does
 
 - **Service Browser**: Browse real L402 services from [satring.com](https://satring.com) with search and category filters
-- **AI Research Assistant**: Chat panel powered by Vercel AI SDK. Ask a question, the agent identifies which L402 APIs to call, pays the Lightning invoice via bolt402, and presents the data with cost attribution
+- **AI Research Assistant**: Chat panel powered by Vercel AI SDK. Ask a question, the agent identifies which L402 APIs to call, pays the Lightning invoice via L402sdk, and presents the data with cost attribution
 - **Spending Dashboard**: Tracks every payment — service name, cost in sats, latency, payment hash
 
-The AI agent uses `createBolt402Tools()` from bolt402-ai-sdk, which gives it:
+The AI agent uses `createL402Tools()` from l402-ai-sdk, which gives it:
 - `l402_fetch` — fetch any URL, automatically handling 402 challenges and Lightning payments
 - `l402_get_balance` — check the Lightning node balance
 - `l402_get_receipts` — audit trail of all payments
@@ -71,10 +71,10 @@ Instead of using your admin macaroon (which has full access to all funds), creat
 docker exec -it lightning_lnd_1 bash
 
 # Create a macaroon that can only pay invoices (no on-chain, no channel management):
-lncli bakemacaroon invoices:read invoices:write offchain:read offchain:write info:read --save_to /tmp/bolt402.macaroon
+lncli bakemacaroon invoices:read invoices:write offchain:read offchain:write info:read --save_to /tmp/L402sdk.macaroon
 
 # Convert to hex:
-xxd -p /tmp/bolt402.macaroon | tr -d '\n'
+xxd -p /tmp/L402sdk.macaroon | tr -d '\n'
 ```
 
 Copy the hex output and set it as `LND_MACAROON` in your `.env.local`.
@@ -113,7 +113,7 @@ demos/l402-explorer/
 │   │   ├── layout.tsx                # Root layout (dark theme)
 │   │   ├── globals.css               # Tailwind + animations
 │   │   └── api/
-│   │       ├── chat/route.ts         # AI chat: streamText + createBolt402Tools()
+│   │       ├── chat/route.ts         # AI chat: streamText + createL402Tools()
 │   │       └── l402-fetch/route.ts   # Manual L402 proxy for protocol flow visualizer
 │   ├── components/
 │   │   ├── ServiceBrowser.tsx        # Two-column layout, search, filters
@@ -130,17 +130,17 @@ demos/l402-explorer/
 └── tsconfig.json
 ```
 
-bolt402-ai-sdk is linked from `../../packages/bolt402-ai-sdk` via `file:` dependency.
+l402-ai-sdk is linked from `../../packages/l402-ai-sdk` via `file:` dependency.
 
-## How bolt402 is used
+## How L402sdk is used
 
-The chat API route (`/api/chat`) creates bolt402 tools and passes them to the Vercel AI SDK:
+The chat API route (`/api/chat`) creates L402sdk tools and passes them to the Vercel AI SDK:
 
 ```typescript
-import { createBolt402Tools, LndBackend } from '@lightninglabs/bolt402-ai';
+import { createL402Tools, LndBackend } from '@lightninglabs/l402-ai';
 import { streamText } from 'ai';
 
-const tools = createBolt402Tools({
+const tools = createL402Tools({
   backend: new LndBackend({ url: LND_URL, macaroon: LND_MACAROON }),
   budget: { perRequestMax: 1000, dailyMax: 50000 },
 });
@@ -152,7 +152,7 @@ const result = streamText({
 });
 ```
 
-When the AI decides to call an L402 API, bolt402 handles the entire flow:
+When the AI decides to call an L402 API, L402sdk handles the entire flow:
 1. HTTP request to the endpoint
 2. Receives 402 Payment Required + WWW-Authenticate header
 3. Parses the L402 challenge (macaroon + invoice)

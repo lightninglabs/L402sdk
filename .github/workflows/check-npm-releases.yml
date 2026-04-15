@@ -3,20 +3,20 @@ name: Check NPM Releases
 on:
   workflow_call:
     outputs:
-      bolt402_wasm:
-        description: "True if bolt402-wasm version was bumped"
-        value: ${{ jobs.check.outputs.bolt402_wasm }}
-      bolt402_ai_sdk:
-        description: "True if bolt402-ai-sdk version was bumped"
-        value: ${{ jobs.check.outputs.bolt402_ai_sdk }}
+      l402_wasm:
+        description: "True if l402-wasm version was bumped"
+        value: ${{ jobs.check.outputs.l402_wasm }}
+      l402_ai_sdk:
+        description: "True if l402-ai-sdk version was bumped"
+        value: ${{ jobs.check.outputs.l402_ai_sdk }}
 
 jobs:
   check:
     name: Detect version bumps
     runs-on: ubuntu-latest
     outputs:
-      bolt402_wasm: ${{ steps.check-versions.outputs.bolt402_wasm }}
-      bolt402_ai_sdk: ${{ steps.check-versions.outputs.bolt402_ai_sdk }}
+      l402_wasm: ${{ steps.check-versions.outputs.l402_wasm }}
+      l402_ai_sdk: ${{ steps.check-versions.outputs.l402_ai_sdk }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -30,34 +30,34 @@ jobs:
           prev_commit="${{ github.event.before }}"
           echo "Previous commit: $prev_commit"
 
-          # --- bolt402-wasm (own version in crates/bolt402-wasm/Cargo.toml) ---
+          # --- l402-wasm (own version in crates/l402-wasm/Cargo.toml) ---
           get_crate_version() {
             grep -E '^version\s*=' "$1" | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/'
           }
 
-          wasm_toml="crates/bolt402-wasm/Cargo.toml"
+          wasm_toml="crates/l402-wasm/Cargo.toml"
           current_wasm=$(get_crate_version "$wasm_toml")
           previous_wasm=$(git show "$prev_commit:$wasm_toml" | grep -E '^version\s*=' | head -1 | sed -E 's/version\s*=\s*"([^"]+)"/\1/')
-          echo "bolt402-wasm: $previous_wasm → $current_wasm"
+          echo "l402-wasm: $previous_wasm → $current_wasm"
 
           if [ "$current_wasm" != "$previous_wasm" ]; then
-            echo "bolt402-wasm version bump detected."
-            echo "bolt402_wasm=true" >> "$GITHUB_OUTPUT"
+            echo "l402-wasm version bump detected."
+            echo "l402_wasm=true" >> "$GITHUB_OUTPUT"
           else
-            echo "bolt402-wasm: no version bump."
-            echo "bolt402_wasm=false" >> "$GITHUB_OUTPUT"
+            echo "l402-wasm: no version bump."
+            echo "l402_wasm=false" >> "$GITHUB_OUTPUT"
           fi
 
-          # --- bolt402-ai-sdk (package.json version) ---
-          ai_pkg="packages/bolt402-ai-sdk/package.json"
+          # --- l402-ai-sdk (package.json version) ---
+          ai_pkg="packages/l402-ai-sdk/package.json"
           current_ai=$(jq -r '.version' "$ai_pkg")
           previous_ai=$(git show "$prev_commit:$ai_pkg" | jq -r '.version')
-          echo "bolt402-ai-sdk: $previous_ai → $current_ai"
+          echo "l402-ai-sdk: $previous_ai → $current_ai"
 
           if [ "$current_ai" != "$previous_ai" ]; then
-            echo "bolt402-ai-sdk version bump detected."
-            echo "bolt402_ai_sdk=true" >> "$GITHUB_OUTPUT"
+            echo "l402-ai-sdk version bump detected."
+            echo "l402_ai_sdk=true" >> "$GITHUB_OUTPUT"
           else
-            echo "bolt402-ai-sdk: no version bump."
-            echo "bolt402_ai_sdk=false" >> "$GITHUB_OUTPUT"
+            echo "l402-ai-sdk: no version bump."
+            echo "l402_ai_sdk=false" >> "$GITHUB_OUTPUT"
           fi

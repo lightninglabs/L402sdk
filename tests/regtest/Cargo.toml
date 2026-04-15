@@ -1,6 +1,6 @@
 [package]
-name = "bolt402-regtest"
-description = "Regtest integration tests for the bolt402 L402 client SDK"
+name = "l402-regtest"
+description = "Regtest integration tests for the L402sdk L402 client SDK"
 version = "0.0.0"
 publish = false
 edition.workspace = true
@@ -44,12 +44,12 @@ name = "swissknife_flow"
 path = "tests/swissknife_flow.rs"
 
 [dependencies]
-bolt402-proto = { workspace = true }
-bolt402-core = { workspace = true }
-bolt402-lnd = { workspace = true, features = ["grpc", "rest"] }
-bolt402-cln = { workspace = true, features = ["grpc", "rest"] }
-bolt402-sqlite = { workspace = true }
-bolt402-swissknife = { workspace = true }
+l402-proto = { workspace = true }
+l402-core = { workspace = true }
+l402-lnd = { workspace = true, features = ["grpc", "rest"] }
+l402-cln = { workspace = true, features = ["grpc", "rest"] }
+l402-sqlite = { workspace = true }
+l402-swissknife = { workspace = true }
 tokio = { workspace = true, features = ["full", "test-util"] }
 reqwest = { workspace = true }
 serde_json = { workspace = true }

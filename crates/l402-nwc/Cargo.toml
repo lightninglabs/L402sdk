@@ -1,0 +1,22 @@
+[package]
+name = "l402-nwc"
+description = "Nostr Wallet Connect (NWC/NIP-47) Lightning backend for L402sdk"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+
+[dependencies]
+l402-core = { workspace = true }
+l402-proto = { workspace = true }
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+nwc = "0.44"
+nostr = { version = "0.44", features = ["nip47"] }
+
+[dev-dependencies]
+tokio = { workspace = true }

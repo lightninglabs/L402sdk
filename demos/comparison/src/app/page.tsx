@@ -1,7 +1,7 @@
 import { highlight } from "@/lib/highlight";
 import {
   lngetSnippets,
-  bolt402Snippets,
+  L402sdkSnippets,
   featureComparison,
 } from "@/lib/snippets";
 import LanguageTabs from "@/components/LanguageTabs";
@@ -20,9 +20,9 @@ async function renderTabs(
 }
 
 export default async function Home() {
-  const [lngetTabs, bolt402Tabs] = await Promise.all([
+  const [lngetTabs, L402sdkTabs] = await Promise.all([
     renderTabs(lngetSnippets),
-    renderTabs(bolt402Snippets),
+    renderTabs(L402sdkSnippets),
   ]);
 
   return (
@@ -34,7 +34,7 @@ export default async function Home() {
             <span className="text-xl">⚡</span>
             <div>
               <h1 className="text-sm font-bold text-zinc-100 tracking-tight">
-                bolt402 vs lnget
+                L402sdk vs lnget
               </h1>
               <p className="text-[10px] text-zinc-500">
                 SDK comparison
@@ -43,7 +43,7 @@ export default async function Home() {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="https://github.com/lightninglabs/bolt402"
+              href="https://github.com/lightninglabs/L402sdk"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
@@ -75,7 +75,7 @@ export default async function Home() {
               how they integrate.{" "}
               <span className="text-zinc-300">lnget</span> is a standalone CLI
               you shell out to.{" "}
-              <span className="text-[#F7931A]">bolt402</span> is a library you
+              <span className="text-[#F7931A]">L402sdk</span> is a library you
               import and call directly, with native types, pluggable backends,
               and built-in AI framework tooling.
             </p>
@@ -149,13 +149,13 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* bolt402 side */}
+            {/* L402sdk side */}
             <div className="rounded-xl border border-[#F7931A]/30 bg-zinc-900/30 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-[#F7931A]/20 px-4 py-3">
                 <span className="text-base">⚡</span>
                 <div>
                   <h4 className="text-sm font-semibold text-[#F7931A]">
-                    bolt402
+                    L402sdk
                   </h4>
                   <p className="text-[10px] text-zinc-500">
                     Embedded SDK, native import
@@ -163,7 +163,7 @@ export default async function Home() {
                 </div>
               </div>
               <div className="p-4">
-                <LanguageTabs tabs={bolt402Tabs} />
+                <LanguageTabs tabs={L402sdkTabs} />
 
                 <div className="mt-5 space-y-2.5">
                   <h5 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
@@ -242,10 +242,10 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* bolt402 architecture */}
+            {/* L402sdk architecture */}
             <div className="rounded-xl border border-[#F7931A]/30 bg-zinc-900/30 p-5">
               <h4 className="text-sm font-semibold text-[#F7931A] mb-4">
-                ⚡ bolt402: in-process SDK
+                ⚡ l402: in-process SDK
               </h4>
               <div className="font-mono text-xs text-zinc-500 space-y-2 leading-relaxed">
                 <div className="rounded bg-zinc-800/60 p-3">
@@ -295,7 +295,7 @@ export default async function Home() {
             <FeatureTable rows={featureComparison} />
           </div>
           <p className="mt-4 text-xs text-zinc-600">
-            lnget excels as a quick CLI tool for one-off requests. bolt402 is
+            lnget excels as a quick CLI tool for one-off requests. L402sdk is
             built for production code, AI agents, and multi-language SDKs.
           </p>
         </div>
@@ -335,7 +335,7 @@ export default async function Home() {
 
             <div className="rounded-xl border border-[#F7931A]/30 bg-zinc-900/30 p-5">
               <h4 className="text-sm font-semibold text-[#F7931A] mb-3">
-                Choose bolt402 when...
+                Choose L402sdk when...
               </h4>
               <ul className="space-y-2 text-xs text-zinc-500">
                 <li className="flex items-start gap-2">
@@ -368,14 +368,14 @@ export default async function Home() {
       <footer className="border-t border-zinc-800 bg-zinc-950">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
           <p className="text-center text-[10px] text-zinc-600">
-            bolt402 vs lnget comparison — by{" "}
+            L402sdk vs lnget comparison — by{" "}
             <a
-              href="https://github.com/lightninglabs/bolt402"
+              href="https://github.com/lightninglabs/L402sdk"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-500 hover:text-[#F7931A] transition-colors"
             >
-              bolt402
+              L402sdk
             </a>
             . Both are open source. Both advance the L402 ecosystem.
           </p>

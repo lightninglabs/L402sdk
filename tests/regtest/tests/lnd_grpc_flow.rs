@@ -13,7 +13,7 @@ async fn full_l402_flow_grpc() {
     let backend = lnd_grpc_backend().await;
 
     // Verify backend connectivity first
-    let info = bolt402_proto::LnBackend::get_info(&backend).await.unwrap();
+    let info = l402_proto::LnBackend::get_info(&backend).await.unwrap();
     tracing::info!("Connected to LND: {} ({})", info.alias, info.pubkey);
     assert!(!info.pubkey.is_empty());
     assert!(
@@ -22,9 +22,7 @@ async fn full_l402_flow_grpc() {
     );
 
     // Check balance
-    let balance = bolt402_proto::LnBackend::get_balance(&backend)
-        .await
-        .unwrap();
+    let balance = l402_proto::LnBackend::get_balance(&backend).await.unwrap();
     tracing::info!("LND balance: {} sats", balance);
     assert!(balance > 1000, "LND must have funds to pay invoices");
 

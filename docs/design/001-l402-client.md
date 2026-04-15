@@ -9,7 +9,7 @@
 
 ## Problem
 
-bolt402 needs a central client that transparently handles L402 authentication.
+L402sdk needs a central client that transparently handles L402 authentication.
 When an HTTP request returns 402 Payment Required, the client should
 automatically parse the challenge, pay the invoice, cache the token, and retry.
 

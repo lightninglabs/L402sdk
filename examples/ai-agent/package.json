@@ -1,5 +1,5 @@
 {
-  "name": "bolt402-ai-agent-example",
+  "name": "L402sdk-ai-agent-example",
   "private": true,
   "type": "module",
   "packageManager": "yarn@4.13.0",
@@ -9,8 +9,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.41",
     "ai": "^6.0.116",
-    "@lightninglabs/bolt402-ai": "^0.1.0",
-    "@lightninglabs/bolt402": "^0.1.0",
+    "@lightninglabs/l402-ai": "^0.1.0",
+    "@lightninglabs/l402": "^0.1.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

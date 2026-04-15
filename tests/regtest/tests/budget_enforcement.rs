@@ -3,7 +3,7 @@
 //! Validates that the budget system correctly prevents payments that exceed
 //! configured limits, using real invoices and the regtest Lightning network.
 
-use bolt402_core::budget::Budget;
+use l402_core::budget::Budget;
 use regtest_helpers::*;
 
 #[tokio::test]

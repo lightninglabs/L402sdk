@@ -3,7 +3,7 @@
 //! Validates that tokens persisted in SQLite survive client restarts
 //! and correctly skip re-payment when the token is still valid.
 
-use bolt402_sqlite::SqliteTokenStore;
+use l402_sqlite::SqliteTokenStore;
 use regtest_helpers::*;
 use tempfile::NamedTempFile;
 

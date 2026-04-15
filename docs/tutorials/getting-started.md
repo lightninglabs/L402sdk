@@ -1,6 +1,6 @@
-# Getting Started with bolt402
+# Getting Started with L402sdk
 
-This tutorial walks you through the full L402 payment flow using `bolt402-mock`. No real Lightning node needed.
+This tutorial walks you through the full L402 payment flow using `l402-mock`. No real Lightning node needed.
 
 ## Prerequisites
 
@@ -20,8 +20,8 @@ Add dependencies to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bolt402-core = { git = "https://github.com/lightninglabs/bolt402" }
-bolt402-mock = { git = "https://github.com/lightninglabs/bolt402" }
+l402-core = { git = "https://github.com/lightninglabs/L402sdk" }
+l402-mock = { git = "https://github.com/lightninglabs/L402sdk" }
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -30,7 +30,7 @@ tokio = { version = "1", features = ["full"] }
 The mock server simulates an API that requires Lightning payments. You configure which endpoints are protected and how much they cost:
 
 ```rust
-use bolt402_mock::{MockL402Server, EndpointConfig};
+use l402_mock::{MockL402Server, EndpointConfig};
 
 #[tokio::main]
 async fn main() {
@@ -62,9 +62,9 @@ The `L402Client` handles the full payment flow automatically. It needs:
 - A **budget** (spending limits)
 
 ```rust
-use bolt402_core::L402Client;
-use bolt402_core::budget::Budget;
-use bolt402_core::cache::InMemoryTokenStore;
+use l402_core::L402Client;
+use l402_core::budget::Budget;
+use l402_core::cache::InMemoryTokenStore;
 
 // The mock backend "pays" invoices by looking up preimages
 // from the mock server's registry (no real money involved)

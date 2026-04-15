@@ -4,18 +4,18 @@
 **Issue:** #8
 **Author:** Dario Anongba Varela
 
-> Historical note: this document captures the original pure-TypeScript proposal. The implemented package no longer ships a native TS `L402Client` or pluggable TS backends. Today `bolt402-ai-sdk` is a thin wrapper around `bolt402-wasm`, and the current public entry point is `createBolt402Tools({ client })` with a `WasmL402Client`.
+> Historical note: this document captures the original pure-TypeScript proposal. The implemented package no longer ships a native TS `L402Client` or pluggable TS backends. Today `l402-ai-sdk` is a thin wrapper around `l402-wasm`, and the current public entry point is `createL402Tools({ client })` with a `WasmL402Client`.
 
 ## Problem
 
-bolt402 provides a Rust L402 client SDK, but the primary consumers of L402-gated APIs today are AI agents, most of which run in TypeScript/Node.js. The Vercel AI SDK is the dominant framework for building AI agent applications in TypeScript (20M+ monthly downloads). There is no existing library that provides Vercel AI SDK tools for L402 payments.
+L402sdk provides a Rust L402 client SDK, but the primary consumers of L402-gated APIs today are AI agents, most of which run in TypeScript/Node.js. The Vercel AI SDK is the dominant framework for building AI agent applications in TypeScript (20M+ monthly downloads). There is no existing library that provides Vercel AI SDK tools for L402 payments.
 
-Lightning Labs' `lightning-agent-tools` provides CLI-based tools (lnget) and an MCP server, but no programmatic TypeScript SDK and no Vercel AI SDK integration. bolt402 fills this gap.
+Lightning Labs' `lightning-agent-tools` provides CLI-based tools (lnget) and an MCP server, but no programmatic TypeScript SDK and no Vercel AI SDK integration. L402sdk fills this gap.
 
 ## Goals
 
-1. Provide a TypeScript package (`bolt402-ai-sdk`) that gives AI agents the ability to pay for L402-gated APIs
-2. Expose Vercel AI SDK tools via a simple `createBolt402Tools()` function
+1. Provide a TypeScript package (`l402-ai-sdk`) that gives AI agents the ability to pay for L402-gated APIs
+2. Expose Vercel AI SDK tools via a simple `createL402Tools()` function
 3. Mirror the Rust core's hexagonal architecture: pluggable Lightning backends, token caching, budget tracking
 4. Ship with working Lightning backends (LND REST, SwissKnife REST)
 5. Include comprehensive tests, docs, and a working example
@@ -32,11 +32,11 @@ Lightning Labs' `lightning-agent-tools` provides CLI-based tools (lnget) and an 
 
 ```
 packages/
-  bolt402-ai-sdk/
+  l402-ai-sdk/
     src/
       index.ts              # Public API exports
       l402-client.ts        # L402Client: core protocol engine
-      tools.ts              # createBolt402Tools(): Vercel AI SDK tools
+      tools.ts              # createL402Tools(): Vercel AI SDK tools
       types.ts              # Shared types (LnBackend, TokenStore, etc.)
       token-store.ts        # InMemoryTokenStore adapter
       budget.ts             # BudgetTracker
@@ -60,7 +60,7 @@ packages/
 ```
                     Vercel AI SDK
                          │
-                  createBolt402Tools()
+                  createL402Tools()
                          │
                     ┌─────────────┐
                     │  L402Client  │  (core engine)
@@ -119,11 +119,11 @@ interface NodeInfo {
 
 ### Implemented Surface
 
-The final package is thinner than this original proposal. `bolt402-ai-sdk` does not ship its own TypeScript `L402Client` anymore; it wraps a `WasmL402Client` from `bolt402-wasm`:
+The final package is thinner than this original proposal. `l402-ai-sdk` does not ship its own TypeScript `L402Client` anymore; it wraps a `WasmL402Client` from `l402-wasm`:
 
 ```typescript
-import { createBolt402Tools } from 'bolt402-ai-sdk';
-import init, { WasmBudgetConfig, WasmL402Client } from 'bolt402-wasm';
+import { createL402Tools } from 'l402-ai-sdk';
+import init, { WasmBudgetConfig, WasmL402Client } from 'l402-wasm';
 
 await init();
 
@@ -134,7 +134,7 @@ const client = WasmL402Client.withLndRest(
   100,
 );
 
-const tools = createBolt402Tools({ client });
+const tools = createL402Tools({ client });
 ```
 
 The runtime L402 flow is still the same:
@@ -160,7 +160,7 @@ No dedicated `l402_get_balance` tool shipped in the final implementation.
 
 ### Backend Selection
 
-`bolt402-ai-sdk` no longer exposes native TypeScript backend classes. Backend selection now happens in `bolt402-wasm`:
+`l402-ai-sdk` no longer exposes native TypeScript backend classes. Backend selection now happens in `l402-wasm`:
 
 - `WasmL402Client.withLndRest(...)`
 - `WasmL402Client.withSwissKnife(...)`
@@ -194,7 +194,7 @@ No dedicated `l402_get_balance` tool shipped in the final implementation.
 2. **Unit tests** for each tool: verify schema, mock L402Client, check return values
 3. **Unit tests** for backends: mock HTTP, verify correct API calls to LND/SwissKnife
 4. **Unit tests** for budget tracker and token store
-5. **Integration test** with `bolt402-mock` server: start the mock server, configure L402Client to use it with a mock backend, verify end-to-end flow
+5. **Integration test** with `l402-mock` server: start the mock server, configure L402Client to use it with a mock backend, verify end-to-end flow
 6. **CI:** lint (eslint), format (prettier), type-check (tsc), test (vitest)
 
 ## Dependencies

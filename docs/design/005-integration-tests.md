@@ -7,13 +7,13 @@
 
 ## Problem
 
-bolt402 has unit tests for individual modules (proto parsing, cache, budget, mock server) but no end-to-end tests that exercise the full L402 flow through the `L402Client`. We need to verify that all components work together: HTTP request → 402 challenge → invoice payment → token construction → authenticated retry → success.
+L402sdk has unit tests for individual modules (proto parsing, cache, budget, mock server) but no end-to-end tests that exercise the full L402 flow through the `L402Client`. We need to verify that all components work together: HTTP request → 402 challenge → invoice payment → token construction → authenticated retry → success.
 
 ## Proposed Design
 
 ### Tier 1: Mock-based Integration Tests (CI)
 
-A workspace-level `tests/` directory with integration tests that spin up `bolt402-mock::MockL402Server` and wire it to `L402Client` via `MockLnBackend`. These test the real HTTP flow over localhost without any Lightning infrastructure.
+A workspace-level `tests/` directory with integration tests that spin up `l402-mock::MockL402Server` and wire it to `L402Client` via `MockLnBackend`. These test the real HTTP flow over localhost without any Lightning infrastructure.
 
 **Test cases:**
 
@@ -38,7 +38,7 @@ A workspace-level `tests/` directory with integration tests that spin up `bolt40
 ### File Layout
 
 ```
-crates/bolt402-mock/
+crates/l402-mock/
   tests/
     integration.rs        # All Tier 1 tests
   examples/
@@ -47,19 +47,19 @@ crates/bolt402-mock/
 
 ## Key Decisions
 
-- **Tests in bolt402-mock crate**: Integration tests live in `bolt402-mock/tests/` because the mock crate already depends on both `bolt402-core` and `bolt402-proto`, providing access to all components without extra dependencies. Workspace-root `tests/` doesn't work in Cargo workspaces (no owning package).
+- **Tests in l402-mock crate**: Integration tests live in `l402-mock/tests/` because the mock crate already depends on both `l402-core` and `l402-proto`, providing access to all components without extra dependencies. Workspace-root `tests/` doesn't work in Cargo workspaces (no owning package).
 - **Single test file**: All integration tests in one file to share helper setup code and keep CI fast (one test binary).
-- **Demo as mock example**: The demo binary lives in `bolt402-mock/examples/` since it demonstrates the mock server + client workflow.
+- **Demo as mock example**: The demo binary lives in `l402-mock/examples/` since it demonstrates the mock server + client workflow.
 - **Tier 2 is now implemented**: Docker/regtest coverage lives in `tests/regtest/` and exercises the full Aperture-backed flow across LND gRPC, LND REST, CLN gRPC, and CLN REST.
 
 ## Alternatives Considered
 
 - **Workspace-level tests/**: Doesn't compile in Cargo workspaces; rejected.
-- **Separate test crate**: Adds complexity for little benefit; bolt402-mock already has the right deps.
+- **Separate test crate**: Adds complexity for little benefit; l402-mock already has the right deps.
 
 ## Testing Plan
 
-- `cargo test -p bolt402-mock --test integration` runs all Tier 1 tests
-- `cargo run -p bolt402-mock --example demo` runs the interactive demo
+- `cargo test -p l402-mock --test integration` runs all Tier 1 tests
+- `cargo run -p l402-mock --example demo` runs the interactive demo
 - `make regtest-up && make regtest-init && make regtest-test` runs the Tier 2 Docker/Aperture suite
 - CI already runs `cargo test` which picks up all tests including integration

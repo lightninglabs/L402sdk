@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "l402-langchain"
+version = "0.1.0"
+description = "LangChain integration for L402sdk — L402 Lightning payments in AI agents"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+    { name = "Dario Anongba Varela", email = "dario.anongba@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+keywords = ["l402", "lightning", "bitcoin", "langchain", "ai-agents", "payments"]
+dependencies = [
+    "L402sdk>=0.1.0",
+    "langchain-core>=0.2.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lightninglabs/L402sdk"
+Repository = "https://github.com/lightninglabs/L402sdk"
+Documentation = "https://github.com/lightninglabs/L402sdk/tree/main/packages/l402-langchain"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/l402_langchain"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,5 +1,5 @@
 network=regtest
-alias=bolt402-cln
+alias=l402-cln
 log-level=info
 
 # Bitcoin connection
@@ -12,7 +12,7 @@ bitcoin-rpcpassword=regtest
 addr=0.0.0.0:9735
 announce-addr=cln:9735
 
-# gRPC plugin (for bolt402-cln backend tests)
+# gRPC plugin (for l402-cln backend tests)
 grpc-host=0.0.0.0
 grpc-port=9736
 

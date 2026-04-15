@@ -6,7 +6,7 @@
 
 ## Problem
 
-bolt402 lacks standard open-source project scaffolding files. Without a CONTRIBUTING.md, new contributors don't know how to set up the project, run tests, or submit changes. Without issue templates, bug reports and feature requests arrive in inconsistent formats. Without a CHANGELOG, users can't track what changed between releases.
+L402sdk lacks standard open-source project scaffolding files. Without a CONTRIBUTING.md, new contributors don't know how to set up the project, run tests, or submit changes. Without issue templates, bug reports and feature requests arrive in inconsistent formats. Without a CHANGELOG, users can't track what changed between releases.
 
 These are the last scaffolding items before the project can accept external contributors.
 
@@ -21,7 +21,7 @@ A comprehensive guide covering:
 3. **Project structure**: High-level overview with links to AGENTS.md for architecture
 4. **Coding standards**: Formatting, linting, doc comments, error handling — references CLAUDE.md
 5. **PR workflow**: Branch naming (`type/description`), conventional commits, squash merge, CI requirements
-6. **Testing requirements**: Rust (cargo test), TypeScript (vitest), integration tests with bolt402-mock
+6. **Testing requirements**: Rust (cargo test), TypeScript (vitest), integration tests with l402-mock
 7. **Issue workflow**: File an issue first, get confirmation, then implement
 
 ### Issue Templates

@@ -1,15 +1,15 @@
 # Implementing a Custom Lightning Backend
 
-bolt402's hexagonal architecture makes it straightforward to add support for any Lightning implementation. This tutorial walks through implementing the `LnBackend` trait.
+L402sdk's hexagonal architecture makes it straightforward to add support for any Lightning implementation. This tutorial walks through implementing the `LnBackend` trait.
 
 ## The LnBackend Trait
 
-The `LnBackend` trait is the port that defines how bolt402 pays invoices:
+The `LnBackend` trait is the port that defines how L402sdk pays invoices:
 
 ```rust
 use async_trait::async_trait;
-use bolt402_proto::port::{LnBackend, PaymentResult, NodeInfo};
-use bolt402_proto::ClientError;
+use l402_proto::port::{LnBackend, PaymentResult, NodeInfo};
+use l402_proto::ClientError;
 
 #[async_trait]
 pub trait LnBackend: Send + Sync {
@@ -40,19 +40,19 @@ Let's implement a backend for [Core Lightning](https://github.com/ElementsProjec
 ### Step 1: Create the Crate
 
 ```bash
-mkdir crates/bolt402-cln
+mkdir crates/l402-cln
 ```
 
-`crates/bolt402-cln/Cargo.toml`:
+`crates/l402-cln/Cargo.toml`:
 ```toml
 [package]
-name = "bolt402-cln"
+name = "l402-cln"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-bolt402-proto = { workspace = true }
+l402-proto = { workspace = true }
 async-trait = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
@@ -63,8 +63,8 @@ tokio = { workspace = true }
 ### Step 2: Define the Backend Struct
 
 ```rust
-use bolt402_proto::port::{LnBackend, PaymentResult, NodeInfo};
-use bolt402_proto::ClientError;
+use l402_proto::port::{LnBackend, PaymentResult, NodeInfo};
+use l402_proto::ClientError;
 use async_trait::async_trait;
 
 /// Core Lightning backend using the JSON-RPC interface.
@@ -205,9 +205,9 @@ impl LnBackend for ClnBackend {
 ### Step 4: Use Your Backend
 
 ```rust
-use bolt402_core::L402Client;
-use bolt402_core::budget::Budget;
-use bolt402_core::cache::InMemoryTokenStore;
+use l402_core::L402Client;
+use l402_core::budget::Budget;
+use l402_core::cache::InMemoryTokenStore;
 
 let backend = ClnBackend::new("http://localhost:9835");
 
@@ -225,9 +225,9 @@ let client = L402Client::builder()
 let response = client.get("https://api.example.com/data").await?;
 ```
 
-### Step 5: Test with bolt402-mock
+### Step 5: Test with l402-mock
 
-You don't need a real CLN node to test your client integration. Use `bolt402-mock`:
+You don't need a real CLN node to test your client integration. Use `l402-mock`:
 
 ```rust
 #[tokio::test]
@@ -255,12 +255,12 @@ async fn test_cln_client_integration() {
 
 ## TypeScript / WASM Note
 
-`bolt402-ai-sdk` no longer exposes a native TypeScript `LnBackend` interface. The package is a thin wrapper around `bolt402-wasm`, which in turn wraps Rust backends and the Rust `L402Client`.
+`l402-ai-sdk` no longer exposes a native TypeScript `LnBackend` interface. The package is a thin wrapper around `l402-wasm`, which in turn wraps Rust backends and the Rust `L402Client`.
 
 If you need a new backend in JavaScript or TypeScript:
 
 - implement the adapter in Rust by adding a new crate (or extending an existing backend crate) that implements `LnBackend`
-- expose it through `crates/bolt402-wasm` with a wasm-bindgen wrapper, following `WasmLndRestBackend`, `WasmClnRestBackend`, or `WasmSwissKnifeBackend`
+- expose it through `crates/l402-wasm` with a wasm-bindgen wrapper, following `WasmLndRestBackend`, `WasmClnRestBackend`, or `WasmSwissKnifeBackend`
 - add a `WasmL402Client` constructor if the backend should support the full end-to-end L402 flow from JS/TS
 
 ## Checklist for New Backends
@@ -270,6 +270,6 @@ If you need a new backend in JavaScript or TypeScript:
 - [ ] Handle both successful and failed payments gracefully
 - [ ] Return accurate `fee_sats` (not zero) for proper receipt tracking
 - [ ] Add unit tests with mocked HTTP responses
-- [ ] Add integration tests using `bolt402-mock` for the L402Client flow
-- [ ] Add a WASM wrapper in `crates/bolt402-wasm` if the backend should be available from JS/TS
+- [ ] Add integration tests using `l402-mock` for the L402Client flow
+- [ ] Add a WASM wrapper in `crates/l402-wasm` if the backend should be available from JS/TS
 - [ ] Document connection parameters and authentication requirements

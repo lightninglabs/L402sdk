@@ -18,9 +18,9 @@ This is critical for:
 
 ## Design
 
-### Crate: bolt402-mock
+### Crate: l402-mock
 
-Lightweight HTTP server built on axum. Depends only on bolt402-proto for shared types.
+Lightweight HTTP server built on axum. Depends only on l402-proto for shared types.
 
 ### Components
 

@@ -21,7 +21,7 @@ export default function FeatureTable({ rows }: FeatureTableProps) {
             </th>
             <th className="text-left py-3 px-4 text-zinc-400 font-medium">
               <span className="inline-flex items-center gap-1.5">
-                ⚡ bolt402
+                ⚡ L402sdk
               </span>
             </th>
           </tr>
@@ -46,12 +46,12 @@ export default function FeatureTable({ rows }: FeatureTableProps) {
               </td>
               <td
                 className={`py-3 px-4 ${
-                  row.advantage === "bolt402"
+                  row.advantage === "L402sdk"
                     ? "text-emerald-400"
                     : "text-zinc-500"
                 }`}
               >
-                {row.bolt402}
+                {row.L402sdk}
               </td>
             </tr>
           ))}

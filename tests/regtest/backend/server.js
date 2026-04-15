@@ -17,7 +17,7 @@ const http = require("http");
 const PORT = parseInt(process.env.BACKEND_PORT || "9000", 10);
 
 const ROUTES = {
-  "/health": () => ({ status: "ok", service: "bolt402-regtest-backend" }),
+  "/health": () => ({ status: "ok", service: "l402-regtest-backend" }),
   "/api/data": () => ({
     ok: true,
     resource: "data",

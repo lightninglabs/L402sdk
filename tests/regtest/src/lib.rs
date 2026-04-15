@@ -6,12 +6,12 @@
 use std::path::PathBuf;
 use std::sync::Once;
 
-use bolt402_core::L402Client;
-use bolt402_core::budget::Budget;
-use bolt402_core::cache::InMemoryTokenStore;
-use bolt402_lnd::LndGrpcBackend;
-use bolt402_lnd::LndRestBackend;
-use bolt402_proto::LnBackend;
+use l402_core::L402Client;
+use l402_core::budget::Budget;
+use l402_core::cache::InMemoryTokenStore;
+use l402_lnd::LndGrpcBackend;
+use l402_lnd::LndRestBackend;
+use l402_proto::LnBackend;
 use tracing_subscriber::EnvFilter;
 
 static INIT: Once = Once::new();
@@ -91,12 +91,12 @@ pub async fn lnd_grpc_backend() -> LndGrpcBackend {
 
     // Write cert to temp file (LndGrpcBackend reads from path)
     let cert_bytes = base64_decode(&cert_base64);
-    let cert_path = std::env::temp_dir().join("bolt402-regtest-tls.cert");
+    let cert_path = std::env::temp_dir().join("l402-regtest-tls.cert");
     std::fs::write(&cert_path, &cert_bytes).expect("failed to write TLS cert");
 
     // Write macaroon to temp file
     let macaroon_bytes = hex::decode(&macaroon_hex).expect("invalid macaroon hex");
-    let macaroon_path = std::env::temp_dir().join("bolt402-regtest-admin.macaroon");
+    let macaroon_path = std::env::temp_dir().join("l402-regtest-admin.macaroon");
     std::fs::write(&macaroon_path, &macaroon_bytes).expect("failed to write macaroon");
 
     LndGrpcBackend::connect(
@@ -121,7 +121,7 @@ pub fn lnd_rest_backend() -> LndRestBackend {
 ///
 /// Returns `None` if CLN credentials are not available (CLN gRPC certs
 /// are generated at runtime and may not exist).
-pub async fn cln_backend() -> Option<bolt402_cln::ClnGrpcBackend> {
+pub async fn cln_backend() -> Option<l402_cln::ClnGrpcBackend> {
     let host =
         std::env::var("CLN_GRPC_HOST").unwrap_or_else(|_| "https://localhost:9736".to_string());
 
@@ -136,15 +136,15 @@ pub async fn cln_backend() -> Option<bolt402_cln::ClnGrpcBackend> {
 
     // Write certs to temp files
     let tmp = std::env::temp_dir();
-    let ca_path = tmp.join("bolt402-regtest-cln-ca.pem");
-    let cert_path = tmp.join("bolt402-regtest-cln-client.pem");
-    let key_path = tmp.join("bolt402-regtest-cln-client-key.pem");
+    let ca_path = tmp.join("l402-regtest-cln-ca.pem");
+    let cert_path = tmp.join("l402-regtest-cln-client.pem");
+    let key_path = tmp.join("l402-regtest-cln-client-key.pem");
 
     std::fs::write(&ca_path, base64_decode(&ca_b64)).ok()?;
     std::fs::write(&cert_path, base64_decode(&client_cert_b64)).ok()?;
     std::fs::write(&key_path, base64_decode(&client_key_b64)).ok()?;
 
-    match bolt402_cln::ClnGrpcBackend::connect(
+    match l402_cln::ClnGrpcBackend::connect(
         &host,
         ca_path.to_str().unwrap(),
         cert_path.to_str().unwrap(),
@@ -164,7 +164,7 @@ pub async fn cln_backend() -> Option<bolt402_cln::ClnGrpcBackend> {
 ///
 /// Returns `None` if the CLN REST rune is not available or the REST API
 /// cannot be reached.
-pub async fn cln_rest_backend() -> Option<bolt402_cln::ClnRestBackend> {
+pub async fn cln_rest_backend() -> Option<l402_cln::ClnRestBackend> {
     let host =
         std::env::var("CLN_REST_URL").unwrap_or_else(|_| "https://localhost:3010".to_string());
 
@@ -176,7 +176,7 @@ pub async fn cln_rest_backend() -> Option<bolt402_cln::ClnRestBackend> {
         }
     };
 
-    let backend = match bolt402_cln::ClnRestBackend::new(&host, &rune) {
+    let backend = match l402_cln::ClnRestBackend::new(&host, &rune) {
         Ok(backend) => backend,
         Err(e) => {
             tracing::warn!("Failed to create CLN REST backend: {e}");
@@ -184,7 +184,7 @@ pub async fn cln_rest_backend() -> Option<bolt402_cln::ClnRestBackend> {
         }
     };
 
-    match bolt402_proto::LnBackend::get_info(&backend).await {
+    match l402_proto::LnBackend::get_info(&backend).await {
         Ok(_) => Some(backend),
         Err(e) => {
             tracing::warn!("Failed to connect to CLN REST: {e}");
@@ -196,7 +196,7 @@ pub async fn cln_rest_backend() -> Option<bolt402_cln::ClnRestBackend> {
 /// Create a `SwissKnifeBackend` from regtest environment.
 ///
 /// Returns `None` if SwissKnife is not configured or not reachable.
-pub async fn swissknife_backend() -> Option<bolt402_swissknife::SwissKnifeBackend> {
+pub async fn swissknife_backend() -> Option<l402_swissknife::SwissKnifeBackend> {
     let url = std::env::var("SWISSKNIFE_API_URL").ok()?;
     let api_key = std::env::var("SWISSKNIFE_API_KEY").ok()?;
 
@@ -205,10 +205,10 @@ pub async fn swissknife_backend() -> Option<bolt402_swissknife::SwissKnifeBacken
         return None;
     }
 
-    let backend = bolt402_swissknife::SwissKnifeBackend::new(&url, &api_key);
+    let backend = l402_swissknife::SwissKnifeBackend::new(&url, &api_key);
 
     // Verify connectivity
-    match bolt402_proto::LnBackend::get_info(&backend).await {
+    match l402_proto::LnBackend::get_info(&backend).await {
         Ok(info) => {
             tracing::info!("Connected to SwissKnife: {}", info.alias);
             Some(backend)
@@ -247,7 +247,7 @@ pub fn build_l402_client_with_budget<B: LnBackend + 'static>(
 pub fn build_l402_client_with_store<B, T>(backend: B, store: T) -> L402Client
 where
     B: LnBackend + 'static,
-    T: bolt402_proto::TokenStore + 'static,
+    T: l402_proto::TokenStore + 'static,
 {
     L402Client::builder()
         .ln_backend(backend)

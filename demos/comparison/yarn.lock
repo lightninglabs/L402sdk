@@ -1567,9 +1567,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bolt402-comparison@workspace:.":
+"L402sdk-comparison@workspace:.":
   version: 0.0.0-use.local
-  resolution: "bolt402-comparison@workspace:."
+  resolution: "L402sdk-comparison@workspace:."
   dependencies:
     "@tailwindcss/postcss": "npm:^4"
     "@types/node": "npm:^20"

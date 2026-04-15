@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in bolt402
+description: Report a bug in L402sdk
 title: "[Bug]: "
 labels: ["bug"]
 body:
@@ -52,12 +52,12 @@ body:
       description: Which crate(s) does this bug affect?
       multiple: true
       options:
-        - bolt402-proto
-        - bolt402-core
-        - bolt402-lnd
-        - bolt402-swissknife
-        - bolt402-mock
-        - bolt402-ai-sdk (TypeScript)
+        - l402-proto
+        - l402-core
+        - l402-lnd
+        - l402-swissknife
+        - l402-mock
+        - l402-ai-sdk (TypeScript)
     validations:
       required: true
 

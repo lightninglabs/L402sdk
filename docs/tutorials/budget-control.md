@@ -1,6 +1,6 @@
 # Budget Control for Autonomous Agents
 
-When AI agents spend real Bitcoin, you need guardrails. bolt402's budget system is built into the protocol flow, ensuring limits are checked before any payment is attempted.
+When AI agents spend real Bitcoin, you need guardrails. L402sdk's budget system is built into the protocol flow, ensuring limits are checked before any payment is attempted.
 
 ## Why Budgets Matter
 
@@ -16,7 +16,7 @@ The `BudgetTracker` prevents all of this.
 The `Budget` struct supports four types of limits:
 
 ```rust
-use bolt402_core::budget::Budget;
+use l402_core::budget::Budget;
 
 let budget = Budget {
     per_request_max: Some(1_000),     // Max 1,000 sats per payment
@@ -78,9 +78,9 @@ When a request is made, the budget tracker checks for a domain-specific budget f
 ## Using Budgets with L402Client
 
 ```rust
-use bolt402_core::L402Client;
-use bolt402_core::budget::Budget;
-use bolt402_core::cache::InMemoryTokenStore;
+use l402_core::L402Client;
+use l402_core::budget::Budget;
+use l402_core::cache::InMemoryTokenStore;
 
 let client = L402Client::builder()
     .ln_backend(my_backend)
@@ -96,7 +96,7 @@ let client = L402Client::builder()
 // This will fail if the invoice amount exceeds 500 sats
 match client.get("https://expensive-api.com/data").await {
     Ok(response) => println!("Got data: {}", response.status()),
-    Err(bolt402_proto::ClientError::BudgetExceeded { reason }) => {
+    Err(l402_proto::ClientError::BudgetExceeded { reason }) => {
         println!("Payment blocked: {reason}");
     }
     Err(e) => println!("Other error: {e}"),
@@ -106,8 +106,8 @@ match client.get("https://expensive-api.com/data").await {
 ## Using Budgets with Vercel AI SDK
 
 ```typescript
-import { createBolt402Tools } from 'bolt402-ai-sdk';
-import init, { WasmBudgetConfig, WasmL402Client } from 'bolt402-wasm';
+import { createL402Tools } from 'l402-ai-sdk';
+import init, { WasmBudgetConfig, WasmL402Client } from 'l402-wasm';
 
 await init();
 
@@ -118,7 +118,7 @@ const client = WasmL402Client.withLndRest(
   100,
 );
 
-const tools = createBolt402Tools({ client });
+const tools = createL402Tools({ client });
 ```
 
 The AI agent will receive a clear error message if it tries to exceed the budget, and can report this to the user.

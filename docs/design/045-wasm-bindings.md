@@ -7,7 +7,7 @@
 
 ## Problem
 
-Before the WASM work, `bolt402-ai-sdk` carried a pure TypeScript implementation that duplicated protocol logic from Rust. Browser-based and edge-runtime AI agents could not reuse the Rust core directly.
+Before the WASM work, `l402-ai-sdk` carried a pure TypeScript implementation that duplicated protocol logic from Rust. Browser-based and edge-runtime AI agents could not reuse the Rust core directly.
 
 WASM bindings complete the cross-language story by enabling:
 
@@ -17,7 +17,7 @@ WASM bindings complete the cross-language story by enabling:
 
 ## Design
 
-### Crate: `crates/bolt402-wasm/`
+### Crate: `crates/l402-wasm/`
 
 A wasm-bindgen wrapper that exposes both **real Lightning backends** (via Rust, compiled to WASM) and an **in-process mock** for testing/demos.
 
@@ -30,7 +30,7 @@ A wasm-bindgen wrapper that exposes both **real Lightning backends** (via Rust, 
                   └─────────┬───────────┘
                             │ wasm-bindgen
                   ┌─────────▼───────────┐
-                  │    bolt402-wasm     │
+                  │    l402-wasm     │
                   │   WasmL402Client    │
                   │  WasmLndRestBackend │
                   │  WasmClnRestBackend │
@@ -40,27 +40,27 @@ A wasm-bindgen wrapper that exposes both **real Lightning backends** (via Rust, 
               ┌─────────────┼───────────────┐
               │             │               │
     ┌─────────▼──┐  ┌──────▼──────┐  ┌─────▼─────────┐
-    │bolt402-proto│  │bolt402-lnd  │  │bolt402-       │
+    │l402-proto│  │l402-lnd  │  │L402sdk-       │
     │(types,ports│  │(rest feature)│  │swissknife     │
     │ errors)    │  └─────────────┘  └───────────────┘
     └────────────┘
 ```
 
-**Key insight:** `bolt402-core` is WASM-safe after moving off a tokio runtime dependency, so `bolt402-wasm` can wrap the real Rust `L402Client` directly while still exposing standalone backend bindings. The REST backends use `reqwest`, which compiles to browser `fetch` on `wasm32-unknown-unknown`.
+**Key insight:** `l402-core` is WASM-safe after moving off a tokio runtime dependency, so `l402-wasm` can wrap the real Rust `L402Client` directly while still exposing standalone backend bindings. The REST backends use `reqwest`, which compiles to browser `fetch` on `wasm32-unknown-unknown`.
 
 ### Key Decisions
 
 1. **wasm-bindgen + wasm-pack** — Standard toolchain. Auto-generates TypeScript type definitions. npm-publishable.
 
-2. **No tokio in WASM path** — Port traits (`LnBackend`, `TokenStore`) and `ClientError` live in `bolt402-proto` (no async runtime dependency). Backend crates (`bolt402-lnd[rest]`, `bolt402-swissknife`) depend only on `bolt402-proto`. This was achieved by moving ports from `bolt402-core` to `bolt402-proto`.
+2. **No tokio in WASM path** — Port traits (`LnBackend`, `TokenStore`) and `ClientError` live in `l402-proto` (no async runtime dependency). Backend crates (`l402-lnd[rest]`, `l402-swissknife`) depend only on `l402-proto`. This was achieved by moving ports from `l402-core` to `l402-proto`.
 
-3. **Real backends compiled to WASM** — `bolt402-lnd` (REST feature), `bolt402-cln` (REST feature), and `bolt402-swissknife` all use `reqwest`, which compiles to `wasm32-unknown-unknown` using browser `fetch`. No JS callback delegation needed. Wrapped as `WasmLndRestBackend`, `WasmClnRestBackend`, and `WasmSwissKnifeBackend`.
+3. **Real backends compiled to WASM** — `l402-lnd` (REST feature), `l402-cln` (REST feature), and `l402-swissknife` all use `reqwest`, which compiles to `wasm32-unknown-unknown` using browser `fetch`. No JS callback delegation needed. Wrapped as `WasmLndRestBackend`, `WasmClnRestBackend`, and `WasmSwissKnifeBackend`.
 
 4. **Conditional async_trait** — Port traits use `#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]` because `reqwest::Response` is not `Send` on WASM targets.
 
 5. **Conditional platform APIs** — `danger_accept_invalid_certs()` and `from_env()` are gated behind `#[cfg(not(target_arch = "wasm32"))]` since they don't apply in browsers.
 
-6. **Rust L402 client first** — `WasmL402Client` wraps the real `bolt402-core::L402Client`, so challenge parsing, token caching, budget enforcement, and receipts all stay in one implementation.
+6. **Rust L402 client first** — `WasmL402Client` wraps the real `l402-core::L402Client`, so challenge parsing, token caching, budget enforcement, and receipts all stay in one implementation.
 
 7. **Budget in WASM** — Full budget enforcement (per-request, hourly, daily, total) works through the shared Rust `BudgetTracker`.
 
@@ -91,7 +91,7 @@ const header = buildL402Header(macaroon, preimage);
 ### Crate Structure
 
 ```
-crates/bolt402-wasm/
+crates/l402-wasm/
 ├── Cargo.toml
 ├── src/
 │   ├── lib.rs          # Entry points and wasm-bindgen exports
@@ -104,9 +104,9 @@ crates/bolt402-wasm/
 
 ### Dependencies
 
-- `bolt402-proto` — Types, port traits, errors (WASM-safe)
-- `bolt402-lnd` (default-features = false, features = ["rest"]) — LND REST backend
-- `bolt402-swissknife` — SwissKnife REST backend
+- `l402-proto` — Types, port traits, errors (WASM-safe)
+- `l402-lnd` (default-features = false, features = ["rest"]) — LND REST backend
+- `l402-swissknife` — SwissKnife REST backend
 - `wasm-bindgen` — Core WASM-JS bridge
 - `wasm-bindgen-futures` — async/Promise interop
 - `js-sys` — JS standard library access
@@ -114,13 +114,13 @@ crates/bolt402-wasm/
 
 ### Testing Plan
 
-- `cargo test -p bolt402-wasm` — Native unit tests (mock challenge generation, budget, etc.)
-- `wasm-pack test --headless --chrome crates/bolt402-wasm` — Browser tests via wasm-bindgen-test
+- `cargo test -p l402-wasm` — Native unit tests (mock challenge generation, budget, etc.)
+- `wasm-pack test --headless --chrome crates/l402-wasm` — Browser tests via wasm-bindgen-test
 - CI: `wasm-pack build` + both test suites
 
 ## CI
 
-The `wasm` job builds and tests the WASM bindings. The `typescript` job depends on `wasm` and builds `bolt402-wasm` before `yarn install` (since `bolt402-ai-sdk` depends on `bolt402-wasm@file:../../crates/bolt402-wasm/pkg`).
+The `wasm` job builds and tests the WASM bindings. The `typescript` job depends on `wasm` and builds `l402-wasm` before `yarn install` (since `l402-ai-sdk` depends on `l402-wasm@file:../../crates/l402-wasm/pkg`).
 
 ```yaml
 wasm:
@@ -135,14 +135,14 @@ wasm:
     - name: Install wasm-pack
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     - name: Build WASM (web target)
-      run: wasm-pack build crates/bolt402-wasm --target web
+      run: wasm-pack build crates/l402-wasm --target web
     - name: Run native unit tests
-      run: cargo test -p bolt402-wasm
+      run: cargo test -p l402-wasm
     - name: Run WASM browser tests
-      run: wasm-pack test --headless --chrome crates/bolt402-wasm
+      run: wasm-pack test --headless --chrome crates/l402-wasm
 
 typescript:
-  name: TypeScript (bolt402-ai-sdk)
+  name: TypeScript (l402-ai-sdk)
   needs: wasm
   runs-on: ubuntu-latest
   steps:

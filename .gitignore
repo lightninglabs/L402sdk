@@ -23,10 +23,10 @@ dist/
 .pytest_cache/
 
 # Go bindings (built from CI)
-bindings/bolt402-go/lib/
+bindings/l402-go/lib/
 
 # WASM (built from wasm-pack)
-crates/bolt402-wasm/pkg/
+crates/l402-wasm/pkg/
 
 # TypeScript packages
 packages/*/node_modules/

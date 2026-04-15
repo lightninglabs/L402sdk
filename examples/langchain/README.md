@@ -1,11 +1,11 @@
-# LangChain + bolt402 Example
+# LangChain + L402sdk Example
 
-Demonstrates how to build LangChain tools that use bolt402 for automatic Lightning payments on L402-gated APIs.
+Demonstrates how to build LangChain tools that use L402sdk for automatic Lightning payments on L402-gated APIs.
 
 ## What It Does
 
 1. Creates a mock L402 server with priced API endpoints
-2. Wraps `bolt402.L402Client` in custom LangChain tools (`L402FetchTool`, `L402CostTool`)
+2. Wraps `L402sdk.L402Client` in custom LangChain tools (`L402FetchTool`, `L402CostTool`)
 3. Simulates an agent calling the tools — fetching data, paying invoices, tracking costs
 4. Demonstrates budget enforcement (over-budget requests are rejected)
 5. Shows token caching (repeated requests skip payment)
@@ -13,8 +13,8 @@ Demonstrates how to build LangChain tools that use bolt402 for automatic Lightni
 ## Quick Start (No API Keys Needed)
 
 ```bash
-# From the bolt402 repo root
-cd crates/bolt402-python
+# From the L402sdk repo root
+cd crates/l402-python
 python -m venv .venv
 source .venv/bin/activate
 pip install maturin langchain-core
@@ -28,7 +28,7 @@ python langchain_example.py
 ## Expected Output
 
 ```
-bolt402 + LangChain Example
+L402sdk + LangChain Example
 ========================================
 
 Mock server running at http://127.0.0.1:XXXXX
@@ -80,7 +80,7 @@ LangChain Agent (ChatOpenAI / any LLM)
     ↓ tool call
 L402FetchTool (custom BaseTool)
     ↓
-bolt402.L402Client.get(url)
+L402sdk.L402Client.get(url)
     ↓
 HTTP 402 → parse challenge → pay invoice → retry → HTTP 200
     ↓
@@ -102,7 +102,7 @@ Replace the mock client with a real Lightning backend:
 
 ```python
 # Instead of create_mock_client(), configure a real backend:
-from bolt402 import L402Client, Budget
+from l402 import L402Client, Budget
 
 client = L402Client(
     backend="lnd",

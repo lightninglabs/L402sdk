@@ -4,18 +4,18 @@
 
 Python is the dominant language for AI agent frameworks. LangChain alone has ~200M monthly PyPI downloads. Developers building L402-enabled agents in Python currently have no native library — they must implement the full protocol flow manually or give up and use API keys.
 
-bolt402's Rust core was designed from day one for cross-language FFI. Python bindings are the first and highest-impact language target.
+L402sdk's Rust core was designed from day one for cross-language FFI. Python bindings are the first and highest-impact language target.
 
 ## Proposed Design
 
-### Crate: `crates/bolt402-python`
+### Crate: `crates/l402-python`
 
-A PyO3 module (`bolt402`) that exposes the Rust core to Python. Uses maturin for building native wheels.
+A PyO3 module (`L402sdk`) that exposes the Rust core to Python. Uses maturin for building native wheels.
 
 ### Python API
 
 ```python
-from bolt402 import L402Client, Budget, InMemoryTokenStore
+from l402 import L402Client, Budget, InMemoryTokenStore
 
 # Create a budget
 budget = Budget(
@@ -49,15 +49,15 @@ receipts = client.receipts()
 Python user code
       │
       ▼
-bolt402 (PyO3 module)
-├── L402Client     → wraps bolt402_core::L402Client
-├── Budget         → wraps bolt402_core::budget::Budget
-├── Receipt        → wraps bolt402_core::receipt::Receipt
-├── TokenStore     → wraps bolt402_core::cache::InMemoryTokenStore
-└── MockBackend    → wraps bolt402_mock (for testing)
+L402sdk (PyO3 module)
+├── L402Client     → wraps l402_core::L402Client
+├── Budget         → wraps l402_core::budget::Budget
+├── Receipt        → wraps l402_core::receipt::Receipt
+├── TokenStore     → wraps l402_core::cache::InMemoryTokenStore
+└── MockBackend    → wraps l402_mock (for testing)
       │
       ▼
-bolt402-core (Rust) + bolt402-mock (Rust)
+l402-core (Rust) + l402-mock (Rust)
 ```
 
 ### Key Decisions
@@ -74,7 +74,7 @@ bolt402-core (Rust) + bolt402-mock (Rust)
 
 ### Alternatives Considered
 
-**Pure Python implementation** (like bolt402-ai-sdk in TypeScript): Faster to ship but means maintaining two implementations of the same logic. The whole point of "Rust first, FFI everywhere" is to write the protocol engine once. Rejected.
+**Pure Python implementation** (like l402-ai-sdk in TypeScript): Faster to ship but means maintaining two implementations of the same logic. The whole point of "Rust first, FFI everywhere" is to write the protocol engine once. Rejected.
 
 **cffi bindings**: Lower-level than PyO3, requires manual memory management in Python. PyO3 provides a much better developer experience with native Python objects. Rejected.
 
@@ -83,20 +83,20 @@ bolt402-core (Rust) + bolt402-mock (Rust)
 1. **Rust-side PyO3 tests**: Verify Python objects are constructed correctly
 2. **Python pytest suite**: End-to-end tests using the mock backend
 3. **CI**: GitHub Actions with maturin build + pytest
-4. **Integration test**: Full L402 flow using `bolt402-mock` server from Python
+4. **Integration test**: Full L402 flow using `l402-mock` server from Python
 
 ### Files
 
 ```
-crates/bolt402-python/
+crates/l402-python/
 ├── Cargo.toml
 ├── pyproject.toml
 ├── src/
 │   └── lib.rs          # PyO3 module definition + all Python-facing types
 ├── python/
-│   └── bolt402/
+│   └── l402/
 │       ├── __init__.py  # Re-exports + type stubs
 │       └── py.typed     # PEP 561 marker
 └── tests/
-    └── test_bolt402.py  # pytest test suite
+    └── test_L402sdk.py  # pytest test suite
 ```

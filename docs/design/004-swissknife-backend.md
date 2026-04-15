@@ -6,7 +6,7 @@
 
 ## Problem
 
-bolt402 currently has one Lightning backend (LND via gRPC). To validate the
+L402sdk currently has one Lightning backend (LND via gRPC). To validate the
 hexagonal architecture and provide a lower-friction option for users, we need
 a second `LnBackend` implementation. SwissKnife (Numeraire's custodial Lightning
 wallet) is the natural choice: it proves the adapter pattern works with a
@@ -14,7 +14,7 @@ fundamentally different backend (REST vs gRPC, custodial vs self-custodial).
 
 ## Design
 
-### Crate: bolt402-swissknife
+### Crate: l402-swissknife
 
 New workspace member implementing `LnBackend` for Numeraire SwissKnife's REST API.
 
@@ -74,7 +74,7 @@ pub enum SwissKnifeError {
 }
 ```
 
-All variants convert to `bolt402_proto::ClientError` via `From` impl:
+All variants convert to `l402_proto::ClientError` via `From` impl:
 - `Payment` → `ClientError::PaymentFailed`
 - `Auth` → `ClientError::Backend` (with auth context)
 - Others → `ClientError::Backend`
@@ -82,15 +82,15 @@ All variants convert to `bolt402_proto::ClientError` via `From` impl:
 ### Dependency Graph
 
 ```
-bolt402-proto  ← bolt402-swissknife (new)
+l402-proto  ← l402-swissknife (new)
      ↑
-bolt402-core
+l402-core
      ↑
-bolt402-lnd
+l402-lnd
 ```
 
-`bolt402-swissknife` depends only on `bolt402-proto` (for the `LnBackend` trait
-and error types). No dependency on `bolt402-core` since the backend
+`l402-swissknife` depends only on `l402-proto` (for the `LnBackend` trait
+and error types). No dependency on `l402-core` since the backend
 doesn't need the L402 client engine.
 
 ## Alternatives Considered

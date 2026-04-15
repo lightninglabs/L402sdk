@@ -41,19 +41,19 @@ jobs:
           python-version: '3.12'
 
       - name: Compile regtest tests (without running)
-        run: cargo test -p bolt402-regtest --no-run
+        run: cargo test -p l402-regtest --no-run
 
       - name: Build WASM package
-        run: wasm-pack build crates/bolt402-wasm --target web
+        run: wasm-pack build crates/l402-wasm --target web
 
       - name: Install WASM Node.js test dependencies
-        working-directory: crates/bolt402-wasm/tests/node
+        working-directory: crates/l402-wasm/tests/node
         run: |
           corepack enable
           yarn install --no-immutable
 
       - name: Build Python bindings
-        working-directory: crates/bolt402-python
+        working-directory: crates/l402-python
         run: |
           python -m venv .venv
           .venv/bin/pip install maturin pytest

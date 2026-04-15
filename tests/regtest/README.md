@@ -6,7 +6,7 @@ against **Aperture** (Lightning Labs' reference L402 reverse proxy).
 ## Protocol Flow Under Test
 
 ```
-Client (bolt402)           Aperture (L402 proxy)           Backend
+Client (L402sdk)           Aperture (L402 proxy)           Backend
      │                           │                           │
      │── GET /api/data ─────────►│                           │
      │◄── 402 + WWW-Authenticate │                           │
@@ -38,7 +38,7 @@ Client (bolt402)           Aperture (L402 proxy)           Backend
               │       │(L402 proxy)│  │ (Node.js)│
               │       └──────────┘    └─────────┘
               │            │
-         bolt402 client tests
+         L402sdk client tests
          (LND gRPC/REST, CLN gRPC/REST)
 ```
 
@@ -76,7 +76,7 @@ make regtest-init
 make regtest-test
 
 # 4. Run a single suite
-cargo test -p bolt402-regtest --test cln_rest_flow -- --nocapture
+cargo test -p l402-regtest --test cln_rest_flow -- --nocapture
 
 # 5. Teardown
 make regtest-down
@@ -119,9 +119,9 @@ The Docker stack is shared infrastructure. Other languages should:
 2. Hit the same `L402_SERVER_URL` (Aperture on port 8081)
 
 Planned:
-- **WASM/Node.js**: `crates/bolt402-wasm/tests/node/integration/`
-- **Python**: `crates/bolt402-python/tests/integration/`
-- **Go**: `bindings/bolt402-go/tests/integration/`
+- **WASM/Node.js**: `crates/l402-wasm/tests/node/integration/`
+- **Python**: `crates/l402-python/tests/integration/`
+- **Go**: `bindings/l402-go/tests/integration/`
 
 ## CI
 

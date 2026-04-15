@@ -6,60 +6,60 @@
 
 ## Problem
 
-bolt402 is a Rust-first L402 client SDK. To reach Go developers and integrate with Go-based AI agent frameworks (notably Lightning Labs' [lightning-agent-tools](https://github.com/lightninglabs/lightning-agent-tools)), we need native Go bindings.
+L402sdk is a Rust-first L402 client SDK. To reach Go developers and integrate with Go-based AI agent frameworks (notably Lightning Labs' [lightning-agent-tools](https://github.com/lightninglabs/lightning-agent-tools)), we need native Go bindings.
 
 ## Proposed Design
 
 Two-layer architecture, following the same pattern as our Python bindings (PyO3):
 
 ```
-bolt402-core (Rust)
+l402-core (Rust)
       ↓
-bolt402-ffi (Rust cdylib/staticlib, extern "C")
+l402-ffi (Rust cdylib/staticlib, extern "C")
       ↓  C ABI
-bolt402-go (Go package via CGo)
+l402-go (Go package via CGo)
       ↓
 Go applications / AI agents
 ```
 
-### Layer 1: `bolt402-ffi` (Rust crate)
+### Layer 1: `l402-ffi` (Rust crate)
 
-A new workspace member that exposes bolt402-core through a C-compatible ABI:
+A new workspace member that exposes l402-core through a C-compatible ABI:
 
 - **Opaque pointers** for `MockServer`, `Client`, `Response`
-- **Thread-local error** via `bolt402_last_error_message()`
+- **Thread-local error** via `l402_last_error_message()`
 - **Shared tokio runtime** for async-to-sync bridging
-- **cbindgen** auto-generates `include/bolt402.h`
-- **String ownership**: returned strings freed with `bolt402_string_free()`
+- **cbindgen** auto-generates `include/L402sdk.h`
+- **String ownership**: returned strings freed with `l402_string_free()`
 
 API surface:
-- `bolt402_mock_server_new/url/free`
-- `bolt402_client_new_mock/free`
-- `bolt402_client_get/post`
-- `bolt402_response_status/paid/body/has_receipt/receipt_*/free`
-- `bolt402_client_total_spent/receipts_json`
-- `bolt402_last_error_message/string_free`
+- `l402_mock_server_new/url/free`
+- `l402_client_new_mock/free`
+- `l402_client_get/post`
+- `l402_response_status/paid/body/has_receipt/receipt_*/free`
+- `l402_client_total_spent/receipts_json`
+- `l402_last_error_message/string_free`
 
-### Layer 2: `bolt402-go` (Go package)
+### Layer 2: `l402-go` (Go package)
 
-Idiomatic Go wrapper in `bindings/bolt402-go/`:
+Idiomatic Go wrapper in `bindings/l402-go/`:
 
-- `MockServer` — wraps `Bolt402MockServer*`, finalizer-protected
-- `Client` — wraps `Bolt402Client*`, finalizer-protected
+- `MockServer` — wraps `L402MockServer*`, finalizer-protected
+- `Client` — wraps `L402Client*`, finalizer-protected
 - `Response` — pure Go struct (status, paid, body, receipt)
 - `Receipt` — pure Go struct with JSON tags for deserialization
-- CGo links against the static library (`libbolt402_ffi.a`)
+- CGo links against the static library (`libl402_ffi.a`)
 
 ### CI Integration
 
 New GitHub Actions job `go` that:
-1. Builds `bolt402-ffi` as a static library
-2. Copies `libbolt402_ffi.a` to `bindings/bolt402-go/lib/`
+1. Builds `l402-ffi` as a static library
+2. Copies `libl402_ffi.a` to `bindings/l402-go/lib/`
 3. Runs `go test -v ./...`
 
 ### Workspace Changes
 
-- Add `bolt402-ffi` to `workspace.members` (but NOT `default-members` since it requires protobuf/cbindgen to build)
+- Add `l402-ffi` to `workspace.members` (but NOT `default-members` since it requires protobuf/cbindgen to build)
 - Add `cbindgen` as workspace build-dependency
 
 ## Key Decisions
@@ -80,15 +80,15 @@ New GitHub Actions job `go` that:
 
 ## Testing Plan
 
-- 4 FFI unit tests in Rust (`bolt402-ffi/src/lib.rs`)
-- 10 Go integration tests (`bolt402-go/bolt402_test.go`)
+- 4 FFI unit tests in Rust (`l402-ffi/src/lib.rs`)
+- 10 Go integration tests (`l402-go/l402_test.go`)
 - CI job validates the full chain: Rust build → static lib → CGo → Go tests
 
 ## Scope
 
 This PR delivers:
-- [x] `bolt402-ffi` crate added to workspace
-- [x] `bolt402-go` package with idiomatic Go API
+- [x] `l402-ffi` crate added to workspace
+- [x] `l402-go` package with idiomatic Go API
 - [x] Go tests (mock server lifecycle, client lifecycle, GET with payment, POST, receipts, error cases)
 - [x] CI job for Go bindings
 - [x] README with usage examples

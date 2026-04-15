@@ -1,4 +1,4 @@
-/** Code snippets for the bolt402 vs lnget comparison. */
+/** Code snippets for the L402sdk vs lnget comparison. */
 
 export interface Snippet {
   language: string;
@@ -67,13 +67,13 @@ const weather = data;                // raw object`,
   },
 ];
 
-export const bolt402Snippets: Snippet[] = [
+export const L402sdkSnippets: Snippet[] = [
   {
     language: "rust",
     label: "Rust",
     shikiLang: "rust",
-    code: `use bolt402_core::{L402Client, Budget};
-use bolt402_lnd::LndBackend;
+    code: `use l402_core::{L402Client, Budget};
+use l402_lnd::LndBackend;
 
 let client = L402Client::builder()
     .ln_backend(LndBackend::new(&config))
@@ -94,11 +94,11 @@ let receipts = client.receipts().await;`,
     language: "typescript",
     label: "TypeScript (Vercel AI SDK)",
     shikiLang: "typescript",
-    code: `import { createBolt402Tools, LndBackend } from "bolt402-ai-sdk";
+    code: `import { createL402Tools, LndBackend } from "l402-ai-sdk";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
-const tools = createBolt402Tools({
+const tools = createL402Tools({
   backend: new LndBackend({
     url: process.env.LND_URL!,
     macaroon: process.env.LND_MACAROON!,
@@ -117,7 +117,7 @@ const { text } = await generateText({
     language: "python",
     label: "Python",
     shikiLang: "python",
-    code: `from bolt402 import L402Client, LndBackend, Budget
+    code: `from l402 import L402Client, LndBackend, Budget
 
 client = L402Client(
     backend=LndBackend(url=url, macaroon=macaroon),
@@ -139,69 +139,69 @@ receipts = client.receipts()`,
 export interface FeatureRow {
   feature: string;
   lnget: string;
-  bolt402: string;
-  advantage: "bolt402" | "lnget" | "neutral";
+  l402: string;
+  advantage: "L402sdk" | "lnget" | "neutral";
 }
 
 export const featureComparison: FeatureRow[] = [
   {
     feature: "Integration model",
     lnget: "CLI binary — subprocess/exec",
-    bolt402: "Library — native import",
-    advantage: "bolt402",
+    l402: "Library — native import",
+    advantage: "L402sdk",
   },
   {
     feature: "Error handling",
     lnget: "Exit codes + stderr strings",
-    bolt402: "Typed Result<T, E> / exceptions",
-    advantage: "bolt402",
+    l402: "Typed Result<T, E> / exceptions",
+    advantage: "L402sdk",
   },
   {
     feature: "Token caching",
     lnget: "File-based (~/.lnget/tokens)",
-    bolt402: "Pluggable (memory, file, localStorage, custom)",
-    advantage: "bolt402",
+    l402: "Pluggable (memory, file, localStorage, custom)",
+    advantage: "L402sdk",
   },
   {
     feature: "Budget control",
     lnget: "--max-cost / --max-fee flags",
-    bolt402: "Programmatic (per-request, hourly, daily, per-domain)",
-    advantage: "bolt402",
+    l402: "Programmatic (per-request, hourly, daily, per-domain)",
+    advantage: "L402sdk",
   },
   {
     feature: "AI framework support",
     lnget: "Shell out from agent code",
-    bolt402: "Native Vercel AI SDK tools, LangChain, etc.",
-    advantage: "bolt402",
+    l402: "Native Vercel AI SDK tools, LangChain, etc.",
+    advantage: "L402sdk",
   },
   {
     feature: "Languages",
     lnget: "Go (source) — consume via shell",
-    bolt402: "Rust, TypeScript, Python (+ Go, WASM planned)",
-    advantage: "bolt402",
+    l402: "Rust, TypeScript, Python (+ Go, WASM planned)",
+    advantage: "L402sdk",
   },
   {
     feature: "Response types",
     lnget: "Raw JSON string",
-    bolt402: "Typed structs / interfaces",
-    advantage: "bolt402",
+    l402: "Typed structs / interfaces",
+    advantage: "L402sdk",
   },
   {
     feature: "Receipt tracking",
     lnget: "JSON output per-request",
-    bolt402: "Built-in receipt log with programmatic access",
-    advantage: "bolt402",
+    l402: "Built-in receipt log with programmatic access",
+    advantage: "L402sdk",
   },
   {
     feature: "Streaming support",
     lnget: "stdout pipe",
-    bolt402: "Native async streams",
-    advantage: "bolt402",
+    l402: "Native async streams",
+    advantage: "L402sdk",
   },
   {
     feature: "Quick CLI usage",
     lnget: "One-liner: lnget <url>",
-    bolt402: "Requires code — not a CLI tool",
+    l402: "Requires code — not a CLI tool",
     advantage: "lnget",
   },
 ];

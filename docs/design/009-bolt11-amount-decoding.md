@@ -13,12 +13,12 @@ For autonomous AI agents spending real money, this is a critical gap. An agent c
 
 ## Proposed Design
 
-### 1. Lightweight BOLT11 amount decoder in `bolt402-proto`
+### 1. Lightweight BOLT11 amount decoder in `l402-proto`
 
-Add a `bolt11` module to `bolt402-proto` with a single function that extracts the amount from a BOLT11 invoice string without full invoice validation.
+Add a `bolt11` module to `l402-proto` with a single function that extracts the amount from a BOLT11 invoice string without full invoice validation.
 
 **Why not `lightning-invoice` crate?**
-- `bolt402-proto` is the lightweight protocol types crate with minimal dependencies (only `base64`, `thiserror`, `tracing`)
+- `l402-proto` is the lightweight protocol types crate with minimal dependencies (only `base64`, `thiserror`, `tracing`)
 - `lightning-invoice` pulls in `secp256k1`, `bitcoin_hashes`, and other crypto deps
 - We only need amount extraction, not signature verification or full parsing
 - Full validation is the job of the Lightning backend (LND/CLN), not the client SDK
@@ -49,7 +49,7 @@ Note: `n` and `p` multipliers can result in sub-satoshi amounts. We round up to 
 ### 2. API
 
 ```rust
-// bolt402-proto/src/bolt11.rs
+// l402-proto/src/bolt11.rs
 
 /// Amount decoded from a BOLT11 invoice, in millisatoshis.
 /// Using millisatoshis preserves sub-satoshi precision from n/p multipliers.
@@ -80,7 +80,7 @@ In `L402Client::request()`, after parsing the L402 challenge and before paying:
 
 ```rust
 // Decode the invoice amount for budget enforcement
-let invoice_amount = bolt402_proto::bolt11::decode_bolt11_amount(&challenge.invoice)?;
+let invoice_amount = l402_proto::bolt11::decode_bolt11_amount(&challenge.invoice)?;
 let amount_sats = invoice_amount
     .map(|a| a.satoshis())
     .unwrap_or(0); // Zero-amount invoices: can't enforce amount budget
@@ -112,7 +112,7 @@ The mock should generate: `lnbc{amount_in_correct_unit}{multiplier}1...` where t
 
 ## Key Decisions
 
-1. **Lightweight decoder over `lightning-invoice` crate** — keeps `bolt402-proto` lean
+1. **Lightweight decoder over `lightning-invoice` crate** — keeps `l402-proto` lean
 2. **Millisatoshi internal representation** — preserves precision from `n`/`p` multipliers
 3. **Ceil rounding for satoshi conversion** — conservative for budget enforcement
 4. **Zero-amount invoices return `None`** — caller decides how to handle (pass 0 to budget)
@@ -121,20 +121,20 @@ The mock should generate: `lnbc{amount_in_correct_unit}{multiplier}1...` where t
 
 ## Alternatives Considered
 
-- **Use `lightning-invoice` crate**: Full validation, but heavy dependency for `bolt402-proto`. Could be added later behind a feature flag if needed.
-- **Move decoding to `bolt402-core`**: Breaks the pattern of protocol types living in `proto`.
+- **Use `lightning-invoice` crate**: Full validation, but heavy dependency for `l402-proto`. Could be added later behind a feature flag if needed.
+- **Move decoding to `l402-core`**: Breaks the pattern of protocol types living in `proto`.
 - **Track fees in budget**: Adds complexity for minimal benefit since routing fees are typically <1% of the payment.
 
 ## Testing Plan
 
-1. **Unit tests in `bolt402-proto`** for the amount decoder:
+1. **Unit tests in `l402-proto`** for the amount decoder:
    - Mainnet/testnet/regtest prefixes
    - All multipliers (m, u, n, p, none)
    - Decimal amounts (e.g., `2500u`)
    - Zero-amount invoices
    - Invalid formats (no `ln` prefix, unknown multiplier, etc.)
    - Edge cases: very large amounts, sub-satoshi precision
-2. **Unit tests in `bolt402-core`** for client budget integration:
+2. **Unit tests in `l402-core`** for client budget integration:
    - Verify `check_and_record` called with decoded amount
    - Verify budget blocks high-amount invoices
    - Verify zero-amount invoices pass budget check

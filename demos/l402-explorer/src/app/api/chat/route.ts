@@ -4,7 +4,7 @@ import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio';
 import { openai } from '@ai-sdk/openai';
 import { anthropic, createAnthropic } from '@ai-sdk/anthropic';
 import { xai } from '@ai-sdk/xai';
-import { createBolt402Tools } from '@lightninglabs/bolt402-ai';
+import { createL402Tools } from '@lightninglabs/l402-ai';
 import { getSharedL402Client } from '@/lib/l402-shared';
 
 // ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ async function getIndexMCPClient() {
 
   mcpInitPromise = (async () => {
     try {
-      console.log('[bolt402-chat] Initializing 402index MCP client...');
+      console.log('[L402sdk-chat] Initializing 402index MCP client...');
       const client = await createMCPClient({
         transport: new Experimental_StdioMCPTransport({
           command: 'npx',
@@ -29,7 +29,7 @@ async function getIndexMCPClient() {
         }),
       });
       mcpClient = client;
-      console.log('[bolt402-chat] 402index MCP client ready');
+      console.log('[L402sdk-chat] 402index MCP client ready');
 
       // Pre-fetch valid categories so the model knows what exists
       try {
@@ -42,12 +42,12 @@ async function getIndexMCPClient() {
           }
         }
       } catch (err) {
-        console.warn('[bolt402-chat] Failed to pre-fetch categories:', err);
+        console.warn('[L402sdk-chat] Failed to pre-fetch categories:', err);
       }
 
       return client;
     } catch (err) {
-      console.error('[bolt402-chat] Failed to init 402index MCP:', err);
+      console.error('[L402sdk-chat] Failed to init 402index MCP:', err);
       mcpInitPromise = null;
       throw err;
     }
@@ -165,7 +165,7 @@ function buildSystemPrompt(): string {
     ? `\n\nKnown service categories in the directory: ${cachedCategories.join(', ')}.`
     : '';
 
-  return `You are an AI research assistant powered by bolt402. You help users query L402-gated APIs and pay for them with Lightning Network micropayments.
+  return `You are an AI research assistant powered by L402sdk. You help users query L402-gated APIs and pay for them with Lightning Network micropayments.
 
 ## Your tools
 
@@ -175,7 +175,7 @@ function buildSystemPrompt(): string {
 - list_categories — Browse available API categories.
 - get_directory_stats — Get ecosystem overview.
 
-**Payment (bolt402):**
+**Payment (L402sdk):**
 - l402_fetch — Fetch any URL, automatically paying Lightning invoices for L402 endpoints. Handles the full L402 flow.
 - l402_get_balance — Check Lightning node balance.
 - l402_get_receipts — Get payment receipts and spending totals.
@@ -218,8 +218,8 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Get bolt402 payment tools (shared client so receipts persist)
-    const bolt402Tools = createBolt402Tools({
+    // Get L402sdk payment tools (shared client so receipts persist)
+    const L402sdkTools = createL402Tools({
       client: getSharedL402Client(),
     });
 
@@ -241,14 +241,14 @@ export async function POST(req: Request) {
         );
       }
     } catch (err) {
-      console.warn('[bolt402-chat] MCP unavailable, agent will use bolt402 tools only:', err);
+      console.warn('[L402sdk-chat] MCP unavailable, agent will use L402sdk tools only:', err);
     }
 
     const modelMessages = await convertToModelMessages(messages);
 
     const allTools = {
       ...indexTools,
-      ...bolt402Tools,
+      ...L402sdkTools,
     } as Parameters<typeof streamText>[0]['tools'];
 
     const result = streamText({
@@ -258,13 +258,13 @@ export async function POST(req: Request) {
       tools: allTools,
       stopWhen: stepCountIs(8),
       onError({ error }) {
-        console.error('[bolt402-chat] Stream error:', error);
+        console.error('[L402sdk-chat] Stream error:', error);
       },
     });
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    console.error('[bolt402-chat] Error:', error);
+    console.error('[L402sdk-chat] Error:', error);
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Internal server error',

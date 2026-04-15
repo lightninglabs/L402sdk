@@ -1,4 +1,4 @@
-//! # bolt402 Getting Started Example
+//! # L402sdk Getting Started Example
 //!
 //! Demonstrates the full L402 payment flow using the mock server.
 //! No real Lightning node needed.
@@ -8,14 +8,14 @@
 //! cargo run --example basic-mock
 //! ```
 
-use bolt402_core::budget::Budget;
-use bolt402_core::cache::InMemoryTokenStore;
-use bolt402_core::{L402Client, L402ClientConfig};
-use bolt402_mock::{EndpointConfig, MockL402Server};
+use l402_core::budget::Budget;
+use l402_core::cache::InMemoryTokenStore;
+use l402_core::{L402Client, L402ClientConfig};
+use l402_mock::{EndpointConfig, MockL402Server};
 
 #[tokio::main]
 async fn main() {
-    println!("bolt402 — Getting Started Example");
+    println!("L402sdk — Getting Started Example");
     println!("==================================");
     println!();
 
@@ -44,7 +44,7 @@ async fn main() {
         .config(L402ClientConfig {
             max_fee_sats: 1000,
             max_retries: 1,
-            user_agent: "bolt402-example/0.1".to_string(),
+            user_agent: "L402sdk-example/0.1".to_string(),
         })
         .build()
         .expect("failed to build client");

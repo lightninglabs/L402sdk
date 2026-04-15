@@ -1,11 +1,11 @@
-# bolt402 vs lnget — Side-by-Side Comparison
+# L402sdk vs lnget — Side-by-Side Comparison
 
-A static comparison page showing the developer experience difference between [bolt402](https://github.com/lightninglabs/bolt402) (embedded SDK) and [lnget](https://github.com/lightninglabs/lnget) (CLI binary) for consuming L402-gated APIs.
+A static comparison page showing the developer experience difference between [L402sdk](https://github.com/lightninglabs/L402sdk) (embedded SDK) and [lnget](https://github.com/lightninglabs/lnget) (CLI binary) for consuming L402-gated APIs.
 
 ## What it shows
 
-- **Split-screen code comparison**: Same L402 endpoint consumed via lnget (shell out) vs bolt402 (native import)
-- **Multi-language snippets**: Rust, TypeScript, and Python bolt402 examples with Shiki syntax highlighting
+- **Split-screen code comparison**: Same L402 endpoint consumed via lnget (shell out) vs L402sdk (native import)
+- **Multi-language snippets**: Rust, TypeScript, and Python L402sdk examples with Shiki syntax highlighting
 - **Architecture diagrams**: External process vs in-process SDK flow
 - **Feature comparison table**: Side-by-side on integration, errors, caching, budget, AI frameworks
 - **When-to-use guide**: Honest guidance on when each tool is the right choice

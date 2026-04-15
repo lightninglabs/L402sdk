@@ -1,4 +1,4 @@
-# 012: bolt402 vs lnget — Side-by-Side Comparison Page
+# 012: L402sdk vs lnget — Side-by-Side Comparison Page
 
 **Issue:** #31
 **Author:** Dario Anongba Varela
@@ -6,17 +6,17 @@
 
 ## Problem
 
-bolt402's key differentiator from lnget is that it's a library (embeddable SDK) rather than a CLI binary. Users evaluating L402 tooling need to immediately see why this matters for production code and AI agent pipelines. A visual comparison page makes the DX difference self-evident.
+L402sdk's key differentiator from lnget is that it's a library (embeddable SDK) rather than a CLI binary. Users evaluating L402 tooling need to immediately see why this matters for production code and AI agent pipelines. A visual comparison page makes the DX difference self-evident.
 
 ## Proposed Design
 
-A single-page comparison demo at `demos/comparison/` built as a static Next.js site. Split-screen layout: lnget CLI approach on the left, bolt402 SDK approach on the right. Same L402 endpoint, same result, fundamentally different integration story.
+A single-page comparison demo at `demos/comparison/` built as a static Next.js site. Split-screen layout: lnget CLI approach on the left, L402sdk SDK approach on the right. Same L402 endpoint, same result, fundamentally different integration story.
 
 ### Layout
 
 ```
 ┌─────────────────────────┬─────────────────────────┐
-│       🔧 lnget          │       ⚡ bolt402         │
+│       🔧 lnget          │       ⚡ L402sdk         │
 │   (CLI / shell-out)     │   (embedded SDK)         │
 │                         │                          │
 │  ┌───────────────────┐  │  ┌───────────────────┐  │
@@ -36,10 +36,10 @@ A single-page comparison demo at `demos/comparison/` built as a static Next.js s
 │  [ Rust ] [ TypeScript ] [ Python ] [ Go (soon) ] │
 │                                                    │
 │  Code snippets for each language showing the       │
-│  bolt402 SDK equivalent                            │
+│  L402sdk SDK equivalent                            │
 ├────────────────────────────────────────────────────┤
 │              Feature Comparison Table               │
-│  Feature            │ lnget    │ bolt402           │
+│  Feature            │ lnget    │ L402sdk           │
 │  ─────────          │ ─────    │ ───────           │
 │  Integration        │ CLI      │ Library           │
 │  Error handling     │ Exit cod │ Typed Result<T>   │
@@ -60,10 +60,10 @@ A single-page comparison demo at `demos/comparison/` built as a static Next.js s
 ### Key Components
 
 1. **`ComparisonHero`** — Header with tagline and one-line pitch
-2. **`SplitComparison`** — Side-by-side panels with lnget vs bolt402 code
+2. **`SplitComparison`** — Side-by-side panels with lnget vs L402sdk code
 3. **`LanguageTabs`** — Tabbed code snippets (Rust, TypeScript, Python)
 4. **`FeatureTable`** — Comparison grid with feature-by-feature breakdown
-5. **`ArchitectureDiagram`** — Visual showing lnget's shell-out vs bolt402's embedded flow
+5. **`ArchitectureDiagram`** — Visual showing lnget's shell-out vs L402sdk's embedded flow
 
 ### Code Snippets
 
@@ -78,7 +78,7 @@ status=$(echo "$result" | jq -r '.status')
 cost=$(echo "$result" | jq -r '.payment.amount_sat')
 ```
 
-**bolt402 (Rust):**
+**L402sdk (Rust):**
 ```rust
 let backend = LndGrpcBackend::connect(
     "https://localhost:10009",
@@ -95,7 +95,7 @@ let response = client.get("https://api.example.com/v1/weather?city=zurich").awai
 let weather: Weather = response.json().await?;
 ```
 
-**bolt402 (TypeScript — Vercel AI SDK):**
+**L402sdk (TypeScript — Vercel AI SDK):**
 ```typescript
 await init();
 
@@ -106,7 +106,7 @@ const client = WasmL402Client.withLndRest(
   100,
 );
 
-const tools = createBolt402Tools({
+const tools = createL402Tools({
   client,
 });
 
@@ -117,7 +117,7 @@ const { text } = await generateText({
 });
 ```
 
-**bolt402 (Python):**
+**L402sdk (Python):**
 ```python
 client = L402Client(
     backend=LndBackend(url=url, macaroon=macaroon),
@@ -130,7 +130,7 @@ weather = response.json()
 
 ### No Live Execution Mode
 
-The issue mentions optional live execution. For this PR, the page is **fully static** — code snippets only. Live execution can be added later by connecting to bolt402-mock, but keeping the first PR focused.
+The issue mentions optional live execution. For this PR, the page is **fully static** — code snippets only. Live execution can be added later by connecting to l402-mock, but keeping the first PR focused.
 
 ## Alternatives Considered
 

@@ -23,13 +23,13 @@ export default async function Home() {
                 L402 Explorer
               </h1>
               <p className="text-[10px] text-zinc-500">
-                by bolt402
+                by L402sdk
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="https://github.com/lightninglabs/bolt402"
+              href="https://github.com/lightninglabs/L402sdk"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
@@ -85,12 +85,12 @@ export default async function Home() {
           <p className="text-center text-[10px] text-zinc-600">
             L402 Explorer — an interactive demo by{' '}
             <a
-              href="https://github.com/lightninglabs/bolt402"
+              href="https://github.com/lightninglabs/L402sdk"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-500 hover:text-[#F7931A] transition-colors"
             >
-              bolt402
+              L402sdk
             </a>
             . Service data from{' '}
             <a

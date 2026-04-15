@@ -1,0 +1,28 @@
+[package]
+name = "l402-core"
+description = "L402 client SDK core: protocol engine, token cache, budget tracker, and Lightning backend abstraction"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories = ["authentication", "web-programming::http-client"]
+keywords = ["l402", "lightning", "bitcoin", "payments", "sdk"]
+
+[dependencies]
+l402-proto = { workspace = true }
+async-trait = { workspace = true }
+bytes = { version = "1" }
+reqwest = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+web-time = "1.1"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+mockall = { workspace = true }
+tokio = { workspace = true, features = ["full", "test-util"] }

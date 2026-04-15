@@ -1,17 +1,17 @@
 # Architecture Guide
 
-bolt402 follows **hexagonal architecture** (ports and adapters), inspired by domain-driven design. The core protocol logic has zero external dependencies beyond standard async/HTTP libraries. Lightning backends and token stores are interchangeable through trait boundaries.
+L402sdk follows **hexagonal architecture** (ports and adapters), inspired by domain-driven design. The core protocol logic has zero external dependencies beyond standard async/HTTP libraries. Lightning backends and token stores are interchangeable through trait boundaries.
 
 ## Crate Dependency Graph
 
 ```
-                         bolt402-proto
+                         l402-proto
                (protocol types, ports, errors)
                 ↑      ↑      ↑      ↑     ↑
                 │      │      │      │     │
      ┌──────────┤      │      │      │     └──────────┐
      │          │      │      │      │                │
-bolt402-lnd  bolt402-  │  bolt402-  bolt402-    bolt402-wasm
+l402-lnd  L402sdk-  │  L402sdk-  L402sdk-    l402-wasm
  (gRPC+REST) swissknife│ (gRPC+REST) nwc       (WASM bindings)
      │          │      │                         wraps: lnd(rest),
      │          │      │                         cln(rest),
@@ -19,27 +19,27 @@ bolt402-lnd  bolt402-  │  bolt402-  bolt402-    bolt402-wasm
      │          │      │
      └─────┬────┘      │
            │           │
-     bolt402-core      bolt402-mock
+     l402-core      l402-mock
      (L402 engine,     (test server)
       budget, cache)
         ↑     ↑
         │     │
-   bolt402- bolt402-
+   L402sdk- L402sdk-
     ffi     python
 ```
 
 | Crate | Role |
 |-------|------|
-| `bolt402-proto` | Shared protocol types: `L402Challenge`, `L402Token`, `L402Error`, `ClientError`. **Also owns all port traits** (`LnBackend`, `TokenStore`) and shared domain types (`PaymentResult`, `NodeInfo`). No async runtime dependency (no tokio). WASM-safe. |
-| `bolt402-core` | The L402 client engine. Contains `L402Client` (HTTP orchestration with reqwest), `BudgetTracker`, `InMemoryTokenStore`, and `Receipt`. Depends on `bolt402-proto` for port traits and shared types. |
-| `bolt402-lnd` | Implements `LnBackend` for LND. Two feature-gated backends: `grpc` (tonic, requires tokio) and `rest` (reqwest, WASM-compatible). Depends on `bolt402-proto` only. |
-| `bolt402-cln` | Implements `LnBackend` for Core Lightning (CLN). Supports gRPC with mTLS and REST with rune authentication (WASM-compatible). |
-| `bolt402-nwc` | Implements `LnBackend` for Nostr Wallet Connect (NIP-47). |
-| `bolt402-swissknife` | Implements `LnBackend` for Numeraire SwissKnife via REST API. Depends on `bolt402-proto` only. WASM-compatible. |
-| `bolt402-mock` | A mock L402 server and mock Lightning backend for testing. No real Lightning infrastructure needed. |
-| `bolt402-wasm` | WebAssembly bindings via `wasm-bindgen`. Exposes `WasmL402Client` (full Rust L402 engine) plus direct backend wrappers for LND REST, CLN REST, and SwissKnife. Depends on `bolt402-core`, `bolt402-proto`, and backend crates. |
-| `bolt402-sqlite` | Persistent `TokenStore` implementation using SQLite. |
-| `bolt402-ai-sdk` | TypeScript package providing Vercel AI SDK tools. Thin wrapper around `WasmL402Client` from `bolt402-wasm` — all L402 logic in Rust/WASM. |
+| `l402-proto` | Shared protocol types: `L402Challenge`, `L402Token`, `L402Error`, `ClientError`. **Also owns all port traits** (`LnBackend`, `TokenStore`) and shared domain types (`PaymentResult`, `NodeInfo`). No async runtime dependency (no tokio). WASM-safe. |
+| `l402-core` | The L402 client engine. Contains `L402Client` (HTTP orchestration with reqwest), `BudgetTracker`, `InMemoryTokenStore`, and `Receipt`. Depends on `l402-proto` for port traits and shared types. |
+| `l402-lnd` | Implements `LnBackend` for LND. Two feature-gated backends: `grpc` (tonic, requires tokio) and `rest` (reqwest, WASM-compatible). Depends on `l402-proto` only. |
+| `l402-cln` | Implements `LnBackend` for Core Lightning (CLN). Supports gRPC with mTLS and REST with rune authentication (WASM-compatible). |
+| `l402-nwc` | Implements `LnBackend` for Nostr Wallet Connect (NIP-47). |
+| `l402-swissknife` | Implements `LnBackend` for Numeraire SwissKnife via REST API. Depends on `l402-proto` only. WASM-compatible. |
+| `l402-mock` | A mock L402 server and mock Lightning backend for testing. No real Lightning infrastructure needed. |
+| `l402-wasm` | WebAssembly bindings via `wasm-bindgen`. Exposes `WasmL402Client` (full Rust L402 engine) plus direct backend wrappers for LND REST, CLN REST, and SwissKnife. Depends on `l402-core`, `l402-proto`, and backend crates. |
+| `l402-sqlite` | Persistent `TokenStore` implementation using SQLite. |
+| `l402-ai-sdk` | TypeScript package providing Vercel AI SDK tools. Thin wrapper around `WasmL402Client` from `l402-wasm` — all L402 logic in Rust/WASM. |
 
 ## Ports and Adapters
 
@@ -47,7 +47,7 @@ The hexagonal architecture separates what the system does (core logic) from how 
 
 ### Ports (Trait Definitions)
 
-Ports live in `bolt402-proto` so that adapter crates can implement them without pulling in tokio or reqwest, enabling WASM compilation:
+Ports live in `l402-proto` so that adapter crates can implement them without pulling in tokio or reqwest, enabling WASM compilation:
 
 ```rust
 // Lightning payment port
@@ -81,37 +81,37 @@ Each adapter lives in its own crate:
 
 | Port | Adapter | Crate | WASM-compatible |
 |------|---------|-------|-----------------|
-| `LnBackend` | LND gRPC | `bolt402-lnd` (feature `grpc`) | No |
-| `LnBackend` | LND REST | `bolt402-lnd` (feature `rest`) | Yes |
-| `LnBackend` | CLN gRPC | `bolt402-cln` | No |
-| `LnBackend` | CLN REST | `bolt402-cln` (feature `rest`) | Yes |
-| `LnBackend` | NWC (NIP-47) | `bolt402-nwc` | No |
-| `LnBackend` | SwissKnife REST | `bolt402-swissknife` | Yes |
-| `LnBackend` | Mock (for testing) | `bolt402-mock` | No |
-| `TokenStore` | In-memory LRU cache | `bolt402-core` (built-in) | Yes |
-| `TokenStore` | SQLite | `bolt402-sqlite` | No |
+| `LnBackend` | LND gRPC | `l402-lnd` (feature `grpc`) | No |
+| `LnBackend` | LND REST | `l402-lnd` (feature `rest`) | Yes |
+| `LnBackend` | CLN gRPC | `l402-cln` | No |
+| `LnBackend` | CLN REST | `l402-cln` (feature `rest`) | Yes |
+| `LnBackend` | NWC (NIP-47) | `l402-nwc` | No |
+| `LnBackend` | SwissKnife REST | `l402-swissknife` | Yes |
+| `LnBackend` | Mock (for testing) | `l402-mock` | No |
+| `TokenStore` | In-memory LRU cache | `l402-core` (built-in) | Yes |
+| `TokenStore` | SQLite | `l402-sqlite` | No |
 
 You can implement your own adapters for LDK or any other Lightning implementation. See the [Custom Backend Tutorial](tutorials/custom-backend.md).
 
 ## WASM Architecture
 
-`bolt402-core` has no async runtime dependency (no tokio). It uses `std::sync::RwLock` for internal state and `web_time::Instant` for timing (transparent shim: re-exports `std::time` on native, uses `performance.now()` on WASM). This means the full L402 engine compiles to WASM.
+`l402-core` has no async runtime dependency (no tokio). It uses `std::sync::RwLock` for internal state and `web_time::Instant` for timing (transparent shim: re-exports `std::time` on native, uses `performance.now()` on WASM). This means the full L402 engine compiles to WASM.
 
 ```
-bolt402-wasm
-  ├── bolt402-core           (L402Client engine — no async runtime)
-  ├── bolt402-proto          (types, ports, errors — no async runtime)
-  ├── bolt402-lnd[rest]      (reqwest → browser fetch on WASM)
-  ├── bolt402-cln[rest]      (reqwest → browser fetch on WASM)
-  └── bolt402-swissknife     (reqwest → browser fetch on WASM)
+l402-wasm
+  ├── l402-core           (L402Client engine — no async runtime)
+  ├── l402-proto          (types, ports, errors — no async runtime)
+  ├── l402-lnd[rest]      (reqwest → browser fetch on WASM)
+  ├── l402-cln[rest]      (reqwest → browser fetch on WASM)
+  └── l402-swissknife     (reqwest → browser fetch on WASM)
 ```
 
-`bolt402-wasm` exposes:
-- **`WasmL402Client`**: Wraps the real `bolt402-core::L402Client` via `Rc<L402Client>`. Factory methods `withLndRest()` and `withSwissKnife()` construct the full client with Rust backends, budget tracker, and in-memory token cache. All L402 protocol logic runs in Rust.
+`l402-wasm` exposes:
+- **`WasmL402Client`**: Wraps the real `l402-core::L402Client` via `Rc<L402Client>`. Factory methods `withLndRest()` and `withSwissKnife()` construct the full client with Rust backends, budget tracker, and in-memory token cache. All L402 protocol logic runs in Rust.
 - **`WasmLndRestBackend`** / **`WasmClnRestBackend`** / **`WasmSwissKnifeBackend`**: Direct wasm-bindgen wrappers around the Rust backends for standalone use.
 - **Utility functions**: `parseL402Challenge()`, `buildL402Header()`, `version()`.
 
-The TypeScript `bolt402-ai-sdk` package is a thin wrapper: it creates Vercel AI SDK tool definitions that delegate to `WasmL402Client`. No L402 protocol logic in TypeScript.
+The TypeScript `l402-ai-sdk` package is a thin wrapper: it creates Vercel AI SDK tool definitions that delegate to `WasmL402Client`. No L402 protocol logic in TypeScript.
 
 ## The L402 Protocol Flow
 
@@ -161,13 +161,13 @@ Budget checks happen before payment. If a limit would be exceeded, `ClientError:
 
 ## Design Principles
 
-1. **WASM-safe foundation.** Both `bolt402-proto` and `bolt402-core` have zero async runtime dependency. The full L402 engine compiles to WASM. Backend crates that use reqwest get browser `fetch` for free on WASM targets.
+1. **WASM-safe foundation.** Both `l402-proto` and `l402-core` have zero async runtime dependency. The full L402 engine compiles to WASM. Backend crates that use reqwest get browser `fetch` for free on WASM targets.
 
-2. **Zero-dependency core.** `bolt402-core` depends only on `bolt402-proto`, reqwest, and `web-time`. No async runtime, no Lightning-specific dependencies leak into the core. Compiles to WASM.
+2. **Zero-dependency core.** `l402-core` depends only on `l402-proto`, reqwest, and `web-time`. No async runtime, no Lightning-specific dependencies leak into the core. Compiles to WASM.
 
 3. **Swap anything.** Need a different Lightning backend? Implement `LnBackend`. Need persistent token storage? Implement `TokenStore`. The core doesn't care.
 
-4. **Test without infrastructure.** `bolt402-mock` provides a complete L402 server and mock Lightning backend. `bolt402-wasm` includes an in-process mock for browser testing. No real Lightning node needed.
+4. **Test without infrastructure.** `l402-mock` provides a complete L402 server and mock Lightning backend. `l402-wasm` includes an in-process mock for browser testing. No real Lightning node needed.
 
 5. **Receipts by default.** Every payment is recorded as a `Receipt` with amount, fees, latency, and payment hash. This makes cost analysis and auditing trivial.
 

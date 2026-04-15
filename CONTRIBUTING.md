@@ -1,12 +1,12 @@
-# Contributing to bolt402
+# Contributing to L402sdk
 
-Thanks for your interest in contributing to bolt402! This guide covers everything you need to get started.
+Thanks for your interest in contributing to L402sdk! This guide covers everything you need to get started.
 
 ## Prerequisites
 
 - **Rust** (stable toolchain, MSRV 1.85) — [rustup.rs](https://rustup.rs/)
-- **Node.js 22+** — only needed for TypeScript packages (`packages/bolt402-ai-sdk`)
-- **protobuf-compiler** — required for the LND gRPC adapter (`bolt402-lnd`)
+- **Node.js 22+** — only needed for TypeScript packages (`packages/l402-ai-sdk`)
+- **protobuf-compiler** — required for the LND gRPC adapter (`l402-lnd`)
   - macOS: `brew install protobuf`
   - Ubuntu/Debian: `sudo apt-get install -y protobuf-compiler`
   - Arch: `sudo pacman -S protobuf`
@@ -15,8 +15,8 @@ Thanks for your interest in contributing to bolt402! This guide covers everythin
 
 ```bash
 # Clone the repository
-git clone https://github.com/lightninglabs/bolt402.git
-cd bolt402
+git clone https://github.com/lightninglabs/L402sdk.git
+cd L402sdk
 
 # Build all Rust crates
 cargo build --workspace
@@ -35,7 +35,7 @@ cargo doc --workspace --no-deps
 For the TypeScript package:
 
 ```bash
-cd packages/bolt402-ai-sdk
+cd packages/l402-ai-sdk
 yarn install
 yarn typecheck
 yarn test
@@ -51,22 +51,22 @@ make ci       # full CI pipeline (fmt + lint + test + doc)
 ## Project Structure
 
 ```
-bolt402/
+l402/
 ├── crates/
-│   ├── bolt402-proto/       # L402 protocol types, parsing, token construction
-│   ├── bolt402-core/        # Client engine, ports (traits), adapters
-│   ├── bolt402-lnd/         # LND backends (gRPC + REST)
-│   ├── bolt402-cln/         # CLN backends (gRPC + REST)
-│   ├── bolt402-nwc/         # Nostr Wallet Connect backend adapter
-│   ├── bolt402-swissknife/  # SwissKnife REST backend adapter
-│   ├── bolt402-mock/        # Mock L402 server for testing
-│   ├── bolt402-sqlite/      # SQLite token store
-│   ├── bolt402-ffi/         # C-compatible FFI layer
-│   ├── bolt402-python/      # Python bindings
-│   └── bolt402-wasm/        # WebAssembly bindings
+│   ├── l402-proto/       # L402 protocol types, parsing, token construction
+│   ├── l402-core/        # Client engine, ports (traits), adapters
+│   ├── l402-lnd/         # LND backends (gRPC + REST)
+│   ├── l402-cln/         # CLN backends (gRPC + REST)
+│   ├── l402-nwc/         # Nostr Wallet Connect backend adapter
+│   ├── l402-swissknife/  # SwissKnife REST backend adapter
+│   ├── l402-mock/        # Mock L402 server for testing
+│   ├── l402-sqlite/      # SQLite token store
+│   ├── l402-ffi/         # C-compatible FFI layer
+│   ├── l402-python/      # Python bindings
+│   └── l402-wasm/        # WebAssembly bindings
 ├── packages/
-│   ├── bolt402-ai-sdk/      # Vercel AI SDK integration (TypeScript)
-│   └── bolt402-langchain/   # LangChain integration (Python package)
+│   ├── l402-ai-sdk/      # Vercel AI SDK integration (TypeScript)
+│   └── l402-langchain/   # LangChain integration (Python package)
 ├── docs/
 │   └── design/              # Design documents for each feature
 ├── AGENTS.md                # Architecture overview
@@ -93,7 +93,7 @@ The architecture is hexagonal (ports and adapters). See [AGENTS.md](AGENTS.md) f
 
 - **Type checking**: `tsc --noEmit` must pass.
 - **Testing**: `vitest` for unit tests.
-- **Style**: Follow the existing code patterns in `packages/bolt402-ai-sdk`.
+- **Style**: Follow the existing code patterns in `packages/l402-ai-sdk`.
 
 See [CLAUDE.md](CLAUDE.md) for the complete coding rules.
 
@@ -101,7 +101,7 @@ See [CLAUDE.md](CLAUDE.md) for the complete coding rules.
 
 ### 1. Open an Issue First
 
-Before starting work, [open an issue](https://github.com/lightninglabs/bolt402/issues/new/choose) to discuss the change. This avoids duplicate work and ensures the change aligns with the project direction.
+Before starting work, [open an issue](https://github.com/lightninglabs/L402sdk/issues/new/choose) to discuss the change. This avoids duplicate work and ensures the change aligns with the project direction.
 
 ### 2. Create a Feature Branch
 
@@ -161,7 +161,7 @@ All of these must be green before merge:
 - `cargo clippy --workspace --all-targets -- -D warnings`
 - `cargo test --workspace`
 - `cargo doc --workspace --no-deps` (with `-D warnings` for rustdoc)
-- TypeScript: `tsc --noEmit` and `vitest run` (for `bolt402-ai-sdk`)
+- TypeScript: `tsc --noEmit` and `vitest run` (for `l402-ai-sdk`)
 
 ## Testing
 
@@ -183,7 +183,7 @@ mod tests {
 
 ### Integration Tests
 
-The `bolt402-mock` crate provides a mock L402 server for integration testing. See `crates/bolt402-mock/tests/` for examples.
+The `l402-mock` crate provides a mock L402 server for integration testing. See `crates/l402-mock/tests/` for examples.
 
 For the Docker-based regtest suite against Aperture:
 
@@ -197,7 +197,7 @@ make regtest-down
 ### TypeScript Tests
 
 ```bash
-cd packages/bolt402-ai-sdk
+cd packages/l402-ai-sdk
 yarn test
 ```
 
@@ -217,4 +217,4 @@ By contributing, you agree that your contributions will be licensed under the pr
 
 ## Questions?
 
-Open a [GitHub issue](https://github.com/lightninglabs/bolt402/issues) for bugs and feature requests. For general questions and discussion, start a conversation in the issue tracker.
+Open a [GitHub issue](https://github.com/lightninglabs/L402sdk/issues) for bugs and feature requests. For general questions and discussion, start a conversation in the issue tracker.

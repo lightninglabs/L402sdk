@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "bolt402 vs lnget — L402 SDK Comparison",
+  title: "L402sdk vs lnget — L402 SDK Comparison",
   description:
-    "Side-by-side comparison of bolt402 (embedded SDK) vs lnget (CLI) for consuming L402-gated APIs with Lightning payments.",
+    "Side-by-side comparison of L402sdk (embedded SDK) vs lnget (CLI) for consuming L402-gated APIs with Lightning payments.",
 };
 
 export default function RootLayout({

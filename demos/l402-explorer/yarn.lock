@@ -716,11 +716,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lightninglabs/bolt402-ai@npm:^0.1.0":
+"@lightninglabs/L402sdk-ai@npm:^0.1.0":
   version: 0.1.0
-  resolution: "@lightninglabs/bolt402-ai@npm:0.1.0"
+  resolution: "@lightninglabs/L402sdk-ai@npm:0.1.0"
   dependencies:
-    "@lightninglabs/bolt402": "npm:^0.1.0"
+    "@lightninglabs/L402sdk": "npm:^0.1.0"
   peerDependencies:
     ai: ">=6.0.0"
     zod: ^3.25.76 || ^4.1.8
@@ -728,9 +728,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lightninglabs/bolt402@npm:^0.1.0":
+"@lightninglabs/L402sdk@npm:^0.1.0":
   version: 0.1.0
-  resolution: "@lightninglabs/bolt402@npm:0.1.0"
+  resolution: "@lightninglabs/L402sdk@npm:0.1.0"
   checksum: 10c0/e19dd17ed9af0f485bac8853660e97bf25bc81830d9decc6eb3eb9c201476ab1ef1cd16e28add3ca047d690b66735445d2273b61d29b95c0b38de4078d2c36ef
   languageName: node
   linkType: hard
@@ -3521,7 +3521,7 @@ __metadata:
     "@ai-sdk/openai": "npm:3.0.41"
     "@ai-sdk/react": "npm:3.0.118"
     "@ai-sdk/xai": "npm:3.0.67"
-    "@lightninglabs/bolt402-ai": "npm:^0.1.0"
+    "@lightninglabs/L402sdk-ai": "npm:^0.1.0"
     "@tailwindcss/postcss": "npm:^4.2.2"
     "@tailwindcss/typography": "npm:^0.5.19"
     "@types/node": "npm:^25.5.0"

@@ -7,7 +7,7 @@
 
 ## Problem
 
-LangChain is the largest AI agent framework with 200M+ monthly PyPI downloads. bolt402 has Python bindings (PyO3) and an existing LangChain example (`examples/langchain/`), but no installable, tested, CI-validated Python package. AI developers need a drop-in integration they can `pip install` and immediately use with LangChain agents.
+LangChain is the largest AI agent framework with 200M+ monthly PyPI downloads. L402sdk has Python bindings (PyO3) and an existing LangChain example (`examples/langchain/`), but no installable, tested, CI-validated Python package. AI developers need a drop-in integration they can `pip install` and immediately use with LangChain agents.
 
 The existing example (`examples/langchain/langchain_example.py`) proves the concept works. Issue #55 asks us to promote this into a proper package with:
 - Installable Python package structure
@@ -19,18 +19,18 @@ The existing example (`examples/langchain/langchain_example.py`) proves the conc
 
 ## Proposed Design
 
-### Package: `bolt402-langchain`
+### Package: `l402-langchain`
 
-A pure-Python package (no Rust build required at install time) that depends on the `bolt402` PyO3 bindings and `langchain-core`.
+A pure-Python package (no Rust build required at install time) that depends on the `L402sdk` PyO3 bindings and `langchain-core`.
 
 ### Directory Structure
 
 ```
-packages/bolt402-langchain/
+packages/l402-langchain/
 ├── pyproject.toml
 ├── README.md
 ├── src/
-│   └── bolt402_langchain/
+│   └── l402_langchain/
 │       ├── __init__.py         # Public API re-exports
 │       ├── tools.py            # L402FetchTool, L402BudgetTool
 │       ├── callbacks.py        # PaymentCallbackHandler (LangChain callback)
@@ -46,11 +46,11 @@ packages/bolt402-langchain/
 
 #### 1. `L402FetchTool` (LangChain BaseTool)
 
-Wraps `bolt402.L402Client.get()` and `.post()` for autonomous API access:
+Wraps `L402sdk.L402Client.get()` and `.post()` for autonomous API access:
 
 ```python
-from bolt402_langchain import L402FetchTool
-from bolt402 import create_mock_client
+from l402_langchain import L402FetchTool
+from l402 import create_mock_client
 
 client, server = create_mock_client({"/api/data": 100})
 tool = L402FetchTool(client=client)
@@ -68,7 +68,7 @@ The tool:
 Reports total spending, receipt count, and per-endpoint breakdown:
 
 ```python
-from bolt402_langchain import L402BudgetTool
+from l402_langchain import L402BudgetTool
 
 budget_tool = L402BudgetTool(client=client)
 result = budget_tool.invoke("")  # "Total spent: 100 sats across 1 payment(s)"
@@ -79,7 +79,7 @@ result = budget_tool.invoke("")  # "Total spent: 100 sats across 1 payment(s)"
 A LangChain callback handler that fires on L402 payment events. Useful for logging, alerting, or integrating with external systems:
 
 ```python
-from bolt402_langchain import PaymentCallbackHandler
+from l402_langchain import PaymentCallbackHandler
 
 handler = PaymentCallbackHandler(
     on_payment=lambda receipt: print(f"Paid {receipt.amount_sats} sats"),
@@ -91,10 +91,10 @@ Since LangChain callbacks fire on tool start/end/error, the handler hooks into `
 
 #### 4. `create_l402_client()` factory
 
-Configuration helper that creates a `bolt402.L402Client` from keyword arguments:
+Configuration helper that creates a `L402sdk.L402Client` from keyword arguments:
 
 ```python
-from bolt402_langchain import create_l402_client
+from l402_langchain import create_l402_client
 
 # Mock mode (for testing)
 client, server = create_l402_client(
@@ -114,7 +114,7 @@ Works with any LangChain agent type:
 ```python
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-from bolt402_langchain import L402FetchTool, L402BudgetTool, create_l402_client
+from l402_langchain import L402FetchTool, L402BudgetTool, create_l402_client
 
 client, server = create_l402_client(backend="mock", endpoints={"/api/data": 100})
 tools = [L402FetchTool(client=client), L402BudgetTool(client=client)]
@@ -124,7 +124,7 @@ executor = AgentExecutor(agent=agent, tools=tools)
 
 ### Key Decisions
 
-1. **Pure Python package**: No Rust compilation at install. Depends on pre-built `bolt402` wheel. This keeps installation simple (`pip install bolt402-langchain`).
+1. **Pure Python package**: No Rust compilation at install. Depends on pre-built `L402sdk` wheel. This keeps installation simple (`pip install l402-langchain`).
 
 2. **`langchain-core` dependency, not `langchain`**: Only depend on the minimal `langchain-core` package (which provides `BaseTool`, `BaseCallbackHandler`). Users bring their own LLM integrations.
 
@@ -138,9 +138,9 @@ executor = AgentExecutor(agent=agent, tools=tools)
 
 ### Alternatives Considered
 
-- **Embedding in `bolt402-python` crate**: Would couple LangChain dependency to the core bindings. Separate package is cleaner.
+- **Embedding in `l402-python` crate**: Would couple LangChain dependency to the core bindings. Separate package is cleaner.
 - **Using `@tool` decorator**: Class-based `BaseTool` is better for dependency injection (client instance).
-- **Async tools**: LangChain supports async but `bolt402` Python bindings use `block_on` internally. Sync tools are simpler and correct.
+- **Async tools**: LangChain supports async but `L402sdk` Python bindings use `block_on` internally. Sync tools are simpler and correct.
 
 ### Testing Plan
 
@@ -148,7 +148,7 @@ executor = AgentExecutor(agent=agent, tools=tools)
 2. **Callback tests**: Verify `PaymentCallbackHandler` fires correctly.
 3. **Config tests**: Verify `create_l402_client()` factory.
 4. **CI integration**: Add a `langchain` job to the GitHub Actions workflow that:
-   - Builds `bolt402` Python bindings via `maturin develop`
-   - Installs `bolt402-langchain` in editable mode
+   - Builds `L402sdk` Python bindings via `maturin develop`
+   - Installs `l402-langchain` in editable mode
    - Runs `pytest` on the package tests
 5. **No LLM in CI**: All tests use mock infrastructure and direct tool invocation. No OpenAI API key required.

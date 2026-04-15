@@ -38,12 +38,12 @@ doc-open:
 
 # Build Python bindings (maturin develop)
 python:
-	cd crates/bolt402-python && .venv/bin/maturin develop
+	cd crates/l402-python && .venv/bin/maturin develop
 
 # Build WASM package (default: bundler target)
 WASM_TARGET ?= bundler
 wasm:
-	wasm-pack build crates/bolt402-wasm --target $(WASM_TARGET) --scope lightninglabs
+	wasm-pack build crates/l402-wasm --target $(WASM_TARGET) --scope lightninglabs
 
 # Clean build artifacts
 clean:
@@ -73,13 +73,13 @@ regtest-init:
 regtest-test: regtest-test-rust regtest-test-python regtest-test-wasm
 
 regtest-test-rust:
-	cargo test -p bolt402-regtest -- --nocapture
+	cargo test -p l402-regtest -- --nocapture
 
 regtest-test-python:
-	cd crates/bolt402-python && .venv/bin/pytest tests/test_regtest.py -v
+	cd crates/l402-python && .venv/bin/pytest tests/test_regtest.py -v
 
 regtest-test-wasm:
-	cd crates/bolt402-wasm/tests/node && yarn vitest run tests/regtest.test.ts
+	cd crates/l402-wasm/tests/node && yarn vitest run tests/regtest.test.ts
 
 # Tear down the regtest stack and remove volumes
 regtest-down:

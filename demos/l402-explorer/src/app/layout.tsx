@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "L402 Explorer — bolt402",
+  title: "L402 Explorer — L402sdk",
   description:
     "Interactive explorer for L402 protocol services. Browse Lightning-payable APIs, visualize the protocol flow, and track spending.",
 };
