@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "l402-langchain"
+name = "l402sdk-langchain"
 version = "0.1.0"
 description = "LangChain integration for L402sdk — L402 Lightning payments in AI agents"
 readme = "README.md"
