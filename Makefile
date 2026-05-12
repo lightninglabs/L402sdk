@@ -48,6 +48,18 @@ wasm:
 # Clean build artifacts
 clean:
 	cargo clean
+	rm -rf crates/l402-wasm/pkg
+	rm -rf bindings/l402-go/lib
+	rm -rf crates/l402-python/.venv crates/l402-python/.pytest_cache crates/l402-python/tests/__pycache__
+	rm -rf packages/*/node_modules packages/*/dist packages/*/coverage packages/*/.cache packages/*/*.tsbuildinfo
+	rm -rf packages/*/.pytest_cache packages/*/tests/__pycache__
+	rm -rf examples/*/node_modules examples/*/dist examples/*/build examples/*/coverage examples/*/.cache
+	rm -rf demos/*/node_modules demos/*/.next demos/*/out demos/*/dist demos/*/build demos/*/coverage demos/*/.cache
+	rm -rf tests/regtest/lnd/tls
+	rm -f tests/regtest/.env tests/regtest/.env.regtest
+	find . -name '*.log' -type f -delete
+	find . -name '*.test' -type f -delete
+	find . -name '*.profraw' -type f -delete
 
 # CI pipeline (same as GitHub Actions)
 ci: fmt lint test doc

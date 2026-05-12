@@ -4,7 +4,8 @@
   "type": "module",
   "packageManager": "yarn@4.13.0",
   "scripts": {
-    "start": "tsx index.ts"
+    "start": "tsx index.ts",
+    "clean": "rm -rf node_modules dist build coverage .cache *.log"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.41",

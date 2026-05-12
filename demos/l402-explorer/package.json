@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "clean": "rm -rf node_modules .next out dist build"
+    "clean": "rm -rf node_modules .next out dist build coverage .cache *.log"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.58",
