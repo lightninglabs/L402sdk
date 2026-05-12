@@ -281,8 +281,7 @@ impl L402Client {
         // Decode the invoice amount for budget enforcement.
         // Zero-amount invoices (no amount in the BOLT11 string) pass with 0.
         let invoice_amount_sats = decode_bolt11_amount(&challenge.invoice)
-            .map(|opt| opt.map_or(0, |a| a.satoshis()))
-            .unwrap_or(0);
+            .map_or(0, |opt| opt.map_or(0, |a| a.satoshis()));
 
         // Check budget with the decoded amount before paying
         self.budget_tracker
