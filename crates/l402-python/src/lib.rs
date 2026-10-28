@@ -320,10 +320,15 @@ impl PyLndRestBackend {
     /// Args:
     ///     url: LND REST API URL (e.g. ``https://localhost:8080``)
     ///     macaroon: Hex-encoded admin macaroon
+    ///     ca_pem: Optional trusted CA certificate in PEM format
     #[new]
-    fn new(url: &str, macaroon: &str) -> PyResult<Self> {
-        let inner = LndRestBackend::new(url, macaroon)
-            .map_err(|e| PyRuntimeError::new_err(format!("failed to create LND backend: {e}")))?;
+    #[pyo3(signature = (url, macaroon, ca_pem=None))]
+    fn new(url: &str, macaroon: &str, ca_pem: Option<&str>) -> PyResult<Self> {
+        let inner = match ca_pem {
+            Some(pem) => LndRestBackend::with_ca_pem(url, macaroon, pem.as_bytes()),
+            None => LndRestBackend::new(url, macaroon),
+        }
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create LND backend: {e}")))?;
         Ok(Self { inner })
     }
 
@@ -479,10 +484,15 @@ impl PyClnRestBackend {
     /// Args:
     ///     url: CLN REST API URL (e.g. ``https://localhost:3001``)
     ///     rune: Rune token string
+    ///     ca_pem: Optional trusted CA certificate in PEM format
     #[new]
-    fn new(url: &str, rune: &str) -> PyResult<Self> {
-        let inner = ClnRestBackend::new(url, rune)
-            .map_err(|e| PyRuntimeError::new_err(format!("failed to create CLN backend: {e}")))?;
+    #[pyo3(signature = (url, rune, ca_pem=None))]
+    fn new(url: &str, rune: &str, ca_pem: Option<&str>) -> PyResult<Self> {
+        let inner = match ca_pem {
+            Some(pem) => ClnRestBackend::with_ca_pem(url, rune, pem.as_bytes()),
+            None => ClnRestBackend::new(url, rune),
+        }
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create CLN backend: {e}")))?;
         Ok(Self { inner })
     }
 
@@ -823,16 +833,21 @@ impl PyL402Client {
     ///     macaroon: Hex-encoded admin macaroon
     ///     budget: Optional budget configuration (default: unlimited)
     ///     max_fee_sats: Maximum routing fee in satoshis (default: 100)
+    ///     ca_pem: Optional trusted CA certificate in PEM format
     #[staticmethod]
-    #[pyo3(signature = (url, macaroon, budget=None, max_fee_sats=100))]
+    #[pyo3(signature = (url, macaroon, budget=None, max_fee_sats=100, ca_pem=None))]
     fn with_lnd_rest(
         url: &str,
         macaroon: &str,
         budget: Option<PyBudget>,
         max_fee_sats: u64,
+        ca_pem: Option<&str>,
     ) -> PyResult<Self> {
-        let backend = LndRestBackend::new(url, macaroon)
-            .map_err(|e| PyRuntimeError::new_err(format!("failed to create LND backend: {e}")))?;
+        let backend = match ca_pem {
+            Some(pem) => LndRestBackend::with_ca_pem(url, macaroon, pem.as_bytes()),
+            None => LndRestBackend::new(url, macaroon),
+        }
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create LND backend: {e}")))?;
 
         build_client(backend, budget, max_fee_sats)
     }
@@ -873,16 +888,21 @@ impl PyL402Client {
     ///     rune: Rune token string
     ///     budget: Optional budget configuration (default: unlimited)
     ///     max_fee_sats: Maximum routing fee in satoshis (default: 100)
+    ///     ca_pem: Optional trusted CA certificate in PEM format
     #[staticmethod]
-    #[pyo3(signature = (url, rune, budget=None, max_fee_sats=100))]
+    #[pyo3(signature = (url, rune, budget=None, max_fee_sats=100, ca_pem=None))]
     fn with_cln_rest(
         url: &str,
         rune: &str,
         budget: Option<PyBudget>,
         max_fee_sats: u64,
+        ca_pem: Option<&str>,
     ) -> PyResult<Self> {
-        let backend = ClnRestBackend::new(url, rune)
-            .map_err(|e| PyRuntimeError::new_err(format!("failed to create CLN backend: {e}")))?;
+        let backend = match ca_pem {
+            Some(pem) => ClnRestBackend::with_ca_pem(url, rune, pem.as_bytes()),
+            None => ClnRestBackend::new(url, rune),
+        }
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create CLN backend: {e}")))?;
 
         build_client(backend, budget, max_fee_sats)
     }
@@ -1163,13 +1183,13 @@ mod tests {
 
     #[test]
     fn lnd_backend_constructor_valid() {
-        let backend = PyLndRestBackend::new("https://localhost:8080", "deadbeef");
+        let backend = PyLndRestBackend::new("https://localhost:8080", "deadbeef", None);
         assert!(backend.is_ok());
     }
 
     #[test]
     fn cln_backend_constructor_valid() {
-        let backend = PyClnRestBackend::new("https://localhost:3001", "test_rune");
+        let backend = PyClnRestBackend::new("https://localhost:3001", "test_rune", None);
         assert!(backend.is_ok());
     }
 
@@ -1212,13 +1232,15 @@ mod tests {
 
     #[test]
     fn client_with_lnd_rest_constructor() {
-        let result = PyL402Client::with_lnd_rest("https://localhost:8080", "deadbeef", None, 100);
+        let result =
+            PyL402Client::with_lnd_rest("https://localhost:8080", "deadbeef", None, 100, None);
         assert!(result.is_ok());
     }
 
     #[test]
     fn client_with_cln_rest_constructor() {
-        let result = PyL402Client::with_cln_rest("https://localhost:3001", "test_rune", None, 100);
+        let result =
+            PyL402Client::with_cln_rest("https://localhost:3001", "test_rune", None, 100, None);
         assert!(result.is_ok());
     }
 
@@ -1232,8 +1254,13 @@ mod tests {
     #[test]
     fn client_with_budget() {
         let budget = PyBudget::new(Some(100), None, None, Some(10000), None);
-        let result =
-            PyL402Client::with_lnd_rest("https://localhost:8080", "deadbeef", Some(budget), 50);
+        let result = PyL402Client::with_lnd_rest(
+            "https://localhost:8080",
+            "deadbeef",
+            Some(budget),
+            50,
+            None,
+        );
         assert!(result.is_ok());
     }
 }

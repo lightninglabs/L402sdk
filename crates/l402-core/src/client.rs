@@ -279,9 +279,12 @@ impl L402Client {
             .and_then(|u| u.host_str().map(String::from));
 
         // Decode the invoice amount for budget enforcement.
-        // Zero-amount invoices (no amount in the BOLT11 string) pass with 0.
-        let invoice_amount_sats = decode_bolt11_amount(&challenge.invoice)
-            .map_or(0, |opt| opt.map_or(0, |a| a.satoshis()));
+        // Never authorize a payment whose amount cannot be checked.
+        let invoice_amount_sats = decode_bolt11_amount(&challenge.invoice)?
+            .ok_or_else(|| l402_proto::L402Error::InvalidInvoice {
+                reason: "automatic L402 payments require an explicit invoice amount".to_string(),
+            })?
+            .satoshis();
 
         // Check budget with the decoded amount before paying
         self.budget_tracker
@@ -496,7 +499,7 @@ mod tests {
         payment_hash: String,
         amount_sats: u64,
         fee_sats: u64,
-        pay_count: AtomicU32,
+        pay_count: Arc<AtomicU32>,
         should_fail: bool,
     }
 
@@ -507,7 +510,7 @@ mod tests {
                 payment_hash: payment_hash.to_string(),
                 amount_sats: amount,
                 fee_sats: 1,
-                pay_count: AtomicU32::new(0),
+                pay_count: Arc::new(AtomicU32::new(0)),
                 should_fail: false,
             }
         }
@@ -518,7 +521,7 @@ mod tests {
                 payment_hash: String::new(),
                 amount_sats: 0,
                 fee_sats: 0,
-                pay_count: AtomicU32::new(0),
+                pay_count: Arc::new(AtomicU32::new(0)),
                 should_fail: true,
             }
         }
@@ -604,6 +607,44 @@ mod tests {
             .build();
 
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn unbudgetable_challenges_never_call_the_payer() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for invoice in [
+            "lnbc1qtest",
+            "lnbcinvalid",
+            "lnbc2.5m1qtest",
+            "lnbc18446744073709551615n1qtest",
+        ] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}", listener.local_addr().unwrap());
+            let reply = format!(
+                "HTTP/1.1 402 Payment Required\r\nWWW-Authenticate: L402 macaroon=\"YWJj\", invoice=\"{invoice}\"\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+            );
+            let server = tokio::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut buf = [0; 4096];
+                assert!(socket.read(&mut buf).await.unwrap() > 0);
+                socket.write_all(reply.as_bytes()).await.unwrap();
+            });
+            let backend = MockLnBackend::failing();
+            let count = backend.pay_count.clone();
+            let client = L402Client::builder()
+                .ln_backend(backend)
+                .token_store(InMemoryTokenStore::default())
+                .build()
+                .unwrap();
+            assert!(
+                matches!(client.get(&url).await, Err(ClientError::Protocol(_))),
+                "{invoice}"
+            );
+            assert_eq!(count.load(Ordering::Relaxed), 0);
+            assert_eq!(client.total_spent().await, 0);
+            assert!(client.receipts().await.is_empty());
+            server.await.unwrap();
+        }
     }
 
     #[test]

@@ -76,17 +76,34 @@ impl LndRestBackend {
     #[allow(clippy::result_large_err)]
     pub fn new(url: &str, macaroon: &str) -> Result<Self, LndError> {
         let builder = HttpClient::builder();
+        // Wallet bearer credentials must not follow redirects to another host.
         #[cfg(not(target_arch = "wasm32"))]
-        let builder = builder.danger_accept_invalid_certs(true);
+        let builder = builder.redirect(reqwest::redirect::Policy::none());
         let client = builder
             .build()
             .map_err(|e| LndError::Transport(format!("failed to build HTTP client: {e}")))?;
+        Ok(Self::with_client(url, macaroon, client))
+    }
 
-        Ok(Self {
-            client,
-            url: url.trim_end_matches('/').to_string(),
-            macaroon: macaroon.to_string(),
-        })
+    /// Create a backend trusting only the supplied PEM-encoded CA certificate.
+    ///
+    /// TLS certificate chains and hostnames remain verified. Native callers
+    /// connecting to self-signed nodes must supply the node's trusted CA here.
+    /// Browsers use their platform trust store instead.
+    ///
+    /// # Errors
+    /// Returns a transport error if the certificate or client is invalid.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[allow(clippy::result_large_err)]
+    pub fn with_ca_pem(url: &str, macaroon: &str, ca_pem: &[u8]) -> Result<Self, LndError> {
+        let ca = reqwest::Certificate::from_pem(ca_pem)
+            .map_err(|e| LndError::Transport(format!("invalid CA certificate: {e}")))?;
+        let client = HttpClient::builder()
+            .tls_certs_only([ca])
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .map_err(|e| LndError::Transport(format!("failed to build HTTP client: {e}")))?;
+        Ok(Self::with_client(url, macaroon, client))
     }
 
     /// Create a new LND REST backend with a custom HTTP client.
@@ -103,6 +120,7 @@ impl LndRestBackend {
     /// Create an LND REST backend from environment variables.
     ///
     /// Reads from:
+    /// - `LND_REST_CA_CERT_PATH` - optional trusted PEM CA file
     /// - `LND_REST_URL` (default: `https://localhost:8080`)
     /// - `LND_MACAROON_HEX` - hex-encoded macaroon string (preferred)
     /// - `LND_MACAROON_PATH` - path to binary macaroon file (fallback, uses sync I/O)
@@ -133,6 +151,9 @@ impl LndRestBackend {
             ));
         };
 
+        if let Ok(path) = std::env::var("LND_REST_CA_CERT_PATH") {
+            return Self::with_ca_pem(&url, &macaroon, &std::fs::read(path)?);
+        }
         Self::new(&url, &macaroon)
     }
 }

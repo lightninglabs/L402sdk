@@ -114,46 +114,34 @@ impl BudgetTracker {
         let current_hour = now / 3600;
         let current_day = now / 86400;
 
-        // Check hourly limit
-        if let Some(hourly_max) = effective_budget.hourly_max {
-            let hourly_spent = state.hourly.get(&current_hour).copied().unwrap_or(0);
-            if hourly_spent + amount > hourly_max {
+        // Compute all counters first: neither overflow nor a failed limit check
+        // may partially mutate the reservation.
+        let checked_total = |spent: u64| {
+            spent
+                .checked_add(amount)
+                .ok_or_else(|| ClientError::BudgetExceeded {
+                    reason: "payment would overflow budget accounting".to_string(),
+                })
+        };
+        let hourly = checked_total(state.hourly.get(&current_hour).copied().unwrap_or(0))?;
+        let daily = checked_total(state.daily.get(&current_day).copied().unwrap_or(0))?;
+        let total = checked_total(state.total)?;
+        for (name, next, limit) in [
+            ("hourly", hourly, effective_budget.hourly_max),
+            ("daily", daily, effective_budget.daily_max),
+            ("total", total, effective_budget.total_max),
+        ] {
+            if let Some(limit) = limit
+                && next > limit
+            {
                 return Err(ClientError::BudgetExceeded {
-                    reason: format!(
-                        "payment of {amount} sats would exceed hourly limit ({hourly_spent} + {amount} > {hourly_max})"
-                    ),
+                    reason: format!("payment would exceed {name} limit ({next} > {limit})"),
                 });
             }
         }
-
-        // Check daily limit
-        if let Some(daily_max) = effective_budget.daily_max {
-            let daily_spent = state.daily.get(&current_day).copied().unwrap_or(0);
-            if daily_spent + amount > daily_max {
-                return Err(ClientError::BudgetExceeded {
-                    reason: format!(
-                        "payment of {amount} sats would exceed daily limit ({daily_spent} + {amount} > {daily_max})"
-                    ),
-                });
-            }
-        }
-
-        // Check total limit
-        if let Some(total_max) = effective_budget.total_max {
-            let total_spent = state.total;
-            if total_spent + amount > total_max {
-                return Err(ClientError::BudgetExceeded {
-                    reason: format!(
-                        "payment of {amount} sats would exceed total limit ({total_spent} + {amount} > {total_max})"
-                    ),
-                });
-            }
-        }
-
-        // Record the spending
-        state.total += amount;
-        *state.hourly.entry(current_hour).or_insert(0) += amount;
-        *state.daily.entry(current_day).or_insert(0) += amount;
+        state.total = total;
+        state.hourly.insert(current_hour, hourly);
+        state.daily.insert(current_day, daily);
 
         // Clean up old entries (older than 48 hours)
         let cutoff_hour = current_hour.saturating_sub(48);
@@ -205,6 +193,27 @@ mod tests {
         assert!(tracker.check_and_record(500, None).await.is_ok());
         assert!(tracker.check_and_record(499, None).await.is_ok());
         assert!(tracker.check_and_record(2, None).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn accounting_overflow_fails_without_mutation() {
+        for total_max in [None, Some(u64::MAX)] {
+            let mut budget = Budget::unlimited();
+            budget.total_max = total_max;
+            let tracker = BudgetTracker::new(budget);
+            tracker.check_and_record(u64::MAX, None).await.unwrap();
+            assert!(tracker.check_and_record(1, None).await.is_err());
+            assert_eq!(tracker.total_spent().await, u64::MAX);
+            assert!(
+                tracker
+                    .state
+                    .read()
+                    .unwrap()
+                    .hourly
+                    .values()
+                    .all(|v| *v == u64::MAX)
+            );
+        }
     }
 
     #[tokio::test]

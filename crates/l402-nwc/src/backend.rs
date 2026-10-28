@@ -123,7 +123,7 @@ impl LnBackend for NwcBackend {
         bolt11: &str,
         _max_fee_sats: u64,
     ) -> Result<PaymentResult, ClientError> {
-        debug!(invoice = %&bolt11[..bolt11.len().min(20)], "paying invoice via NWC");
+        debug!(invoice = %bolt11.chars().take(20).collect::<String>(), "paying invoice via NWC");
 
         let request = PayInvoiceRequest::new(bolt11);
 
