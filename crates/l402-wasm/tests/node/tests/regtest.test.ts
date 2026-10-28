@@ -53,7 +53,8 @@ const SWISSKNIFE_API_URL = process.env.SWISSKNIFE_API_URL || "";
 const SWISSKNIFE_API_KEY = process.env.SWISSKNIFE_API_KEY || "";
 
 const hasLnd = LND_REST_HOST !== "" && LND_MACAROON_HEX !== "";
-const hasSwissKnife = SWISSKNIFE_API_URL !== "" && SWISSKNIFE_API_KEY !== "";
+const SWISSKNIFE_WALLET_ID = process.env.SWISSKNIFE_WALLET_ID || "";
+const hasSwissKnife = SWISSKNIFE_WALLET_ID !== "" && SWISSKNIFE_API_URL !== "" && SWISSKNIFE_API_KEY !== "";
 
 /**
  * Check if the regtest L402 server is reachable.
@@ -75,6 +76,9 @@ describe("Regtest: LND REST backend via WASM", () => {
 
   beforeAll(async () => {
     available = hasLnd && (await isRegtestAvailable());
+    if (process.env.L402_REQUIRE_REGTEST && !available) {
+      throw new Error("Required regtest backend is unavailable");
+    }
     if (!available) {
       console.log(
         "SKIP: regtest LND not available (set L402_SERVER_URL, LND_REST_HOST, LND_MACAROON_HEX)",
@@ -166,6 +170,9 @@ describe("Regtest: SwissKnife backend via WASM", () => {
 
   beforeAll(async () => {
     available = hasSwissKnife && (await isRegtestAvailable());
+    if (process.env.L402_REQUIRE_REGTEST && !available) {
+      throw new Error("Required regtest backend is unavailable");
+    }
     if (!available) {
       console.log(
         "SKIP: regtest SwissKnife not available (set SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY)",
@@ -176,9 +183,10 @@ describe("Regtest: SwissKnife backend via WASM", () => {
   it("full L402 flow via SwissKnife", async () => {
     if (!available) return;
 
-    const client = WasmL402Client.withSwissKnife(
+    const client = WasmL402Client.withSwissKnifeWallet(
       SWISSKNIFE_API_URL,
       SWISSKNIFE_API_KEY,
+      SWISSKNIFE_WALLET_ID,
       WasmBudgetConfig.unlimited(),
       BigInt(100),
     );

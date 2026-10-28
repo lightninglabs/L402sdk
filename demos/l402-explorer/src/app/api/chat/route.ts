@@ -35,7 +35,7 @@ async function getIndexMCPClient() {
       try {
         const tools = await client.tools();
         if (tools.list_categories) {
-          const result = await tools.list_categories.execute({}, { toolCallId: '_init', messages: [] });
+          const result = await tools.list_categories.execute({}, { toolCallId: '_init', messages: [], context: {} });
           const parsed = extractMCPText(result);
           if (parsed?.categories && typeof parsed.categories === 'object') {
             cachedCategories = Object.keys(parsed.categories);

@@ -11,7 +11,7 @@
     <a href="https://www.npmjs.com/package/@lightninglabs/l402-ai"><img alt="npm (AI SDK)" src="https://img.shields.io/npm/v/@lightninglabs/l402-ai.svg?label=npm%20(ai-sdk)"/></a>
     <a href="https://pypi.org/project/l402/"><img alt="PyPI" src="https://img.shields.io/pypi/v/L402sdk.svg?label=pypi"/></a>
     <a href="https://github.com/lightninglabs/L402sdk/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
-    <a href="https://blog.rust-lang.org/2025/02/20/Rust-1.85.0.html"><img alt="Rustc Version 1.85.0+" src="https://img.shields.io/badge/rustc-1.85.0%2B-lightgrey.svg"/></a>
+    <a href="https://www.rust-lang.org/tools/install"><img alt="Rustc Version 1.89.0+" src="https://img.shields.io/badge/rustc-1.89.0%2B-lightgrey.svg"/></a>
   </p>
 
 </div>

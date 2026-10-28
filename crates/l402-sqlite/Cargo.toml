@@ -12,7 +12,7 @@ keywords = ["l402", "lightning", "bitcoin", "sqlite", "token-store"]
 
 [dependencies]
 l402-proto = { workspace = true }
-rusqlite = { version = "0.34", features = ["bundled"] }
+rusqlite = { version = "0.41.1", features = ["bundled"] }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt", "sync"] }
 async-trait = { workspace = true }
@@ -21,7 +21,7 @@ tracing = { workspace = true }
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
 tokio-test = { workspace = true }
-tempfile = "3"
+tempfile = "3.27.0"
 
 [lints]
 workspace = true

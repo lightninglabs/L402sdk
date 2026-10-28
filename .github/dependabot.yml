@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directories:
+      - /packages/l402-ai-sdk
+      - /crates/l402-wasm/tests/node
+      - /demos/l402-explorer
+      - /demos/comparison
+      - /examples/ai-agent
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directories:
+      - /packages/l402-langchain
+      - /crates/l402-python
+      - /examples/langchain
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker-compose
+    directory: /tests/regtest
+    schedule:
+      interval: weekly

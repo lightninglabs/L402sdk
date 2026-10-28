@@ -1,6 +1,6 @@
 # Core dependencies
 L402sdk>=0.1.0
-langchain-core>=0.2.0
+langchain-core>=1.7.1,<2
 
 # Optional: for the full agent example (run_agent_example)
 # langchain>=0.2.0

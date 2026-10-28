@@ -4,7 +4,7 @@ This tutorial walks you through the full L402 payment flow using `l402-mock`. No
 
 ## Prerequisites
 
-- Rust 1.85+ (see [rustup.rs](https://rustup.rs))
+- Rust 1.89+ (see [rustup.rs](https://rustup.rs))
 - Cargo (comes with Rust)
 
 ## Setup

@@ -47,14 +47,12 @@ impl Budget {
     ///
     /// Returns `Ok(())` if allowed, or [`ClientError::BudgetExceeded`] if any limit is violated.
     pub fn check(&self, amount: u64) -> Result<(), ClientError> {
-        if let Some(max) = self.per_request_max {
-            if amount > max {
-                return Err(ClientError::BudgetExceeded {
-                    reason: format!(
-                        "payment of {amount} sats exceeds per-request limit of {max} sats"
-                    ),
-                });
-            }
+        if let Some(max) = self.per_request_max
+            && amount > max
+        {
+            return Err(ClientError::BudgetExceeded {
+                reason: format!("payment of {amount} sats exceeds per-request limit of {max} sats"),
+            });
         }
         Ok(())
     }
@@ -88,7 +86,7 @@ impl BudgetTracker {
     }
 
     /// Check if a payment is allowed and record it if successful.
-    #[allow(clippy::unused_async)] // Kept async for API consistency; callers .await this
+    #[allow(clippy::unused_async, clippy::unused_async_trait_impl)] // Kept async for API consistency; callers .await this
     pub async fn check_and_record(
         &self,
         amount: u64,
@@ -167,7 +165,7 @@ impl BudgetTracker {
     }
 
     /// Get the total amount spent so far.
-    #[allow(clippy::unused_async)] // Kept async for API consistency; callers .await this
+    #[allow(clippy::unused_async, clippy::unused_async_trait_impl)] // Kept async for API consistency; callers .await this
     pub async fn total_spent(&self) -> u64 {
         self.state.read().expect("RwLock poisoned").total
     }

@@ -132,3 +132,8 @@ The `regtest.yml` workflow runs on every PR and push to main:
 4. Runs all Rust regtest tests
 5. Dumps logs on failure
 6. Tears down cleanly
+
+The image versions and digests are pinned in `docker-compose.yml`. Required runs
+(`make regtest-test`) fail when services or credentials are missing. SwissKnife
+0.3 uses `SWISSKNIFE_WALLET_ID`, exported by `init-regtest.sh`. See
+[the upgrade assessment](../../docs/design/068-dependency-refresh.md).

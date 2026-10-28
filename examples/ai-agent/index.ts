@@ -19,8 +19,8 @@ async function main() {
   const client = WasmL402Client.withLndRest(
     process.env.LND_URL ?? 'https://localhost:8080',
     process.env.LND_MACAROON ?? '',
-    new WasmBudgetConfig(1_000, 0, 10_000, 0),
-    100,
+    new WasmBudgetConfig(1_000n, 0n, 10_000n, 0n),
+    100n,
   );
 
   // Step 2: Create tools with the configured client
@@ -55,7 +55,7 @@ async function main() {
       console.log('Tool calls made:');
       for (const step of result.steps) {
         for (const call of step.toolCalls) {
-          console.log(`  - ${call.toolName}(${JSON.stringify(call.args)})`);
+          console.log(`  - ${call.toolName}(${JSON.stringify(call.input)})`);
         }
       }
     }

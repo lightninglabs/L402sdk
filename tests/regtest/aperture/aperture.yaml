@@ -47,6 +47,7 @@ services:
 
   # Health endpoint (free, no L402)
   - name: "health"
+    auth: "off"
     hostregexp: ".*"
     pathregexp: "^/health$"
     address: "backend:9000"

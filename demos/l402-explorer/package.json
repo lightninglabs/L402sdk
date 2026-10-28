@@ -10,31 +10,39 @@
     "clean": "rm -rf node_modules .next out dist build coverage .cache *.log"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "3.0.58",
-    "@ai-sdk/mcp": "1.0.25",
-    "@ai-sdk/openai": "3.0.41",
-    "@ai-sdk/react": "3.0.118",
-    "@ai-sdk/xai": "3.0.67",
+    "@ai-sdk/anthropic": "4.0.90",
+    "@ai-sdk/mcp": "2.0.86",
+    "@ai-sdk/openai": "4.0.104",
+    "@ai-sdk/react": "4.0.159",
+    "@ai-sdk/xai": "5.0.32",
     "@lightninglabs/l402-ai": "^0.1.0",
-    "@tailwindcss/typography": "^0.5.19",
-    "ai": "6.0.116",
-    "next": "16.2.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "@tailwindcss/typography": "^0.5.20",
+    "ai": "7.0.155",
+    "katex": "^0.19.1",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
-    "@types/node": "^25.5.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.0",
-    "tailwindcss": "^4.2.2",
-    "typescript": "^5.9.3"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^10.13.0",
+    "eslint-config-next": "16.4.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3"
   },
-  "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7"
+  "packageManager": "yarn@4.18.1",
+  "resolutions": {
+    "@humanfs/node": "0.16.8",
+    "@babel/core": "7.29.7",
+    "@ungap/structured-clone": "1.4.0",
+    "postcss-selector-parser": "6.1.5",
+    "katex": "0.19.1"
+  }
 }

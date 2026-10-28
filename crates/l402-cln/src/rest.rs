@@ -506,48 +506,61 @@ mod tests {
         assert_eq!(backend.url, "https://localhost:3001");
     }
 
+    // Each environment test runs in its own process; mutating the environment
+    // in Rust's parallel test runner is not safe.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn isolated_env_test(name: &str, values: &[(&str, &str)]) -> bool {
+        if std::env::var("L402_ENV_TEST").as_deref() == Ok(name) {
+            return true;
+        }
+        let status = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", name])
+            .env_remove("CLN_RUNE")
+            .env_remove("CLN_REST_URL")
+            .env("L402_ENV_TEST", name)
+            .envs(values.iter().copied())
+            .status()
+            .unwrap();
+        assert!(status.success());
+        false
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn from_env_missing_auth() {
-        // SAFETY: test runs single-threaded; set_var is safe here.
-        unsafe {
-            std::env::remove_var("CLN_RUNE");
+        if !isolated_env_test("rest::tests::from_env_missing_auth", &[]) {
+            return;
         }
-        let result = ClnRestBackend::from_env();
-        assert!(result.is_err());
+        assert!(ClnRestBackend::from_env().is_err());
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn from_env_rune() {
-        // SAFETY: test runs single-threaded; set_var is safe here.
-        unsafe {
-            std::env::set_var("CLN_RUNE", "test_rune_value");
-            std::env::set_var("CLN_REST_URL", "https://mynode:3001");
+        if !isolated_env_test(
+            "rest::tests::from_env_rune",
+            &[
+                ("CLN_RUNE", "test_rune_value"),
+                ("CLN_REST_URL", "https://mynode:3001"),
+            ],
+        ) {
+            return;
         }
         let backend = ClnRestBackend::from_env().unwrap();
         assert_eq!(backend.url, "https://mynode:3001");
-        // Clean up
-        unsafe {
-            std::env::remove_var("CLN_RUNE");
-            std::env::remove_var("CLN_REST_URL");
-        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn from_env_default_url() {
-        // SAFETY: test runs single-threaded; set_var is safe here.
-        unsafe {
-            std::env::remove_var("CLN_REST_URL");
-            std::env::set_var("CLN_RUNE", "test_rune_value");
+        if !isolated_env_test(
+            "rest::tests::from_env_default_url",
+            &[("CLN_RUNE", "test_rune_value")],
+        ) {
+            return;
         }
         let backend = ClnRestBackend::from_env().unwrap();
         assert_eq!(backend.url, "https://localhost:3001");
-        // Clean up
-        unsafe {
-            std::env::remove_var("CLN_RUNE");
-        }
     }
 
     #[test]

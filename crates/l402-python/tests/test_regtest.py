@@ -57,6 +57,7 @@ CLN_CLIENT_KEY_BASE64 = os.environ.get("CLN_CLIENT_KEY_BASE64", "")
 # SwissKnife credentials
 SWISSKNIFE_API_URL = os.environ.get("SWISSKNIFE_API_URL", "")
 SWISSKNIFE_API_KEY = os.environ.get("SWISSKNIFE_API_KEY", "")
+SWISSKNIFE_WALLET_ID = os.environ.get("SWISSKNIFE_WALLET_ID", "")
 
 
 def _regtest_available() -> bool:
@@ -108,7 +109,15 @@ def _write_temp_file(name: str, b64_content: str) -> str:
 
 def _has_swissknife_credentials() -> bool:
     """Check if SwissKnife credentials are available."""
-    return bool(SWISSKNIFE_API_URL) and bool(SWISSKNIFE_API_KEY)
+    return bool(SWISSKNIFE_API_URL) and bool(SWISSKNIFE_API_KEY) and bool(SWISSKNIFE_WALLET_ID)
+
+
+if os.environ.get("L402_REQUIRE_REGTEST"):
+    assert _regtest_available(), "required Aperture regtest service is unavailable"
+    assert _has_lnd_grpc_credentials(), "required LND credentials are missing"
+    assert _has_cln_credentials(), "required CLN REST credentials are missing"
+    assert _has_cln_grpc_credentials(), "required CLN gRPC credentials are missing"
+    assert _has_swissknife_credentials(), "required SwissKnife credentials are missing"
 
 
 # Skip entire module if regtest is not running
@@ -549,19 +558,19 @@ class TestSwissKnifeL402Flow:
 
     def test_get_info(self):
         """Verify SwissKnife connectivity."""
-        backend = SwissKnifeBackend(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY)
+        backend = SwissKnifeBackend(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
         info = backend.get_info()
         assert info.pubkey  # wallet ID
 
     def test_get_balance(self):
         """Verify SwissKnife balance query."""
-        backend = SwissKnifeBackend(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY)
+        backend = SwissKnifeBackend(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
         balance = backend.get_balance()
         assert isinstance(balance, int)
 
     def test_full_flow(self):
         """GET request with automatic L402 payment via SwissKnife."""
-        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY)
+        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
 
         response = client.get(f"{L402_SERVER_URL}/api/data")
         assert response.status == 200
@@ -571,7 +580,7 @@ class TestSwissKnifeL402Flow:
 
     def test_token_caching(self):
         """Tokens are cached and reused."""
-        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY)
+        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
 
         r1 = client.get(f"{L402_SERVER_URL}/api/data")
         assert r1.paid is True
@@ -594,7 +603,7 @@ class TestSwissKnifeL402Flow:
 
     def test_receipts(self):
         """Receipt tracking works with SwissKnife backend."""
-        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY)
+        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
 
         client.get(f"{L402_SERVER_URL}/api/cheap")
         client.get(f"{L402_SERVER_URL}/api/data")

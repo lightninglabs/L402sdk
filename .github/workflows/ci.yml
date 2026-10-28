@@ -4,19 +4,24 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
+
+permissions:
+  contents: read
 
 jobs:
   fmt:
     name: Formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
@@ -25,23 +30,23 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: clippy
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo clippy --workspace --exclude l402-python --exclude l402-wasm --exclude l402-regtest --all-targets -- -D warnings
+      - run: cargo clippy --workspace --all-features --all-targets -- -D warnings
 
   test:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: sudo apt-get install -y protobuf-compiler
-      - run: cargo test --workspace --exclude l402-python --exclude l402-wasm --exclude l402-regtest
+      - run: cargo test --workspace --exclude l402-python --exclude l402-regtest --all-features
 
   doc:
     name: Documentation
@@ -49,42 +54,51 @@ jobs:
     env:
       RUSTDOCFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: sudo apt-get install -y protobuf-compiler
       - run: cargo doc --workspace --exclude l402-python --exclude l402-wasm --exclude l402-regtest --no-deps
 
   python:
-    name: Python Bindings
+    name: Python Bindings (${{ matrix.python }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.9', '3.15']
     defaults:
       run:
         working-directory: crates/l402-python
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
       - run: sudo apt-get install -y protobuf-compiler
       - run: python -m venv .venv
-      - run: .venv/bin/pip install maturin pytest
+      - run: .venv/bin/pip install --upgrade pip maturin==1.15.0 'pytest>=8.4.2'
       - run: .venv/bin/maturin develop
       - run: .venv/bin/pytest tests/ -v
 
   go:
-    name: Go Bindings
-    runs-on: ubuntu-latest
+    name: Go Bindings (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.21'
-      - run: sudo apt-get install -y protobuf-compiler
+          go-version: '1.27.3'
+      - if: runner.os == 'Linux'
+        run: sudo apt-get install -y protobuf-compiler
+      - if: runner.os == 'macOS'
+        run: brew install protobuf
       - name: Build FFI static library
         run: cargo build -p l402-ffi --release
       - name: Copy library to Go bindings
@@ -99,13 +113,13 @@ jobs:
     name: WASM Bindings
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Install wasm-pack
-        run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
+        run: bash "${{ github.workspace }}/scripts/install-wasm-pack.sh"
       - name: Build WASM (web target)
         run: wasm-pack build crates/l402-wasm --target web
       - name: Run native unit tests
@@ -117,22 +131,27 @@ jobs:
     name: LangChain Integration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: '3.15'
       - run: sudo apt-get install -y protobuf-compiler
       - name: Build Python bindings
         working-directory: crates/l402-python
         run: |
           python -m venv .venv
-          .venv/bin/pip install maturin pytest
+          .venv/bin/pip install --upgrade pip maturin==1.15.0 pytest==9.2.0
           .venv/bin/maturin develop
       - name: Install l402-langchain
         working-directory: crates/l402-python
         run: .venv/bin/pip install -e ../../packages/l402-langchain
+      - name: Audit Python dependencies
+        working-directory: crates/l402-python
+        run: |
+          .venv/bin/pip install pip-audit==2.10.1
+          .venv/bin/pip-audit --skip-editable
       - name: Run LangChain tests
         working-directory: crates/l402-python
         run: .venv/bin/pytest ../../packages/l402-langchain/tests/ -v
@@ -145,22 +164,23 @@ jobs:
       run:
         working-directory: crates/l402-wasm/tests/node
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Install wasm-pack
-        run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
+        run: bash "${{ github.workspace }}/scripts/install-wasm-pack.sh"
       - name: Build WASM package
         run: wasm-pack build crates/l402-wasm --target web
         working-directory: ${{ github.workspace }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
-      - run: corepack enable
+          node-version: '26.13.0'
+      - run: npm install --global corepack@0.36.0 && corepack enable
       - run: yarn install --no-immutable
       - run: yarn vitest run
+      - run: yarn npm audit --all --recursive
 
   typescript:
     name: TypeScript (l402-ai-sdk)
@@ -170,23 +190,73 @@ jobs:
       run:
         working-directory: packages/l402-ai-sdk
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Install wasm-pack
-        run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
+        run: bash "${{ github.workspace }}/scripts/install-wasm-pack.sh"
       - name: Build WASM package
         run: wasm-pack build crates/l402-wasm --target web
         working-directory: .
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
-      - run: corepack enable
+          node-version: '26.13.0'
+      - run: npm install --global corepack@0.36.0 && corepack enable
       - run: yarn install --no-immutable  # WASM pkg is rebuilt each CI run, hash always changes
       - run: yarn tsc --noEmit
       - run: yarn vitest run
+      - run: yarn npm audit --all --recursive
+
+  msrv:
+    name: Minimum Rust version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: '1.89.0'
+      - run: sudo apt-get install -y protobuf-compiler
+      - run: cargo check --workspace --all-features
+      - run: cargo check -p l402-lnd -p l402-cln --no-default-features --features rest
+
+  audit:
+    name: Rust dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo install cargo-audit --version 0.22.2 --locked
+      - run: cargo generate-lockfile
+      - run: cargo audit --deny warnings
+
+  demos:
+    name: Node package (${{ matrix.directory }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: demos/l402-explorer
+            check: yarn lint && yarn build && node scripts/test-math.mjs
+          - directory: demos/comparison
+            check: yarn lint && yarn build
+          - directory: examples/ai-agent
+            check: yarn typecheck
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+      - run: npm install --global corepack@0.36.0 && corepack enable
+      - run: yarn install --immutable
+      - run: yarn npm audit --all --recursive
+      - run: ${{ matrix.check }}
 
   # ============================================================
   # Release orchestration (main branch only, after all tests pass)
@@ -195,7 +265,7 @@ jobs:
   check-npm-releases:
     name: Check NPM version bumps
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [fmt, clippy, test, doc, wasm, wasm-node-tests, typescript]
+    needs: [fmt, clippy, test, doc, wasm, wasm-node-tests, typescript, audit, demos, msrv]
     uses: ./.github/workflows/check-npm-releases.yml
 
   publish-l402-wasm:
@@ -223,13 +293,16 @@ jobs:
   check-pypi-releases:
     name: Check PyPI version bumps
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [fmt, clippy, test, doc, python, langchain]
+    needs: [fmt, clippy, test, doc, python, langchain, audit, msrv]
     uses: ./.github/workflows/check-pypi-releases.yml
 
   publish-l402-python:
     name: Publish L402sdk (Python)
     needs: check-pypi-releases
     if: needs.check-pypi-releases.outputs.l402_python == 'true'
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/publish-l402-python.yml
     secrets: inherit
 
@@ -237,5 +310,8 @@ jobs:
     name: Publish l402-langchain
     needs: check-pypi-releases
     if: needs.check-pypi-releases.outputs.l402_langchain == 'true'
+    permissions:
+      contents: write
+      id-token: write
     uses: ./.github/workflows/publish-l402-langchain.yml
     secrets: inherit

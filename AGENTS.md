@@ -119,7 +119,7 @@ See `CLAUDE.md` for specific instructions when working on this codebase.
 - **L402sdk name**: Renamed from `lnpay` (already taken). "bolt" references BOLT specs, "402" references HTTP 402
 - **Dual license**: MIT OR Apache-2.0 (matches Rust ecosystem convention)
 - **Edition 2024**: Using latest Rust edition
-- **MSRV 1.85**: Minimum supported Rust version
+- **MSRV 1.89**: Minimum supported Rust version
 - **No autonomous merges in cron jobs**: Open PRs, leave for Dario's review
 - **No standalone binaries**: L402sdk is a library/SDK. MCP server, CLI tools belong elsewhere
 

@@ -75,12 +75,17 @@ pub async fn regtest_available() -> bool {
         .build()
         .unwrap();
 
-    match client.get(&url).send().await {
+    let available = match client.get(&url).send().await {
         // Aperture returns 402 for all routes (including /health) when it's running.
         // A 402 means the L402 server is up and ready.
         Ok(resp) => resp.status().is_success() || resp.status().as_u16() == 402,
         Err(_) => false,
-    }
+    };
+    assert!(
+        std::env::var_os("L402_REQUIRE_REGTEST").is_none() || available,
+        "required Aperture regtest service is unavailable"
+    );
+    available
 }
 
 /// Create an `LndGrpcBackend` (Alice, payer) from regtest environment.
@@ -89,14 +94,16 @@ pub async fn lnd_grpc_backend() -> LndGrpcBackend {
     let cert_base64 = env_required("LND_TLS_CERT_BASE64");
     let macaroon_hex = env_required("LND_MACAROON_HEX");
 
-    // Write cert to temp file (LndGrpcBackend reads from path)
+    let tmp = tempfile::tempdir().expect("failed to create private credential directory");
+
+    // Each connection owns its files; concurrent tests cannot truncate them.
     let cert_bytes = base64_decode(&cert_base64);
-    let cert_path = std::env::temp_dir().join("l402-regtest-tls.cert");
+    let cert_path = tmp.path().join("tls.cert");
     std::fs::write(&cert_path, &cert_bytes).expect("failed to write TLS cert");
 
     // Write macaroon to temp file
     let macaroon_bytes = hex::decode(&macaroon_hex).expect("invalid macaroon hex");
-    let macaroon_path = std::env::temp_dir().join("l402-regtest-admin.macaroon");
+    let macaroon_path = tmp.path().join("admin.macaroon");
     std::fs::write(&macaroon_path, &macaroon_bytes).expect("failed to write macaroon");
 
     LndGrpcBackend::connect(
@@ -122,6 +129,15 @@ pub fn lnd_rest_backend() -> LndRestBackend {
 /// Returns `None` if CLN credentials are not available (CLN gRPC certs
 /// are generated at runtime and may not exist).
 pub async fn cln_backend() -> Option<l402_cln::ClnGrpcBackend> {
+    let backend = try_cln_backend().await;
+    assert!(
+        std::env::var_os("L402_REQUIRE_REGTEST").is_none() || backend.is_some(),
+        "required regtest backend cln_backend is unavailable"
+    );
+    backend
+}
+
+async fn try_cln_backend() -> Option<l402_cln::ClnGrpcBackend> {
     let host =
         std::env::var("CLN_GRPC_HOST").unwrap_or_else(|_| "https://localhost:9736".to_string());
 
@@ -134,11 +150,11 @@ pub async fn cln_backend() -> Option<l402_cln::ClnGrpcBackend> {
         return None;
     }
 
-    // Write certs to temp files
-    let tmp = std::env::temp_dir();
-    let ca_path = tmp.join("l402-regtest-cln-ca.pem");
-    let cert_path = tmp.join("l402-regtest-cln-client.pem");
-    let key_path = tmp.join("l402-regtest-cln-client-key.pem");
+    // Isolate credentials from parallel connections and clean up on return.
+    let tmp = tempfile::tempdir().ok()?;
+    let ca_path = tmp.path().join("l402-regtest-cln-ca.pem");
+    let cert_path = tmp.path().join("l402-regtest-cln-client.pem");
+    let key_path = tmp.path().join("l402-regtest-cln-client-key.pem");
 
     std::fs::write(&ca_path, base64_decode(&ca_b64)).ok()?;
     std::fs::write(&cert_path, base64_decode(&client_cert_b64)).ok()?;
@@ -165,6 +181,15 @@ pub async fn cln_backend() -> Option<l402_cln::ClnGrpcBackend> {
 /// Returns `None` if the CLN REST rune is not available or the REST API
 /// cannot be reached.
 pub async fn cln_rest_backend() -> Option<l402_cln::ClnRestBackend> {
+    let backend = try_cln_rest_backend().await;
+    assert!(
+        std::env::var_os("L402_REQUIRE_REGTEST").is_none() || backend.is_some(),
+        "required regtest backend cln_rest_backend is unavailable"
+    );
+    backend
+}
+
+async fn try_cln_rest_backend() -> Option<l402_cln::ClnRestBackend> {
     let host =
         std::env::var("CLN_REST_URL").unwrap_or_else(|_| "https://localhost:3010".to_string());
 
@@ -197,6 +222,15 @@ pub async fn cln_rest_backend() -> Option<l402_cln::ClnRestBackend> {
 ///
 /// Returns `None` if SwissKnife is not configured or not reachable.
 pub async fn swissknife_backend() -> Option<l402_swissknife::SwissKnifeBackend> {
+    let backend = try_swissknife_backend().await;
+    assert!(
+        std::env::var_os("L402_REQUIRE_REGTEST").is_none() || backend.is_some(),
+        "required regtest backend swissknife_backend is unavailable"
+    );
+    backend
+}
+
+async fn try_swissknife_backend() -> Option<l402_swissknife::SwissKnifeBackend> {
     let url = std::env::var("SWISSKNIFE_API_URL").ok()?;
     let api_key = std::env::var("SWISSKNIFE_API_KEY").ok()?;
 
@@ -205,7 +239,9 @@ pub async fn swissknife_backend() -> Option<l402_swissknife::SwissKnifeBackend> 
         return None;
     }
 
-    let backend = l402_swissknife::SwissKnifeBackend::new(&url, &api_key);
+    let backend = l402_swissknife::SwissKnifeBackend::new(&url, &api_key)
+        .with_wallet(&env_required("SWISSKNIFE_WALLET_ID"))
+        .expect("invalid regtest wallet ID");
 
     // Verify connectivity
     match l402_proto::LnBackend::get_info(&backend).await {

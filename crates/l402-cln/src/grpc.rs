@@ -1,7 +1,7 @@
 //! CLN gRPC backend implementation using vendored protos.
 //!
 //! Connects to a Core Lightning node via gRPC with mutual TLS (mTLS)
-//! authentication. Uses the `Pay` RPC for invoice payments, `ListFunds`
+//! authentication. Uses the `Xpay` RPC for invoice payments, `ListFunds`
 //! for balance queries, and `Getinfo` for node information.
 //!
 //! # Example
@@ -25,6 +25,7 @@ use std::fmt;
 use async_trait::async_trait;
 use l402_proto::ClientError;
 use l402_proto::{LnBackend, NodeInfo, PaymentResult};
+use sha2::{Digest, Sha256};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig, Identity};
 use tracing::debug;
 
@@ -36,7 +37,7 @@ use crate::error::ClnError;
 ///
 /// Connects to a CLN node using mutual TLS (mTLS) authentication,
 /// then implements the [`LnBackend`] trait for invoice payments.
-/// Uses CLN's high-level `Pay` RPC for pathfinding and payment execution.
+/// Uses CLN's high-level `Xpay` RPC for pathfinding and payment execution.
 ///
 /// # Authentication
 ///
@@ -161,8 +162,8 @@ impl LnBackend for ClnGrpcBackend {
         // Convert max_fee_sats to millisatoshis for CLN's maxfee field.
         let max_fee_msat = max_fee_sats.saturating_mul(1000);
 
-        let request = cln::PayRequest {
-            bolt11: bolt11.to_string(),
+        let request = cln::XpayRequest {
+            invstring: bolt11.to_string(),
             maxfee: Some(cln::Amount { msat: max_fee_msat }),
             retry_for: Some(60),
             ..Default::default()
@@ -171,35 +172,23 @@ impl LnBackend for ClnGrpcBackend {
         let response = self
             .client
             .clone()
-            .pay(request)
+            .xpay(request)
             .await
             .map_err(ClnError::from)?
             .into_inner();
 
-        match response.status() {
-            cln::pay_response::PayStatus::Complete => {
-                let preimage = hex::encode(&response.payment_preimage);
-                let payment_hash = hex::encode(&response.payment_hash);
+        let preimage = hex::encode(&response.payment_preimage);
+        let payment_hash = hex::encode(Sha256::digest(&response.payment_preimage));
+        let amount_msat = response.amount_msat.as_ref().map_or(0, |a| a.msat);
+        let sent_msat = response.amount_sent_msat.as_ref().map_or(0, |a| a.msat);
+        let fee_msat = sent_msat.saturating_sub(amount_msat);
 
-                // CLN returns amounts in millisatoshis via the Amount message.
-                let amount_msat = response.amount_msat.as_ref().map_or(0, |a| a.msat);
-                let sent_msat = response.amount_sent_msat.as_ref().map_or(0, |a| a.msat);
-                let fee_msat = sent_msat.saturating_sub(amount_msat);
-
-                Ok(PaymentResult {
-                    preimage,
-                    payment_hash,
-                    amount_sats: amount_msat / 1000,
-                    fee_sats: fee_msat / 1000,
-                })
-            }
-            cln::pay_response::PayStatus::Pending => {
-                Err(ClnError::Payment("payment still pending".to_string()).into())
-            }
-            cln::pay_response::PayStatus::Failed => {
-                Err(ClnError::Payment("payment failed".to_string()).into())
-            }
-        }
+        Ok(PaymentResult {
+            preimage,
+            payment_hash,
+            amount_sats: amount_msat / 1000,
+            fee_sats: fee_msat / 1000,
+        })
     }
 
     async fn get_balance(&self) -> Result<u64, ClientError> {
@@ -251,10 +240,10 @@ impl LnBackend for ClnGrpcBackend {
 
 /// Expand `~` to the home directory.
 fn expand_home(path: &str) -> String {
-    if let Some(rest) = path.strip_prefix("~/") {
-        if let Ok(home) = std::env::var("HOME") {
-            return format!("{home}/{rest}");
-        }
+    if let Some(rest) = path.strip_prefix("~/")
+        && let Ok(home) = std::env::var("HOME")
+    {
+        return format!("{home}/{rest}");
     }
     path.to_string()
 }

@@ -4,8 +4,8 @@ Thanks for your interest in contributing to L402sdk! This guide covers everythin
 
 ## Prerequisites
 
-- **Rust** (stable toolchain, MSRV 1.85) — [rustup.rs](https://rustup.rs/)
-- **Node.js 22+** — only needed for TypeScript packages (`packages/l402-ai-sdk`)
+- **Rust** (stable toolchain, MSRV 1.89) — [rustup.rs](https://rustup.rs/)
+- **Node.js 26 LTS** — only needed for TypeScript packages (`packages/l402-ai-sdk`)
 - **protobuf-compiler** — required for the LND gRPC adapter (`l402-lnd`)
   - macOS: `brew install protobuf`
   - Ubuntu/Debian: `sudo apt-get install -y protobuf-compiler`
