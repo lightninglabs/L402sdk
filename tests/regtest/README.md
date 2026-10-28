@@ -136,4 +136,4 @@ The `regtest.yml` workflow runs on every PR and push to main:
 The image versions and digests are pinned in `docker-compose.yml`. Required runs
 (`make regtest-test`) fail when services or credentials are missing. SwissKnife
 0.3 uses `SWISSKNIFE_WALLET_ID`, exported by `init-regtest.sh`. See
-[the upgrade assessment](../../docs/design/068-dependency-refresh.md).
+[the upstream release assessment](https://github.com/lightninglabs/aperture/issues/311).
