@@ -13,12 +13,12 @@ keywords = ["l402", "lightning", "bitcoin", "payments", "sdk"]
 [dependencies]
 l402-proto = { workspace = true }
 async-trait = { workspace = true }
-bytes = { version = "1" }
+bytes = { version = "1.12.1" }
 reqwest = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-web-time = "1.1"
+web-time = "1.1.0"
 
 [lints]
 workspace = true

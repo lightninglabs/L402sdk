@@ -11,11 +11,11 @@ build:
 
 # Run all tests
 test:
-	cargo test --workspace
+	cargo test --workspace --exclude l402-python --exclude l402-regtest --all-features
 
 # Run clippy lints
 lint:
-	cargo clippy --workspace --all-targets -- -D warnings
+	cargo clippy --workspace --all-features --all-targets -- -D warnings
 
 # Check formatting
 fmt:
@@ -85,13 +85,13 @@ regtest-init:
 regtest-test: regtest-test-rust regtest-test-python regtest-test-wasm
 
 regtest-test-rust:
-	cargo test -p l402-regtest -- --nocapture
+	L402_REQUIRE_REGTEST=1 cargo test -p l402-regtest -- --nocapture
 
 regtest-test-python:
-	cd crates/l402-python && .venv/bin/pytest tests/test_regtest.py -v
+	cd crates/l402-python && L402_REQUIRE_REGTEST=1 .venv/bin/pytest tests/test_regtest.py -v
 
 regtest-test-wasm:
-	cd crates/l402-wasm/tests/node && yarn vitest run tests/regtest.test.ts
+	cd crates/l402-wasm/tests/node && NODE_EXTRA_CA_CERTS="$(CURDIR)/tests/regtest/lnd/tls/ca.pem" L402_REQUIRE_REGTEST=1 yarn vitest run tests/regtest.test.ts
 
 # Tear down the regtest stack and remove volumes
 regtest-down:

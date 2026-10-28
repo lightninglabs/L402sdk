@@ -53,7 +53,7 @@ impl PendingChallenge {
             .take(20)
             .collect::<String>();
 
-        let invoice = if amount_sats >= 100 && amount_sats % 100 == 0 {
+        let invoice = if amount_sats >= 100 && amount_sats.is_multiple_of(100) {
             format!("lnbc{}u1mock{safe_hash}", amount_sats / 100)
         } else {
             // Use nanobitcoin: amount_sats sats = amount_sats * 10 nanobitcoin

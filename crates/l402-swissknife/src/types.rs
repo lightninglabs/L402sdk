@@ -31,8 +31,18 @@ pub(crate) struct PaymentResponse {
     /// Hex-encoded payment preimage (proof of payment).
     pub payment_preimage: Option<String>,
 
+    /// Lightning details returned by SwissKnife 0.3 and later.
+    pub lightning: Option<LightningPayment>,
+
     /// Error message (populated when status is Failed).
     pub error: Option<String>,
+}
+
+/// Lightning-specific payment proof in SwissKnife 0.3 responses.
+#[derive(Debug, Deserialize)]
+pub(crate) struct LightningPayment {
+    pub payment_hash: String,
+    pub payment_preimage: Option<String>,
 }
 
 /// Payment status from SwissKnife.
@@ -81,6 +91,18 @@ pub(crate) struct ErrorResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn deserialize_current_lightning_payment() {
+        let payment: PaymentResponse = serde_json::from_value(serde_json::json!({
+            "amount_msat": 100_000, "fee_msat": 10, "status": "Settled",
+            "lightning": {"payment_hash": "hash", "payment_preimage": "preimage"}
+        }))
+        .unwrap();
+        let proof = payment.lightning.unwrap();
+        assert_eq!(proof.payment_hash, "hash");
+        assert_eq!(proof.payment_preimage.as_deref(), Some("preimage"));
+    }
 
     #[test]
     fn deserialize_payment_response_settled() {

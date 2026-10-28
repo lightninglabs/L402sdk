@@ -220,7 +220,7 @@ fn parse_pico_amount(number_str: &str) -> Result<u64, L402Error> {
     })?;
 
     // BOLT11 spec: pico amounts must be multiples of 10
-    if value % 10 != 0 {
+    if !value.is_multiple_of(10) {
         return Err(L402Error::InvalidInvoice {
             reason: format!("picobitcoin amount must be a multiple of 10, got {value}"),
         });

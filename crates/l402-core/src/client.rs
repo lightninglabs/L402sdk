@@ -400,7 +400,7 @@ impl L402Client {
     }
 
     /// Get all recorded payment receipts.
-    #[allow(clippy::unused_async)] // Kept async for API consistency with total_spent()
+    #[allow(clippy::unused_async, clippy::unused_async_trait_impl)] // Kept async for API consistency with total_spent()
     pub async fn receipts(&self) -> Vec<Receipt> {
         self.receipts.read().expect("RwLock poisoned").clone()
     }

@@ -141,23 +141,22 @@ async fn handle_request(
     };
 
     // Check for existing authorization
-    if let Some(auth) = headers.get("authorization") {
-        if let Ok(auth_str) = auth.to_str() {
-            if let Some(result) = validate_l402_auth(auth_str, &state).await {
-                if result {
-                    return (
-                        StatusCode::OK,
-                        HeaderMap::new(),
-                        config.response_body.clone(),
-                    );
-                }
-                return (
-                    StatusCode::UNAUTHORIZED,
-                    HeaderMap::new(),
-                    "invalid L402 token".to_string(),
-                );
-            }
+    if let Some(auth) = headers.get("authorization")
+        && let Ok(auth_str) = auth.to_str()
+        && let Some(result) = validate_l402_auth(auth_str, &state).await
+    {
+        if result {
+            return (
+                StatusCode::OK,
+                HeaderMap::new(),
+                config.response_body.clone(),
+            );
         }
+        return (
+            StatusCode::UNAUTHORIZED,
+            HeaderMap::new(),
+            "invalid L402 token".to_string(),
+        );
     }
 
     // No valid auth: issue a new challenge

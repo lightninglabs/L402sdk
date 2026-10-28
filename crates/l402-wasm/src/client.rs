@@ -292,6 +292,33 @@ impl WasmL402Client {
         })
     }
 
+    /// Create a client for an explicit wallet on `SwissKnife` 0.3 and later.
+    #[wasm_bindgen(js_name = withSwissKnifeWallet)]
+    pub fn with_swissknife_wallet(
+        url: &str,
+        api_key: &str,
+        wallet_id: &str,
+        budget: WasmBudgetConfig,
+        max_fee_sats: u64,
+    ) -> Result<WasmL402Client, JsError> {
+        let backend = SwissKnifeBackend::new(url, api_key)
+            .with_wallet(wallet_id)
+            .map_err(|e| JsError::new(&e.to_string()))?;
+        let client = L402Client::builder()
+            .ln_backend(backend)
+            .token_store(InMemoryTokenStore::default())
+            .budget(budget.into())
+            .config(L402ClientConfig {
+                max_fee_sats,
+                ..L402ClientConfig::default()
+            })
+            .build()
+            .map_err(|e| JsError::new(&e.to_string()))?;
+        Ok(Self {
+            inner: Rc::new(client),
+        })
+    }
+
     /// Send a GET request, automatically handling L402 payment challenges.
     pub async fn get(&self, url: &str) -> Result<WasmL402Response, JsError> {
         let response = self

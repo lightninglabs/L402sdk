@@ -18,14 +18,14 @@ pub enum NwcError {
     Payment(String),
 }
 
-impl From<nwc::Error> for NwcError {
-    fn from(err: nwc::Error) -> Self {
+impl From<nwc::error::Error> for NwcError {
+    fn from(err: nwc::error::Error) -> Self {
         Self::Nwc(err.to_string())
     }
 }
 
-impl From<nostr::nips::nip47::Error> for NwcError {
-    fn from(err: nostr::nips::nip47::Error) -> Self {
+impl From<nostr::error::Error> for NwcError {
+    fn from(err: nostr::error::Error) -> Self {
         Self::InvalidUri(err.to_string())
     }
 }

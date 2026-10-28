@@ -104,11 +104,6 @@ export default function ServiceBrowser({
   const totalPages = Math.ceil(filteredServices.length / PAGE_SIZE);
   const paginatedServices = filteredServices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [selectedCategory, search]);
-
 
   return (
     <div className="flex flex-col gap-6">
@@ -159,7 +154,7 @@ export default function ServiceBrowser({
                 type="text"
                 placeholder="Search services…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-[#F7931A]/50 focus:outline-none focus:ring-1 focus:ring-[#F7931A]/30 transition-colors"
               />
             </div>
@@ -167,7 +162,7 @@ export default function ServiceBrowser({
             {/* Category filter */}
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
               className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-300 focus:border-[#F7931A]/50 focus:outline-none focus:ring-1 focus:ring-[#F7931A]/30 transition-colors"
             >
               <option value="all">All categories</option>

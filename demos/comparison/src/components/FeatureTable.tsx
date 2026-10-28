@@ -51,7 +51,7 @@ export default function FeatureTable({ rows }: FeatureTableProps) {
                     : "text-zinc-500"
                 }`}
               >
-                {row.L402sdk}
+                {row.l402}
               </td>
             </tr>
           ))}

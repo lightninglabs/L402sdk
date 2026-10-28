@@ -2,19 +2,22 @@
   "name": "L402sdk-ai-agent-example",
   "private": true,
   "type": "module",
-  "packageManager": "yarn@4.13.0",
+  "packageManager": "yarn@4.18.1",
   "scripts": {
     "start": "tsx index.ts",
-    "clean": "rm -rf node_modules dist build coverage .cache *.log"
+    "clean": "rm -rf node_modules dist build coverage .cache *.log",
+    "typecheck": "tsc --noEmit --module nodenext --target es2022 --skipLibCheck --types node index.ts"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.41",
-    "ai": "^6.0.116",
-    "@lightninglabs/l402-ai": "^0.1.0",
+    "@ai-sdk/openai": "^4.0.104",
     "@lightninglabs/l402": "^0.1.0",
-    "zod": "^3.25.76"
+    "@lightninglabs/l402-ai": "^0.1.0",
+    "ai": "^7.0.155",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "tsx": "^4.21.0"
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

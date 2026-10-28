@@ -48,11 +48,12 @@ impl TokenStore for InMemoryTokenStore {
         let mut inner = self.inner.write().expect("RwLock poisoned");
 
         // Evict oldest entry if at capacity and this is a new key
-        if inner.tokens.len() >= inner.capacity && !inner.tokens.contains_key(endpoint) {
-            if let Some(oldest) = inner.insertion_order.first().cloned() {
-                inner.tokens.remove(&oldest);
-                inner.insertion_order.remove(0);
-            }
+        if inner.tokens.len() >= inner.capacity
+            && !inner.tokens.contains_key(endpoint)
+            && let Some(oldest) = inner.insertion_order.first().cloned()
+        {
+            inner.tokens.remove(&oldest);
+            inner.insertion_order.remove(0);
         }
 
         // Remove from insertion order if updating existing key

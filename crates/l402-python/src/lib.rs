@@ -649,11 +649,17 @@ impl PySwissKnifeBackend {
     /// Args:
     ///     url: SwissKnife API URL (e.g. ``https://api.numeraire.tech``)
     ///     api_key: API key for authentication
+    ///     wallet_id: Explicit wallet UUID for SwissKnife 0.3 and later
     #[new]
-    fn new(url: &str, api_key: &str) -> Self {
-        Self {
-            inner: SwissKnifeBackend::new(url, api_key),
+    #[pyo3(signature = (url, api_key, wallet_id=None))]
+    fn new(url: &str, api_key: &str, wallet_id: Option<&str>) -> PyResult<Self> {
+        let mut inner = SwissKnifeBackend::new(url, api_key);
+        if let Some(id) = wallet_id {
+            inner = inner
+                .with_wallet(id)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
         }
+        Ok(Self { inner })
     }
 
     /// Pay a BOLT11 Lightning invoice.
@@ -918,17 +924,24 @@ impl PyL402Client {
     /// Args:
     ///     url: SwissKnife API URL (e.g. ``https://api.numeraire.tech``)
     ///     api_key: API key for authentication
+    ///     wallet_id: Explicit wallet UUID for SwissKnife 0.3 and later
     ///     budget: Optional budget configuration (default: unlimited)
     ///     max_fee_sats: Maximum routing fee in satoshis (default: 100)
     #[staticmethod]
-    #[pyo3(signature = (url, api_key, budget=None, max_fee_sats=100))]
+    #[pyo3(signature = (url, api_key, budget=None, max_fee_sats=100, wallet_id=None))]
     fn with_swissknife(
         url: &str,
         api_key: &str,
         budget: Option<PyBudget>,
         max_fee_sats: u64,
+        wallet_id: Option<&str>,
     ) -> PyResult<Self> {
-        let backend = SwissKnifeBackend::new(url, api_key);
+        let mut backend = SwissKnifeBackend::new(url, api_key);
+        if let Some(id) = wallet_id {
+            backend = backend
+                .with_wallet(id)
+                .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        }
         build_client(backend, budget, max_fee_sats)
     }
 
@@ -1162,7 +1175,8 @@ mod tests {
 
     #[test]
     fn swissknife_backend_constructor() {
-        let backend = PySwissKnifeBackend::new("https://api.numeraire.tech", "sk-test");
+        let backend =
+            PySwissKnifeBackend::new("https://api.numeraire.tech", "sk-test", None).unwrap();
         assert_eq!(backend.__repr__(), "SwissKnifeBackend(...)");
     }
 
@@ -1211,7 +1225,7 @@ mod tests {
     #[test]
     fn client_with_swissknife_constructor() {
         let result =
-            PyL402Client::with_swissknife("https://api.numeraire.tech", "sk-test", None, 100);
+            PyL402Client::with_swissknife("https://api.numeraire.tech", "sk-test", None, 100, None);
         assert!(result.is_ok());
     }
 

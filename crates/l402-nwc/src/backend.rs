@@ -19,8 +19,8 @@ use std::fmt;
 use async_trait::async_trait;
 use l402_proto::ClientError;
 use l402_proto::port::{LnBackend, NodeInfo, PaymentResult};
-use nostr::nips::nip47::{NostrWalletConnectURI, PayInvoiceRequest};
-use nwc::NWC;
+use nostr::nips::nip47::{NostrWalletConnectUri, PayInvoiceRequest};
+use nwc::NostrWalletConnect;
 use tracing::debug;
 
 use crate::error::NwcError;
@@ -59,7 +59,7 @@ use crate::error::NwcError;
 /// # }
 /// ```
 pub struct NwcBackend {
-    nwc: NWC,
+    nwc: NostrWalletConnect,
     uri_display: String,
 }
 
@@ -83,7 +83,7 @@ impl NwcBackend {
     ///
     /// Returns [`NwcError::InvalidUri`] if the URI cannot be parsed.
     pub async fn new(uri: &str) -> Result<Self, NwcError> {
-        let parsed = NostrWalletConnectURI::parse(uri)?;
+        let parsed = NostrWalletConnectUri::parse(uri)?;
 
         // Store a safe display form (pubkey only, no secret)
         let uri_display = format!(
@@ -92,7 +92,7 @@ impl NwcBackend {
         );
 
         debug!(uri = %uri_display, "connecting to NWC wallet");
-        let nwc = NWC::new(parsed);
+        let nwc = NostrWalletConnect::new(parsed);
 
         Ok(Self { nwc, uri_display })
     }
@@ -151,7 +151,7 @@ impl LnBackend for NwcBackend {
         let balance_msat = self.nwc.get_balance().await.map_err(NwcError::from)?;
 
         // NWC returns balance in millisatoshis, convert to satoshis.
-        Ok(balance_msat / 1000)
+        Ok(balance_msat.balance / 1000)
     }
 
     async fn get_info(&self) -> Result<NodeInfo, ClientError> {

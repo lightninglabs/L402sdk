@@ -1,7 +1,7 @@
 # SwissKnife regtest overrides (merged with default config).
 # Connects to CLN as the Lightning provider via clnrest.
 
-ln_provider = "clnrest"
+ln_provider = "cln_rest"
 auth_provider = "jwt"
 host = "http://swissknife:3000"
 

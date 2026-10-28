@@ -15,8 +15,8 @@ l402-proto = { workspace = true }
 async-trait = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-nwc = "0.44"
-nostr = { version = "0.44", features = ["nip47"] }
+nwc = "0.45.1"
+nostr = { version = "0.45.5", features = ["nip47"] }
 
 [dev-dependencies]
 tokio = { workspace = true }

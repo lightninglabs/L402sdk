@@ -17,7 +17,7 @@ export async function GET() {
   return NextResponse.json({
     totalSpentSats: Number(totalSpent),
     paymentCount: receiptList.length,
-    receipts: receiptList.map((r: any) => ({
+    receipts: receiptList.map((r) => ({
       url: r.endpoint,
       amountSats: Number(r.amountSats),
       feeSats: Number(r.feeSats),

@@ -63,7 +63,7 @@ impl From<SwissKnifeError> for ClientError {
 ///
 /// # Authentication
 ///
-/// Uses API key authentication via the `Authorization: Bearer <key>` header.
+/// Uses API key authentication via the `Api-Key: <key>` header.
 /// API keys can be created from the SwissKnife dashboard and require
 /// `read:transaction` and `write:transaction` permissions.
 ///
@@ -89,6 +89,7 @@ pub struct SwissKnifeBackend {
     client: HttpClient,
     base_url: String,
     api_key: String,
+    wallet_id: Option<String>,
 }
 
 impl fmt::Debug for SwissKnifeBackend {
@@ -111,6 +112,37 @@ impl SwissKnifeBackend {
             client: HttpClient::new(),
             base_url: base_url.trim_end_matches('/').to_string(),
             api_key: api_key.to_string(),
+            wallet_id: None,
+        }
+    }
+
+    /// Select the wallet used by SwissKnife 0.3 and later.
+    ///
+    /// The wallet must belong to the API key's account. Older servers can keep
+    /// using [`Self::new`] without a selector. An invalid UUID is rejected before
+    /// constructing any request path.
+    pub fn with_wallet(mut self, wallet_id: &str) -> Result<Self, SwissKnifeError> {
+        if wallet_id.len() != 36
+            || !wallet_id.bytes().enumerate().all(|(i, c)| {
+                if [8, 13, 18, 23].contains(&i) {
+                    c == b'-'
+                } else {
+                    c.is_ascii_hexdigit()
+                }
+            })
+        {
+            return Err(SwissKnifeError::Config(
+                "wallet ID must be a UUID".to_string(),
+            ));
+        }
+        self.wallet_id = Some(wallet_id.to_string());
+        Ok(self)
+    }
+
+    fn wallet_path(&self, suffix: &str) -> String {
+        match &self.wallet_id {
+            Some(id) => format!("/v1/me/wallets/{id}{suffix}"),
+            None => format!("/v1/me{suffix}"),
         }
     }
 
@@ -119,6 +151,7 @@ impl SwissKnifeBackend {
     /// Reads from:
     /// - `SWISSKNIFE_API_URL` (default: `https://api.numeraire.tech`)
     /// - `SWISSKNIFE_API_KEY` (required)
+    /// - `SWISSKNIFE_WALLET_ID` (required for SwissKnife 0.3+)
     ///
     /// # Errors
     ///
@@ -130,7 +163,11 @@ impl SwissKnifeBackend {
         let api_key = std::env::var("SWISSKNIFE_API_KEY")
             .map_err(|_| SwissKnifeError::Config("SWISSKNIFE_API_KEY is not set".to_string()))?;
 
-        Ok(Self::new(&base_url, &api_key))
+        let backend = Self::new(&base_url, &api_key);
+        match std::env::var("SWISSKNIFE_WALLET_ID") {
+            Ok(id) => backend.with_wallet(&id),
+            Err(_) => Ok(backend),
+        }
     }
 
     /// Build an authenticated request to the SwissKnife API.
@@ -172,7 +209,7 @@ impl LnBackend for SwissKnifeBackend {
         };
 
         let response = self
-            .request(reqwest::Method::POST, "/v1/me/payments")
+            .request(reqwest::Method::POST, &self.wallet_path("/payments"))
             .json(&body)
             .send()
             .await
@@ -209,7 +246,14 @@ impl LnBackend for SwissKnifeBackend {
             }
         }
 
-        let preimage = payment.payment_preimage.ok_or_else(|| {
+        let (payment_hash, payment_preimage) = match payment.lightning {
+            Some(proof) => (proof.payment_hash, proof.payment_preimage),
+            None => (
+                payment.payment_hash.unwrap_or_default(),
+                payment.payment_preimage,
+            ),
+        };
+        let preimage = payment_preimage.ok_or_else(|| {
             SwissKnifeError::Payment("settled payment missing preimage".to_string())
         })?;
 
@@ -228,7 +272,7 @@ impl LnBackend for SwissKnifeBackend {
 
         Ok(PaymentResult {
             preimage,
-            payment_hash: payment.payment_hash.unwrap_or_default(),
+            payment_hash,
             amount_sats,
             fee_sats,
         })
@@ -236,7 +280,7 @@ impl LnBackend for SwissKnifeBackend {
 
     async fn get_balance(&self) -> Result<u64, ClientError> {
         let response = self
-            .request(reqwest::Method::GET, "/v1/me/balance")
+            .request(reqwest::Method::GET, &self.wallet_path("/balance"))
             .send()
             .await
             .map_err(SwissKnifeError::from)?;
@@ -256,7 +300,7 @@ impl LnBackend for SwissKnifeBackend {
 
     async fn get_info(&self) -> Result<NodeInfo, ClientError> {
         let response = self
-            .request(reqwest::Method::GET, "/v1/me")
+            .request(reqwest::Method::GET, &self.wallet_path(""))
             .send()
             .await
             .map_err(SwissKnifeError::from)?;
@@ -286,6 +330,25 @@ impl LnBackend for SwissKnifeBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wallet_paths_require_explicit_valid_selector() {
+        let backend = SwissKnifeBackend::new("https://example.com", "test");
+        assert_eq!(backend.wallet_path("/balance"), "/v1/me/balance");
+        let id = "12345678-1234-1234-1234-123456789abc";
+        let selected = backend.with_wallet(id).unwrap();
+        assert_eq!(
+            selected.wallet_path("/payments"),
+            format!("/v1/me/wallets/{id}/payments")
+        );
+        for invalid in ["", "../payments", "12345678-1234-1234-1234-123456789ab/"] {
+            assert!(
+                SwissKnifeBackend::new("https://example.com", "test")
+                    .with_wallet(invalid)
+                    .is_err()
+            );
+        }
+    }
 
     #[test]
     fn error_display() {

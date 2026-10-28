@@ -17,6 +17,7 @@
 # Requirements: docker compose, jq, bash 4+
 
 set -euo pipefail
+umask 077
 
 COMPOSE_FILE="${1:-$(dirname "$0")/../docker-compose.yml}"
 PROJECT_DIR="$(cd "$(dirname "$COMPOSE_FILE")" && pwd)"
@@ -74,14 +75,19 @@ wait_for_sync() {
         synced=$(bob getinfo 2>/dev/null | jq -r '.synced_to_chain // false') || true
         [ "$synced" = "true" ] && return 0 ;;
       cln)
-        local warning
-        warning=$(cln getinfo 2>/dev/null | jq -r '.warning_bitcoind_sync // empty') || true
-        [ -z "$warning" ] && return 0 ;;
+        local info target_height
+        target_height=$(btc getblockcount)
+        info=$(cln getinfo 2>/dev/null) || info='{}'
+        if printf '%s' "$info" | jq -e --argjson height "$target_height" \
+          '.blockheight >= $height and (.warning_bitcoind_sync == null)' > /dev/null; then
+          return 0
+        fi ;;
     esac
     sleep 2
     elapsed=$((elapsed + 2))
   done
-  log "WARNING: $svc may not be fully synced after ${max_wait}s"
+  log "ERROR: $svc did not sync after ${max_wait}s"
+  return 1
 }
 
 # ─── Step 1: Mine initial blocks ─────────────────────────────────────
@@ -186,7 +192,10 @@ for i in $(seq 1 60); do
     log "Channels active! Alice: $ALICE_ACTIVE, CLN: $CLN_ACTIVE"
     break
   fi
-  [ "$i" -eq 60 ] && log "WARNING: Channels may not be fully active yet"
+  if [ "$i" -eq 60 ]; then
+    log "ERROR: Channels did not become active"
+    exit 1
+  fi
   sleep 2
 done
 
@@ -223,99 +232,74 @@ docker compose -f "$COMPOSE_FILE" up -d --force-recreate swissknife
 log "SwissKnife container (re)started with CLN rune."
 
 # Wait for SwissKnife to be ready
-SWISSKNIFE_READY=false
-for i in $(seq 1 30); do
-  if curl -sf -o /dev/null http://localhost:3000/v1/system/health 2>/dev/null; then
-    SWISSKNIFE_READY=true
+SWISSKNIFE_API_URL="http://localhost:3000"
+for i in $(seq 1 60); do
+  if curl -fsS -o /dev/null "$SWISSKNIFE_API_URL/v1/system/health" 2>/dev/null; then
     break
+  fi
+  if [ "$i" -eq 60 ]; then
+    log "ERROR: SwissKnife did not become healthy"
+    exit 1
   fi
   sleep 2
 done
 
-SWISSKNIFE_API_URL="http://localhost:3000"
-SWISSKNIFE_API_KEY=""
+# Use the actual API-key path; a JWT is not an API key.
+AUTH_BODY='{"password":"L402sdktestpass"}'
+JWT_TOKEN=$(curl -fsS -X POST -H "Content-Type: application/json" \
+  -d "$AUTH_BODY" "$SWISSKNIFE_API_URL/v1/auth/sign-up" | jq -er '.token') || \
+JWT_TOKEN=$(curl -fsS -X POST -H "Content-Type: application/json" \
+  -d "$AUTH_BODY" "$SWISSKNIFE_API_URL/v1/auth/sign-in" | jq -er '.token')
+SWISSKNIFE_API_KEY=$(curl -fsS -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -d '{"name":"l402-regtest","permissions":["read:account","read:wallet","write:wallet","read:transaction","write:transaction"]}' \
+  "$SWISSKNIFE_API_URL/v1/me/api-keys" | jq -er '.key')
+unset JWT_TOKEN
+log "SwissKnife API key created."
 
-if [ "$SWISSKNIFE_READY" = true ]; then
-  log "SwissKnife is ready."
-
-  # 1. Sign up to get a JWT token
-  SIGNUP_RESP=$(curl -s -X POST \
-    -H "Content-Type: application/json" \
-    -d '{"username":"L402sdktest","password":"L402sdktestpass"}' \
-    "$SWISSKNIFE_API_URL/v1/auth/sign-up" 2>/dev/null || echo "")
-
-  JWT_TOKEN=""
-  if [ -n "$SIGNUP_RESP" ]; then
-    JWT_TOKEN=$(echo "$SIGNUP_RESP" | jq -r '.token // .access_token // empty' 2>/dev/null)
-  fi
-
-  # If sign-up fails (user exists), try sign-in
-  if [ -z "$JWT_TOKEN" ]; then
-    SIGNIN_RESP=$(curl -s -X POST \
-      -H "Content-Type: application/json" \
-      -d '{"username":"L402sdktest","password":"L402sdktestpass"}' \
-      "$SWISSKNIFE_API_URL/v1/auth/sign-in" 2>/dev/null || echo "")
-    if [ -n "$SIGNIN_RESP" ]; then
-      JWT_TOKEN=$(echo "$SIGNIN_RESP" | jq -r '.token // .access_token // empty' 2>/dev/null)
+AUTH_HEADER="Api-Key: $SWISSKNIFE_API_KEY"
+SWISSKNIFE_WALLET_ID=$(curl -fsS -H "$AUTH_HEADER" "$SWISSKNIFE_API_URL/v1/me/wallets" \
+  | jq -er '.[0].id')
+WALLET_URL="$SWISSKNIFE_API_URL/v1/me/wallets/$SWISSKNIFE_WALLET_ID"
+BALANCE_MSAT=$(curl -fsS -H "$AUTH_HEADER" "$WALLET_URL/balance" \
+  | jq -er '.available_msat')
+if [ "$BALANCE_MSAT" -lt 100000000 ]; then
+  log "Funding SwissKnife wallet (500k sats)..."
+  FUNDING_BOLT11=$(curl -fsS -X POST \
+    -H "Content-Type: application/json" -H "$AUTH_HEADER" \
+    -d '{"amount_msat":500000000,"description":"regtest funding"}' \
+    "$WALLET_URL/invoices" | jq -er '.ln_invoice.bolt11')
+  # Channel activation does not imply that the two-hop route is in Alice's
+  # graph yet. Wait for gossip and use an explicit funding-only fee allowance.
+  for i in $(seq 1 60); do
+    if alice queryroutes --dest="$CLN_PUBKEY" --amt=500000 --fee_limit=1000 2>/dev/null \
+      | jq -e '.routes | length > 0' > /dev/null; then
+      break
     fi
-  fi
-
-  if [ -n "$JWT_TOKEN" ]; then
-    log "SwissKnife JWT obtained."
-
-    # 2. Create an API key
-    APIKEY_RESP=$(curl -s -X POST \
-      -H "Content-Type: application/json" \
-      -H "Authorization: Bearer $JWT_TOKEN" \
-      -d '{"name":"l402-regtest","permissions":["read:wallet","write:wallet","read:transaction","write:transaction"]}' \
-      "$SWISSKNIFE_API_URL/v1/me/api-keys" 2>/dev/null || echo "")
-
-    if [ -n "$APIKEY_RESP" ]; then
-      SWISSKNIFE_API_KEY=$(echo "$APIKEY_RESP" | jq -r '.key // .api_key // empty' 2>/dev/null)
-      if [ -n "$SWISSKNIFE_API_KEY" ]; then
-        log "SwissKnife API key created."
-      else
-        # Fallback: use JWT token directly
-        SWISSKNIFE_API_KEY="$JWT_TOKEN"
-        log "WARNING: Could not extract API key, using JWT token instead."
-      fi
-    else
-      # Fallback: use JWT token directly
-      SWISSKNIFE_API_KEY="$JWT_TOKEN"
-      log "WARNING: Could not create API key, using JWT token instead."
+    if [ "$i" -eq 60 ]; then
+      log "ERROR: Alice has no route to fund SwissKnife through CLN"
+      exit 1
     fi
-    # 3. Fund SwissKnife wallet via Lightning (Alice → Bob → CLN → SwissKnife)
-    AUTH_HEADER="Api-Key: $SWISSKNIFE_API_KEY"
-    BALANCE_MSAT=$(curl -s -H "$AUTH_HEADER" "$SWISSKNIFE_API_URL/v1/me" 2>/dev/null \
-      | jq -r '.balance.available_msat // 0')
-
-    if [ "${BALANCE_MSAT:-0}" -lt 100000000 ]; then
-      log "Funding SwissKnife wallet (500k sats)..."
-      INVOICE_RESP=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        -H "$AUTH_HEADER" \
-        -d '{"amount_msat":500000000,"description":"regtest funding"}' \
-        "$SWISSKNIFE_API_URL/v1/me/invoices" 2>/dev/null || echo "")
-
-      FUNDING_BOLT11=$(echo "$INVOICE_RESP" | jq -r '.ln_invoice.bolt11 // empty' 2>/dev/null)
-
-      if [ -n "$FUNDING_BOLT11" ]; then
-        log "Paying funding invoice from Alice..."
-        alice payinvoice --force "$FUNDING_BOLT11" > /dev/null 2>&1 && \
-          log "SwissKnife wallet funded." || \
-          log "WARNING: Failed to pay SwissKnife funding invoice."
-      else
-        log "WARNING: Could not create SwissKnife funding invoice."
-      fi
-    else
-      log "SwissKnife wallet already funded (${BALANCE_MSAT} msat)."
-    fi
-  else
-    log "WARNING: SwissKnife auth failed (skipping)."
+    sleep 2
+  done
+  if ! FUNDING_RESULT=$(alice payinvoice --force --json --fee_limit=1000 "$FUNDING_BOLT11"); then
+    FUNDING_REASON=$(printf '%s' "$FUNDING_RESULT" | jq -r '.failure_reason // "unknown"')
+    log "ERROR: SwissKnife funding payment failed: $FUNDING_REASON"
+    exit 1
   fi
-else
-  log "WARNING: SwissKnife not available (skipping setup)."
+  for i in $(seq 1 30); do
+    BALANCE_MSAT=$(curl -fsS -H "$AUTH_HEADER" "$WALLET_URL/balance" \
+      | jq -er '.available_msat')
+    [ "$BALANCE_MSAT" -ge 100000000 ] && break
+    if [ "$i" -eq 30 ]; then
+      log "ERROR: SwissKnife funding was not credited"
+      exit 1
+    fi
+    sleep 2
+  done
 fi
+log "SwissKnife wallet funded."
 
 # ─── Step 7: Write environment file ──────────────────────────────────
 
@@ -350,6 +334,7 @@ L402_SERVER_URL=http://localhost:8081
 # SwissKnife (custodial wallet connected to lnd-bob)
 SWISSKNIFE_API_URL=${SWISSKNIFE_API_URL}
 SWISSKNIFE_API_KEY=${SWISSKNIFE_API_KEY}
+SWISSKNIFE_WALLET_ID=${SWISSKNIFE_WALLET_ID}
 
 # Bitcoin
 BITCOIND_RPC_URL=http://localhost:18443

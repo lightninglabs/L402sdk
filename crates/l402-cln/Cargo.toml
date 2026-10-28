@@ -12,13 +12,14 @@ keywords = ["l402", "lightning", "bitcoin", "cln"]
 
 [features]
 default = ["grpc"]
-grpc = ["dep:tonic", "dep:prost", "dep:tokio"]
+grpc = ["dep:tonic", "dep:prost", "dep:tonic-prost", "dep:tokio"]
 rest = ["dep:reqwest", "dep:serde", "dep:serde_json"]
 
 [dependencies]
 l402-proto = { workspace = true }
 async-trait = { workspace = true }
 hex = { workspace = true }
+sha2 = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 
@@ -26,8 +27,9 @@ tracing = { workspace = true }
 tokio = { workspace = true, features = ["sync", "fs"], optional = true }
 
 # gRPC dependencies (behind grpc feature)
-tonic = { version = "0.12", features = ["tls"], optional = true }
-prost = { version = "0.13", optional = true }
+tonic = { version = "0.14.8", features = ["tls-aws-lc"], optional = true }
+prost = { version = "0.14.4", optional = true }
+tonic-prost = { version = "0.14.8", optional = true }
 
 # REST dependencies (behind rest feature)
 reqwest = { workspace = true, optional = true }
@@ -35,7 +37,7 @@ serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 
 [build-dependencies]
-tonic-build = "0.12"
+tonic-prost-build = "0.14.8"
 
 [lints]
 workspace = true

@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   # Allow manual trigger for debugging
   workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
+  L402_REQUIRE_REGTEST: "1"
 
 jobs:
   regtest:
@@ -19,26 +19,26 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
 
       - name: Install protobuf compiler
         run: sudo apt-get install -y protobuf-compiler
 
       - name: Install wasm-pack
-        run: curl -sSfL https://github.com/rustwasm/wasm-pack/releases/download/v0.14.0/wasm-pack-v0.14.0-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin --strip-components=1 wasm-pack-v0.14.0-x86_64-unknown-linux-musl/wasm-pack
+        run: bash "${{ github.workspace }}/scripts/install-wasm-pack.sh"
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
+          node-version: '26.13.0'
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: '3.15'
 
       - name: Compile regtest tests (without running)
         run: cargo test -p l402-regtest --no-run
@@ -49,14 +49,14 @@ jobs:
       - name: Install WASM Node.js test dependencies
         working-directory: crates/l402-wasm/tests/node
         run: |
-          corepack enable
+          npm install --global corepack@0.36.0 && corepack enable
           yarn install --no-immutable
 
       - name: Build Python bindings
         working-directory: crates/l402-python
         run: |
           python -m venv .venv
-          .venv/bin/pip install maturin pytest
+          .venv/bin/pip install --upgrade pip maturin==1.15.0 pytest==9.2.0
           .venv/bin/maturin develop
 
       - name: Start Docker services
@@ -86,7 +86,7 @@ jobs:
         working-directory: tests/regtest
         run: |
           echo "Waiting for Aperture..."
-          timeout 60 bash -c "until wget -S -O /dev/null http://localhost:8081/health 2>&1 | grep -q 'HTTP/'; do sleep 3; done"
+          timeout 60 bash -c "until wget -q -O /dev/null http://localhost:8081/health; do sleep 3; done"
           echo "Aperture ready."
 
       - name: Run Rust regtest integration tests
@@ -96,8 +96,6 @@ jobs:
 
       - name: Run WASM/Node.js regtest integration tests
         run: make regtest-test-wasm
-        env:
-          NODE_TLS_REJECT_UNAUTHORIZED: "0"
 
       - name: Run Python regtest integration tests
         run: make regtest-test-python

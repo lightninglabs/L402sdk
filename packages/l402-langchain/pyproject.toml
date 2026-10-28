@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.33.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "LangChain integration for L402sdk — L402 Lightning payments in AI agents"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Dario Anongba Varela", email = "dario.anongba@gmail.com" },
 ]
@@ -18,7 +18,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -28,14 +27,14 @@ classifiers = [
 keywords = ["l402", "lightning", "bitcoin", "langchain", "ai-agents", "payments"]
 dependencies = [
     "L402sdk>=0.1.0",
-    "langchain-core>=0.2.0",
-    "pydantic>=2.0",
+    "langchain-core>=1.7.1,<2",
+    "pydantic>=2.14.1,<3",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [project.urls]

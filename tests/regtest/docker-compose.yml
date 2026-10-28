@@ -1,6 +1,6 @@
 services:
   bitcoind:
-    image: bitcoin/bitcoin:30.2
+    image: bitcoin/bitcoin:32.1@sha256:d2454aaf2ff4ce1ebbc49f4aa05ed044c907b849a80a3f4c0ad23e488e50bbe0
     restart: unless-stopped
     command:
       - -regtest
@@ -14,7 +14,7 @@ services:
       - -fallbackfee=0.00001
       - -txindex=1
     ports:
-      - "18443:18443"
+      - "127.0.0.1:18443:18443"
     volumes:
       - bitcoind-data:/home/bitcoin/.bitcoin
     healthcheck:
@@ -25,7 +25,7 @@ services:
 
   # LND Alice: PAYER node. L402sdk client connects here (gRPC + REST).
   lnd-alice:
-    image: lightninglabs/lnd:v0.20.1-beta
+    image: lightninglabs/lnd:v0.21.5-beta@sha256:ca3477292ae8805d4d49d99c70f492c56bd001f2f464c482cd58de9443f56930
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -35,8 +35,8 @@ services:
       - ./lnd/alice.conf:/root/.lnd/lnd.conf:ro
       - ./lnd/tls:/tls:ro
     ports:
-      - "10009:10009"  # gRPC
-      - "8080:8080"    # REST
+      - "127.0.0.1:10009:10009"  # gRPC
+      - "127.0.0.1:8080:8080"    # REST
     healthcheck:
       test: ["CMD", "lncli", "--network=regtest", "--tlscertpath=/tls/alice-tls.cert", "getinfo"]
       interval: 5s
@@ -45,7 +45,7 @@ services:
 
   # LND Bob: RECEIVER node. Aperture uses this to create invoices.
   lnd-bob:
-    image: lightninglabs/lnd:v0.20.1-beta
+    image: lightninglabs/lnd:v0.21.5-beta@sha256:ca3477292ae8805d4d49d99c70f492c56bd001f2f464c482cd58de9443f56930
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -55,8 +55,8 @@ services:
       - ./lnd/bob.conf:/root/.lnd/lnd.conf:ro
       - ./lnd/tls:/tls:ro
     ports:
-      - "10010:10009"  # gRPC (different host port)
-      - "8082:8080"    # REST (different host port)
+      - "127.0.0.1:10010:10009"  # gRPC (different host port)
+      - "127.0.0.1:8082:8080"    # REST (different host port)
     healthcheck:
       test: ["CMD", "lncli", "--network=regtest", "--tlscertpath=/tls/bob-tls.cert", "getinfo"]
       interval: 5s
@@ -65,7 +65,7 @@ services:
 
   # CLN: PAYER node. For l402-cln backend tests.
   cln:
-    image: elementsproject/lightningd:v25.12.1
+    image: elementsproject/lightningd:v26.06.9@sha256:de74289ddcccb68cd60543b08b2b8594002d819125d200492e17a95166d56577
     restart: unless-stopped
     environment:
       LIGHTNINGD_NETWORK: regtest
@@ -76,8 +76,8 @@ services:
       - cln-data:/root/.lightning
       - ./cln/config:/root/.lightning/config:ro
     ports:
-      - "9736:9736"    # gRPC
-      - "3010:3010"    # REST (clnrest)
+      - "127.0.0.1:9736:9736"    # gRPC
+      - "127.0.0.1:3010:3010"    # REST (clnrest)
     healthcheck:
       test: ["CMD", "lightning-cli", "--network=regtest", "getinfo"]
       interval: 5s
@@ -86,7 +86,7 @@ services:
 
   # Simple backend HTTP server that Aperture proxies to.
   backend:
-    image: node:22-alpine
+    image: node:26-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797
     working_dir: /app
     volumes:
       - ./backend:/app
@@ -103,7 +103,8 @@ services:
   # build from source: docker build --build-arg checkout=v0.5.0 -t aperture:local
   # using the Dockerfile at https://github.com/lightninglabs/aperture
   aperture:
-    image: lightninglabs/aperture:v0.5.0
+    platform: linux/amd64
+    image: lightninglabs/aperture:v0.5.0@sha256:29e03e2c38dca0314f748cc07f483f03615dbf9876620c8e15b94b904fa16114
     restart: unless-stopped
     depends_on:
       lnd-bob:
@@ -115,9 +116,9 @@ services:
       - lnd-bob-data:/lnd:ro
       - ./lnd/tls:/tls:ro
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     healthcheck:
-      test: ["CMD-SHELL", "wget -S -O /dev/null http://127.0.0.1:8081/health 2>&1 | grep -q 'HTTP/'"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8081/health"]
       interval: 10s
       timeout: 10s
       retries: 30
@@ -127,7 +128,7 @@ services:
   # Connected to CLN via clnrest as the Lightning provider.
   # Provides REST API for l402-swissknife backend tests.
   swissknife:
-    image: bitcoinnumeraire/swissknife-server:0.1.7
+    image: bitcoinnumeraire/swissknife-server:0.3.0@sha256:10336286f4ec5dd132ead913e4301d096a710aedc38514b1b6a675c2b03b3893
     restart: unless-stopped
     depends_on:
       cln:
@@ -140,7 +141,7 @@ services:
       - ./swissknife/regtest.toml:/config/production.toml:ro
       - swissknife-data:/storage
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://127.0.0.1:3000/v1/system/health || wget -q -O- http://127.0.0.1:3000/v1/system/health || exit 1"]
       interval: 10s

@@ -20,6 +20,7 @@ package l402
 
 /*
 #cgo LDFLAGS: -L${SRCDIR}/lib -ll402_ffi -lm -ldl -lpthread
+#cgo darwin LDFLAGS: -framework Security -framework CoreFoundation
 #include "../../crates/l402-ffi/include/l402.h"
 #include <stdlib.h>
 */
