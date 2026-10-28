@@ -157,7 +157,7 @@ impl LnBackend for ClnGrpcBackend {
         bolt11: &str,
         max_fee_sats: u64,
     ) -> Result<PaymentResult, ClientError> {
-        debug!(invoice = %&bolt11[..bolt11.len().min(20)], "paying invoice via CLN");
+        debug!(invoice = %bolt11.chars().take(20).collect::<String>(), "paying invoice via CLN");
 
         // Convert max_fee_sats to millisatoshis for CLN's maxfee field.
         let max_fee_msat = max_fee_sats.saturating_mul(1000);

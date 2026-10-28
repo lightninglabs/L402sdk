@@ -9,7 +9,7 @@
 //! A BOLT11 invoice has the format: `ln<network><amount><multiplier>1<data><checksum>`
 //!
 //! - Network: `bc` (mainnet), `tb` (testnet), `bcrt` (regtest)
-//! - Amount: positive decimal number (optional — omitted for zero-amount invoices)
+//! - Amount: positive decimal integer (optional — omitted for zero-amount invoices)
 //! - Multiplier: `m` (10⁻³), `u` (10⁻⁶), `n` (10⁻⁹), `p` (10⁻¹²)
 //!
 //! The `1` separator divides the human-readable part from the data part.
@@ -159,7 +159,7 @@ pub fn decode_bolt11_amount(invoice: &str) -> Result<Option<InvoiceAmount>, L402
         });
     }
 
-    // Parse the numeric part (may be integer or decimal)
+    // BOLT11 amounts are positive decimal integers, never floating point.
     let millisatoshis = if let Some((_, factor)) = multiplier_msat {
         parse_amount_with_multiplier(number_str, last_char, factor)?
     } else {
@@ -175,87 +175,97 @@ pub fn decode_bolt11_amount(invoice: &str) -> Result<Option<InvoiceAmount>, L402
     Ok(Some(InvoiceAmount { millisatoshis }))
 }
 
-/// Parse amount with a multiplier suffix.
-///
-/// The BOLT11 spec says: the amount is a positive decimal integer optionally
-/// followed by a decimal point and more digits.
+/// Parse a positive decimal integer without signs, decimals or exponents.
+fn parse_integer(number_str: &str) -> Result<u64, L402Error> {
+    if number_str.is_empty() || !number_str.bytes().all(|c| c.is_ascii_digit()) {
+        return Err(L402Error::InvalidInvoice {
+            reason: "invoice amount must contain only decimal digits".to_string(),
+        });
+    }
+    number_str.parse().map_err(|_| L402Error::InvalidInvoice {
+        reason: "invoice amount exceeds the supported range".to_string(),
+    })
+}
+
+/// Convert an integer amount to millisatoshis without wrapping.
+fn checked_msat(value: u64, factor: u64) -> Result<u64, L402Error> {
+    value
+        .checked_mul(factor)
+        .ok_or_else(|| L402Error::InvalidInvoice {
+            reason: "invoice amount exceeds the supported millisatoshi range".to_string(),
+        })
+}
+
+/// Parse amount with a BOLT11 multiplier suffix.
 fn parse_amount_with_multiplier(
     number_str: &str,
     multiplier: char,
     factor: u64,
 ) -> Result<u64, L402Error> {
-    // Handle picobitcoin specially since 1p = 0.1 msat
+    let value = parse_integer(number_str)?;
     if multiplier == 'p' {
-        return parse_pico_amount(number_str);
+        if !value.is_multiple_of(10) {
+            return Err(L402Error::InvalidInvoice {
+                reason: "picobitcoin amount must be a multiple of 10".to_string(),
+            });
+        }
+        return Ok(value / 10);
     }
-
-    if number_str.contains('.') {
-        // Decimal amount: e.g., "2.5m" = 2.5 * 100,000,000 msat
-        let value: f64 = number_str.parse().map_err(|_| L402Error::InvalidInvoice {
-            reason: format!("invalid amount number: '{number_str}'"),
-        })?;
-        // Use f64 math and round to avoid precision issues
-        #[allow(
-            clippy::cast_sign_loss,
-            clippy::cast_possible_truncation,
-            clippy::cast_precision_loss
-        )]
-        let msat = (value * factor as f64).round() as u64;
-        Ok(msat)
-    } else {
-        let value: u64 = number_str.parse().map_err(|_| L402Error::InvalidInvoice {
-            reason: format!("invalid amount number: '{number_str}'"),
-        })?;
-        Ok(value * factor)
-    }
-}
-
-/// Parse picobitcoin amount.
-///
-/// 1 picobitcoin = 0.1 millisatoshi. BOLT11 spec requires picobitcoin amounts
-/// to be multiples of 10 (so that the result is a whole number of millisatoshis).
-fn parse_pico_amount(number_str: &str) -> Result<u64, L402Error> {
-    let value: u64 = number_str.parse().map_err(|_| L402Error::InvalidInvoice {
-        reason: format!("invalid amount number: '{number_str}'"),
-    })?;
-
-    // BOLT11 spec: pico amounts must be multiples of 10
-    if !value.is_multiple_of(10) {
-        return Err(L402Error::InvalidInvoice {
-            reason: format!("picobitcoin amount must be a multiple of 10, got {value}"),
-        });
-    }
-
-    // value picobitcoin = value * 0.1 millisatoshi = value / 10 millisatoshi
-    Ok(value / 10)
+    checked_msat(value, factor)
 }
 
 /// Parse a plain BTC amount (no multiplier).
-///
-/// E.g., "1" = 1 BTC = 100,000,000,000 msat.
 fn parse_amount_btc(number_str: &str) -> Result<u64, L402Error> {
-    if number_str.contains('.') {
-        let value: f64 = number_str.parse().map_err(|_| L402Error::InvalidInvoice {
-            reason: format!("invalid amount number: '{number_str}'"),
-        })?;
-        #[allow(
-            clippy::cast_sign_loss,
-            clippy::cast_possible_truncation,
-            clippy::cast_precision_loss
-        )]
-        let msat = (value * BTC_TO_MSAT as f64).round() as u64;
-        Ok(msat)
-    } else {
-        let value: u64 = number_str.parse().map_err(|_| L402Error::InvalidInvoice {
-            reason: format!("invalid amount number: '{number_str}'"),
-        })?;
-        Ok(value * BTC_TO_MSAT)
-    }
+    checked_msat(parse_integer(number_str)?, BTC_TO_MSAT)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reject_unbudgetable_amounts() {
+        for amount in [
+            "18446744073709551616n",
+            "18446744073709551615n",
+            "184467440738m",
+            "184467440737096u",
+            "184467441",
+            "2.5m",
+            "+1m",
+            "-1m",
+            "1e3m",
+            "NaNm",
+            "0n",
+            "5p",
+        ] {
+            assert!(
+                decode_bolt11_amount(&format!("lnbc{amount}1qtest")).is_err(),
+                "{amount}"
+            );
+        }
+    }
+
+    #[test]
+    fn decode_conversion_boundaries_without_wrapping() {
+        for (suffix, factor) in [
+            ("", BTC_TO_MSAT),
+            ("m", 100_000_000),
+            ("u", 100_000),
+            ("n", 100),
+        ] {
+            let max = u64::MAX / factor;
+            let invoice = format!("lnbc{max}{suffix}1qtest");
+            assert_eq!(
+                decode_bolt11_amount(&invoice)
+                    .unwrap()
+                    .unwrap()
+                    .millisatoshis,
+                max * factor
+            );
+            assert!(decode_bolt11_amount(&format!("lnbc{}{suffix}1qtest", max + 1)).is_err());
+        }
+    }
 
     // --- Basic multiplier tests ---
 

@@ -78,12 +78,35 @@ impl ClnRestBackend {
     /// Returns [`ClnError::Transport`] if the HTTP client cannot be built.
     #[allow(clippy::result_large_err)]
     pub fn new(url: &str, rune: &str) -> Result<Self, ClnError> {
-        let client = build_http_client()?;
-        Ok(Self {
-            client,
-            url: url.trim_end_matches('/').to_string(),
-            rune: rune.to_string(),
-        })
+        let builder = HttpClient::builder();
+        // Wallet bearer credentials must not follow redirects to another host.
+        #[cfg(not(target_arch = "wasm32"))]
+        let builder = builder.redirect(reqwest::redirect::Policy::none());
+        let client = builder
+            .build()
+            .map_err(|e| ClnError::Transport(format!("failed to build HTTP client: {e}")))?;
+        Ok(Self::with_client(url, rune, client))
+    }
+
+    /// Create a backend trusting only the supplied PEM-encoded CA certificate.
+    ///
+    /// TLS certificate chains and hostnames remain verified. Native callers
+    /// connecting to self-signed nodes must supply the node's trusted CA here.
+    /// Browsers use their platform trust store instead.
+    ///
+    /// # Errors
+    /// Returns a transport error if the certificate or client is invalid.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[allow(clippy::result_large_err)]
+    pub fn with_ca_pem(url: &str, rune: &str, ca_pem: &[u8]) -> Result<Self, ClnError> {
+        let ca = reqwest::Certificate::from_pem(ca_pem)
+            .map_err(|e| ClnError::Transport(format!("invalid CA certificate: {e}")))?;
+        let client = HttpClient::builder()
+            .tls_certs_only([ca])
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .map_err(|e| ClnError::Transport(format!("failed to build HTTP client: {e}")))?;
+        Ok(Self::with_client(url, rune, client))
     }
 
     /// Create a new CLN REST backend with a custom HTTP client.
@@ -100,6 +123,7 @@ impl ClnRestBackend {
     /// Create a CLN REST backend from environment variables.
     ///
     /// Reads from:
+    /// - `CLN_REST_CA_CERT_PATH` - optional trusted PEM CA file
     /// - `CLN_REST_URL` (default: `https://localhost:3001`)
     /// - `CLN_RUNE` - rune token string
     ///
@@ -116,6 +140,10 @@ impl ClnRestBackend {
             std::env::var("CLN_REST_URL").unwrap_or_else(|_| "https://localhost:3001".to_string());
 
         if let Ok(rune) = std::env::var("CLN_RUNE") {
+            if let Ok(path) = std::env::var("CLN_REST_CA_CERT_PATH") {
+                let ca = std::fs::read(path).map_err(|e| ClnError::Transport(e.to_string()))?;
+                return Self::with_ca_pem(&url, &rune, &ca);
+            }
             Self::new(&url, &rune)
         } else {
             Err(ClnError::Payment("CLN_RUNE is not set".to_string()))
@@ -126,17 +154,6 @@ impl ClnRestBackend {
     fn authenticate(&self, builder: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
         builder.header("Rune", &self.rune)
     }
-}
-
-/// Build an HTTP client with appropriate defaults.
-#[allow(clippy::result_large_err)]
-fn build_http_client() -> Result<HttpClient, ClnError> {
-    let builder = HttpClient::builder();
-    #[cfg(not(target_arch = "wasm32"))]
-    let builder = builder.danger_accept_invalid_certs(true);
-    builder
-        .build()
-        .map_err(|e| ClnError::Transport(format!("failed to build HTTP client: {e}")))
 }
 
 // ---------------------------------------------------------------------------

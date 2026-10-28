@@ -13,6 +13,7 @@ Run with:
     pytest tests/test_regtest.py -v
 """
 
+import base64
 import os
 import pathlib
 
@@ -53,6 +54,9 @@ CLN_RUNE = os.environ.get("CLN_RUNE", "")
 CLN_CA_CERT_BASE64 = os.environ.get("CLN_CA_CERT_BASE64", "")
 CLN_CLIENT_CERT_BASE64 = os.environ.get("CLN_CLIENT_CERT_BASE64", "")
 CLN_CLIENT_KEY_BASE64 = os.environ.get("CLN_CLIENT_KEY_BASE64", "")
+
+LND_CA_PEM = base64.b64decode(LND_TLS_CERT_BASE64).decode()
+CLN_CA_PEM = base64.b64decode(CLN_CA_CERT_BASE64).decode()
 
 # SwissKnife credentials
 SWISSKNIFE_API_URL = os.environ.get("SWISSKNIFE_API_URL", "")
@@ -149,14 +153,14 @@ class TestLndRestBackend:
 
     def test_get_info(self):
         """Verify LND node connectivity."""
-        backend = LndRestBackend(LND_REST_HOST, LND_MACAROON_HEX)
+        backend = LndRestBackend(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
         info = backend.get_info()
         assert info.pubkey
         assert info.num_active_channels > 0
 
     def test_get_balance(self):
         """Verify LND balance query."""
-        backend = LndRestBackend(LND_REST_HOST, LND_MACAROON_HEX)
+        backend = LndRestBackend(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
         balance = backend.get_balance()
         assert balance > 1000
 
@@ -167,7 +171,7 @@ class TestLndRestL402Flow:
 
     def test_full_flow(self):
         """GET request with automatic L402 payment."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         response = client.get(f"{L402_SERVER_URL}/api/data")
         assert response.status == 200
@@ -180,7 +184,7 @@ class TestLndRestL402Flow:
 
     def test_response_json(self):
         """Verify response body is parseable JSON."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         response = client.get(f"{L402_SERVER_URL}/api/data")
         data = response.json()
@@ -188,7 +192,7 @@ class TestLndRestL402Flow:
 
     def test_nonexistent_endpoint(self):
         """Non-existent endpoints return 404 without payment."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         response = client.get(f"{L402_SERVER_URL}/api/nonexistent")
         assert response.status == 404
@@ -197,7 +201,7 @@ class TestLndRestL402Flow:
 
     def test_token_caching(self):
         """Tokens are cached and reused on subsequent requests."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         # First request: should pay
         r1 = client.get(f"{L402_SERVER_URL}/api/data")
@@ -219,6 +223,7 @@ class TestLndRestL402Flow:
         client = L402Client.with_lnd_rest(
             LND_REST_HOST,
             LND_MACAROON_HEX,
+            ca_pem=LND_CA_PEM,
             budget=budget,
         )
 
@@ -232,6 +237,7 @@ class TestLndRestL402Flow:
         client = L402Client.with_lnd_rest(
             LND_REST_HOST,
             LND_MACAROON_HEX,
+            ca_pem=LND_CA_PEM,
             budget=budget,
         )
 
@@ -245,6 +251,7 @@ class TestLndRestL402Flow:
         client = L402Client.with_lnd_rest(
             LND_REST_HOST,
             LND_MACAROON_HEX,
+            ca_pem=LND_CA_PEM,
             budget=budget,
         )
 
@@ -258,7 +265,7 @@ class TestLndRestL402Flow:
 
     def test_receipts_accumulate(self):
         """Receipts are recorded across multiple requests."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         client.get(f"{L402_SERVER_URL}/api/cheap")
         client.get(f"{L402_SERVER_URL}/api/data")
@@ -270,7 +277,7 @@ class TestLndRestL402Flow:
 
     def test_total_spent(self):
         """Total spent tracker is accurate."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         assert client.total_spent() == 0
         client.get(f"{L402_SERVER_URL}/api/cheap")
@@ -282,7 +289,7 @@ class TestLndRestL402Flow:
         """Preimage hashes to the payment hash (proof of payment)."""
         import hashlib
 
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         response = client.get(f"{L402_SERVER_URL}/api/cheap")
         receipt = response.receipt
@@ -293,7 +300,7 @@ class TestLndRestL402Flow:
 
     def test_multiple_sequential_payments(self):
         """Multiple endpoints can be paid in sequence."""
-        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX)
+        client = L402Client.with_lnd_rest(LND_REST_HOST, LND_MACAROON_HEX, ca_pem=LND_CA_PEM)
 
         endpoints = [
             ("/api/cheap", 10),
@@ -403,14 +410,14 @@ class TestClnRestBackend:
 
     def test_get_info(self):
         """Verify CLN node connectivity."""
-        backend = ClnRestBackend(CLN_REST_URL, CLN_RUNE)
+        backend = ClnRestBackend(CLN_REST_URL, CLN_RUNE, ca_pem=CLN_CA_PEM)
         info = backend.get_info()
         assert info.pubkey
         assert info.num_active_channels > 0
 
     def test_get_balance(self):
         """Verify CLN balance query."""
-        backend = ClnRestBackend(CLN_REST_URL, CLN_RUNE)
+        backend = ClnRestBackend(CLN_REST_URL, CLN_RUNE, ca_pem=CLN_CA_PEM)
         balance = backend.get_balance()
         assert balance > 1000
 
@@ -421,7 +428,7 @@ class TestClnRestL402Flow:
 
     def test_full_flow(self):
         """GET request with automatic L402 payment."""
-        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE)
+        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE, ca_pem=CLN_CA_PEM)
 
         response = client.get(f"{L402_SERVER_URL}/api/data")
         assert response.status == 200
@@ -433,7 +440,7 @@ class TestClnRestL402Flow:
 
     def test_token_caching(self):
         """Tokens are cached and reused on subsequent requests."""
-        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE)
+        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE, ca_pem=CLN_CA_PEM)
 
         r1 = client.get(f"{L402_SERVER_URL}/api/data")
         assert r1.paid is True
@@ -450,6 +457,7 @@ class TestClnRestL402Flow:
         client = L402Client.with_cln_rest(
             CLN_REST_URL,
             CLN_RUNE,
+            ca_pem=CLN_CA_PEM,
             budget=budget,
         )
 
@@ -458,7 +466,7 @@ class TestClnRestL402Flow:
 
     def test_receipts(self):
         """Receipt tracking works with CLN backend."""
-        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE)
+        client = L402Client.with_cln_rest(CLN_REST_URL, CLN_RUNE, ca_pem=CLN_CA_PEM)
 
         client.get(f"{L402_SERVER_URL}/api/cheap")
         client.get(f"{L402_SERVER_URL}/api/data")

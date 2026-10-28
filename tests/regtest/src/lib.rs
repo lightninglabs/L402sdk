@@ -121,7 +121,12 @@ pub fn lnd_rest_backend() -> LndRestBackend {
         std::env::var("LND_REST_HOST").unwrap_or_else(|_| "https://localhost:8080".to_string());
     let macaroon_hex = env_required("LND_MACAROON_HEX");
 
-    LndRestBackend::new(&host, &macaroon_hex).expect("failed to create LND REST backend")
+    LndRestBackend::with_ca_pem(
+        &host,
+        &macaroon_hex,
+        &base64_decode(&env_required("LND_TLS_CERT_BASE64")),
+    )
+    .expect("failed to create LND REST backend")
 }
 
 /// Create a `ClnBackend` (payer) from regtest environment.
@@ -201,7 +206,11 @@ async fn try_cln_rest_backend() -> Option<l402_cln::ClnRestBackend> {
         }
     };
 
-    let backend = match l402_cln::ClnRestBackend::new(&host, &rune) {
+    let backend = match l402_cln::ClnRestBackend::with_ca_pem(
+        &host,
+        &rune,
+        &base64_decode(&env_required("CLN_CA_CERT_BASE64")),
+    ) {
         Ok(backend) => backend,
         Err(e) => {
             tracing::warn!("Failed to create CLN REST backend: {e}");

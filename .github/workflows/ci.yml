@@ -82,6 +82,18 @@ jobs:
       - run: .venv/bin/maturin develop
       - run: .venv/bin/pytest tests/ -v
 
+  # Keep required check names stable as matrix versions and platforms change.
+  python-bindings:
+    name: Python Bindings
+    needs: python
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every Python matrix job to pass
+        env:
+          MATRIX_RESULT: ${{ needs.python.result }}
+        run: test "$MATRIX_RESULT" = success
+
   go:
     name: Go Bindings (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -108,6 +120,17 @@ jobs:
       - name: Run Go tests
         working-directory: bindings/l402-go
         run: go test -v ./...
+
+  go-bindings:
+    name: Go Bindings
+    needs: go
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every Go matrix job to pass
+        env:
+          MATRIX_RESULT: ${{ needs.go.result }}
+        run: test "$MATRIX_RESULT" = success
 
   wasm:
     name: WASM Bindings
