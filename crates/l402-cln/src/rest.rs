@@ -225,6 +225,10 @@ struct GetInfoResponse {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl LnBackend for ClnRestBackend {
+    fn supports_fee_limit(&self) -> bool {
+        true
+    }
+
     async fn pay_invoice(
         &self,
         bolt11: &str,
@@ -254,6 +258,11 @@ impl LnBackend for ClnRestBackend {
             .map_err(|e| ClnError::Deserialize(format!("failed to parse payment response: {e}")))?;
 
         let status = data.status.as_deref().unwrap_or("unknown");
+        if status == "failed" {
+            return Err(ClientError::PaymentRejected {
+                reason: "CLN reports failed payment".to_string(),
+            });
+        }
         if status != "complete" {
             return Err(ClnError::Payment(format!("payment status: {status}")).into());
         }
@@ -280,8 +289,8 @@ impl LnBackend for ClnRestBackend {
         Ok(PaymentResult {
             preimage,
             payment_hash,
-            amount_sats: amount_msat / 1000,
-            fee_sats: fee_msat / 1000,
+            amount_sats: amount_msat.div_ceil(1000),
+            fee_sats: fee_msat.div_ceil(1000),
         })
     }
 
@@ -587,7 +596,7 @@ mod tests {
         let sent_msat: u64 = 100_500;
         let fee_msat = sent_msat.saturating_sub(amount_msat);
         assert_eq!(fee_msat, 500);
-        assert_eq!(fee_msat / 1000, 0); // Sub-sat fee rounds down
+        assert_eq!(fee_msat.div_ceil(1000), 1); // Conservatively count sub-sat fees
     }
 
     #[test]

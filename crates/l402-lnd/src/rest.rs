@@ -218,7 +218,7 @@ impl PaymentUpdate {
             .as_deref()
             .or(self.value_msat_camel.as_deref())
         {
-            return msat.parse::<u64>().unwrap_or(0) / 1000;
+            return msat.parse::<u64>().unwrap_or(0).div_ceil(1000);
         }
         self.value_sat
             .as_deref()
@@ -229,7 +229,7 @@ impl PaymentUpdate {
 
     fn fee_sats(&self) -> u64 {
         if let Some(msat) = self.fee_msat.as_deref().or(self.fee_msat_camel.as_deref()) {
-            return msat.parse::<u64>().unwrap_or(0) / 1000;
+            return msat.parse::<u64>().unwrap_or(0).div_ceil(1000);
         }
         self.fee_sat
             .as_deref()
@@ -324,6 +324,10 @@ fn verify_preimage(preimage_hex: &str, payment_hash_hex: &str) -> Result<(), Lnd
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl LnBackend for LndRestBackend {
+    fn supports_fee_limit(&self) -> bool {
+        true
+    }
+
     async fn pay_invoice(
         &self,
         bolt11: &str,
@@ -410,14 +414,18 @@ impl LnBackend for LndRestBackend {
         }
 
         let Some(payment) = succeeded else {
+            if let Some(update) = &last_update
+                && update.is_failed()
+            {
+                return Err(ClientError::PaymentRejected {
+                    reason: update
+                        .failure_reason
+                        .clone()
+                        .unwrap_or_else(|| "FAILED".to_string()),
+                });
+            }
             let reason = last_update
-                .and_then(|u| {
-                    if u.is_failed() {
-                        u.failure_reason.or(u.status)
-                    } else {
-                        u.status
-                    }
-                })
+                .and_then(|u| u.status)
                 .unwrap_or_else(|| "unknown".to_string());
             return Err(LndError::Payment(reason).into());
         };

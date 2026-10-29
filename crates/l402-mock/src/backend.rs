@@ -38,6 +38,10 @@ impl MockLnBackend {
 
 #[async_trait]
 impl LnBackend for MockLnBackend {
+    fn supports_fee_limit(&self) -> bool {
+        true
+    }
+
     async fn pay_invoice(
         &self,
         bolt11: &str,
@@ -48,14 +52,14 @@ impl LnBackend for MockLnBackend {
         // Find the challenge matching this invoice
         let challenge = challenges
             .get(bolt11)
-            .ok_or_else(|| ClientError::PaymentFailed {
+            .ok_or_else(|| ClientError::PaymentRejected {
                 reason: format!("unknown invoice: {bolt11}"),
             })?;
 
         // Deduct from balance
         let mut balance = self.balance.write().await;
         if *balance < challenge.amount_sats {
-            return Err(ClientError::PaymentFailed {
+            return Err(ClientError::PaymentRejected {
                 reason: format!(
                     "insufficient balance: have {} sats, need {}",
                     *balance, challenge.amount_sats

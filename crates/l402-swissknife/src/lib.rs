@@ -1,5 +1,13 @@
 //! # l402-swissknife
 //!
+//! # Fee-limit compatibility
+//!
+//! This adapter cannot enforce a per-payment routing-fee cap. The `LnBackend`
+//! payment method and automatic L402 clients reject it before submission.
+//! Rust callers explicitly accepting wallet-managed fees may call the separate
+//! `pay_invoice_unbounded` method; SDK budgets do not apply to that method.
+
+//!
 //! SwissKnife REST API backend adapter for the L402sdk L402 client SDK.
 //!
 //! This crate implements the [`l402_proto::LnBackend`] trait using

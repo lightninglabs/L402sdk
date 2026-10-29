@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Payment policy (#28)**: Automatic payments require enforceable fee caps; NWC and the current SwissKnife API fail before submission, with a separate uncapped Rust opt-in. Budgets include fees and pending reservations, domain limits cannot relax global limits, and unknown outcomes block automatic repayment.
+- **Receipts (#28)**: Preserve settlement evidence and recoverable tokens across persistence and HTTP failures. Native clients disable redirects by default.
+- **FFI (#28)**: Keep last-error strings owned and safely accept an empty null endpoint array. Cover these FFI boundaries with regression tests, and add a bounded protocol-parser fuzz check.
+
 - **l402-core**: Removed tokio runtime dependency. Replaced `tokio::sync::RwLock` with `std::sync::RwLock` and `std::time::Instant` with `web_time::Instant`. The core library now compiles to WASM without an async runtime. (#63)
 - **l402-ai-sdk**: Stripped all pure-TypeScript L402 reimplementation (l402-client, budget, token stores, backends, types). Now a thin wrapper around `WasmL402Client` from `l402-wasm`. (#63)
 - **l402-regtest**: Expanded the Docker/Aperture integration suite to cover CLN REST in addition to LND gRPC/REST and CLN gRPC.

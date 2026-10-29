@@ -117,6 +117,10 @@ impl LndGrpcBackend {
 
 #[async_trait]
 impl LnBackend for LndGrpcBackend {
+    fn supports_fee_limit(&self) -> bool {
+        true
+    }
+
     async fn pay_invoice(
         &self,
         bolt11: &str,
@@ -158,13 +162,13 @@ impl LnBackend for LndGrpcBackend {
                 Ok(PaymentResult {
                     preimage,
                     payment_hash,
-                    amount_sats: value_msat / 1000,
-                    fee_sats: fee_msat / 1000,
+                    amount_sats: value_msat.div_ceil(1000),
+                    fee_sats: fee_msat.div_ceil(1000),
                 })
             }
-            lnrpc::payment::PaymentStatus::Failed => {
-                Err(LndError::Payment(format!("{:?}", payment.failure_reason())).into())
-            }
+            lnrpc::payment::PaymentStatus::Failed => Err(ClientError::PaymentRejected {
+                reason: format!("{:?}", payment.failure_reason()),
+            }),
             status => Err(LndError::Payment(format!("unexpected status: {status:?}")).into()),
         }
     }

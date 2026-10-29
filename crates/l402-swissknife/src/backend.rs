@@ -101,6 +101,75 @@ impl fmt::Debug for SwissKnifeBackend {
 }
 
 impl SwissKnifeBackend {
+    /// Pay using the wallet's own fee policy, without an SDK fee cap or budget.
+    ///
+    /// This is an explicit opt-in for callers managing payment policy themselves.
+    /// Automatic L402 payments reject this backend until it supports enforceable caps.
+    pub async fn pay_invoice_unbounded(&self, bolt11: &str) -> Result<PaymentResult, ClientError> {
+        let body = SendPaymentRequest {
+            input: bolt11.to_string(),
+        };
+
+        let response = self
+            .request(reqwest::Method::POST, &self.wallet_path("/payments"))
+            .json(&body)
+            .send()
+            .await
+            .map_err(SwissKnifeError::from)?;
+
+        let status = response.status().as_u16();
+        if !response.status().is_success() {
+            return Err(Self::parse_error(status, response).await.into());
+        }
+
+        let payment: crate::types::PaymentResponse =
+            response.json().await.map_err(SwissKnifeError::from)?;
+
+        // Check payment status
+        match payment.status {
+            PaymentStatus::Settled => {}
+            PaymentStatus::Failed => {
+                let reason = payment
+                    .error
+                    .unwrap_or_else(|| "payment failed without error message".to_string());
+                return Err(SwissKnifeError::Payment(reason).into());
+            }
+            PaymentStatus::Pending => {
+                return Err(SwissKnifeError::Payment(
+                    "payment is still pending (not yet settled)".to_string(),
+                )
+                .into());
+            }
+            PaymentStatus::Unknown => {
+                return Err(SwissKnifeError::Payment(
+                    "unexpected payment status from SwissKnife".to_string(),
+                )
+                .into());
+            }
+        }
+
+        let (payment_hash, payment_preimage) = match payment.lightning {
+            Some(proof) => (proof.payment_hash, proof.payment_preimage),
+            None => (
+                payment.payment_hash.unwrap_or_default(),
+                payment.payment_preimage,
+            ),
+        };
+        let preimage = payment_preimage.ok_or_else(|| {
+            SwissKnifeError::Payment("settled payment missing preimage".to_string())
+        })?;
+
+        let amount_sats = payment.amount_msat.div_ceil(1000);
+        let fee_sats = payment.fee_msat.unwrap_or(0).div_ceil(1000);
+
+        Ok(PaymentResult {
+            preimage,
+            payment_hash,
+            amount_sats,
+            fee_sats,
+        })
+    }
+
     /// Create a new `SwissKnifeBackend` connected to the given instance.
     ///
     /// # Arguments
@@ -201,81 +270,10 @@ impl SwissKnifeBackend {
 impl LnBackend for SwissKnifeBackend {
     async fn pay_invoice(
         &self,
-        bolt11: &str,
-        max_fee_sats: u64,
+        _bolt11: &str,
+        _max_fee_sats: u64,
     ) -> Result<PaymentResult, ClientError> {
-        let body = SendPaymentRequest {
-            input: bolt11.to_string(),
-        };
-
-        let response = self
-            .request(reqwest::Method::POST, &self.wallet_path("/payments"))
-            .json(&body)
-            .send()
-            .await
-            .map_err(SwissKnifeError::from)?;
-
-        let status = response.status().as_u16();
-        if !response.status().is_success() {
-            return Err(Self::parse_error(status, response).await.into());
-        }
-
-        let payment: crate::types::PaymentResponse =
-            response.json().await.map_err(SwissKnifeError::from)?;
-
-        // Check payment status
-        match payment.status {
-            PaymentStatus::Settled => {}
-            PaymentStatus::Failed => {
-                let reason = payment
-                    .error
-                    .unwrap_or_else(|| "payment failed without error message".to_string());
-                return Err(SwissKnifeError::Payment(reason).into());
-            }
-            PaymentStatus::Pending => {
-                return Err(SwissKnifeError::Payment(
-                    "payment is still pending (not yet settled)".to_string(),
-                )
-                .into());
-            }
-            PaymentStatus::Unknown => {
-                return Err(SwissKnifeError::Payment(
-                    "unexpected payment status from SwissKnife".to_string(),
-                )
-                .into());
-            }
-        }
-
-        let (payment_hash, payment_preimage) = match payment.lightning {
-            Some(proof) => (proof.payment_hash, proof.payment_preimage),
-            None => (
-                payment.payment_hash.unwrap_or_default(),
-                payment.payment_preimage,
-            ),
-        };
-        let preimage = payment_preimage.ok_or_else(|| {
-            SwissKnifeError::Payment("settled payment missing preimage".to_string())
-        })?;
-
-        let amount_sats = payment.amount_msat / 1000;
-        let fee_sats = payment.fee_msat.unwrap_or(0) / 1000;
-
-        // Warn if actual fee exceeds the requested max (payment already settled,
-        // so we can't undo it, but the caller should know).
-        if fee_sats > max_fee_sats {
-            tracing::warn!(
-                fee_sats,
-                max_fee_sats,
-                "SwissKnife payment fee ({fee_sats} sats) exceeds requested max ({max_fee_sats} sats)"
-            );
-        }
-
-        Ok(PaymentResult {
-            preimage,
-            payment_hash,
-            amount_sats,
-            fee_sats,
-        })
+        Err(ClientError::FeeLimitUnsupported)
     }
 
     async fn get_balance(&self) -> Result<u64, ClientError> {
@@ -482,5 +480,16 @@ mod tests {
         let available_msat: i64 = -5000;
         let sats = u64::try_from(available_msat.max(0)).unwrap_or(0) / 1000;
         assert_eq!(sats, 0);
+    }
+    #[tokio::test]
+    async fn fee_cap_is_rejected_before_network_submission() {
+        let backend = SwissKnifeBackend::new("http://127.0.0.1:1", "unused");
+        assert!(!backend.supports_fee_limit());
+        for cap in [0, 1, u64::MAX] {
+            assert!(matches!(
+                backend.pay_invoice("lnbc1000n1test", cap).await,
+                Err(ClientError::FeeLimitUnsupported)
+            ));
+        }
     }
 }
