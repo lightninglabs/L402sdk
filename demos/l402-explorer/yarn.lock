@@ -816,24 +816,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lightninglabs/l402-ai@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@lightninglabs/l402-ai@npm:0.1.0"
+"@lightninglabs/l402-ai@portal:../../packages/l402-ai-sdk::locator=l402-explorer%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@lightninglabs/l402-ai@portal:../../packages/l402-ai-sdk::locator=l402-explorer%40workspace%3A."
   dependencies:
-    "@lightninglabs/l402": "npm:^0.1.0"
+    "@lightninglabs/l402": "npm:^0.2.0"
   peerDependencies:
     ai: ">=6.0.0"
     zod: ^3.25.76 || ^4.1.8
-  checksum: 10c0/00d90233a94a9e28b88cefb76442484db7d50e9248353ea241c4789746740aba09e6869dac716a717b26e7db10380c61396c81a10fc9bd4b9b0449b759179fff
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@lightninglabs/l402@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@lightninglabs/l402@npm:0.1.0"
-  checksum: 10c0/c81a4122d2580c71a02c16d9e57f1aae73b13dd071fba9061091dc39adc0a3ffb492bf2cbe6886cc3c46c2d0043c94b074107c56fa42592f98a19f04ee326f17
+"@lightninglabs/l402@portal:../../crates/l402-wasm/pkg::locator=l402-explorer%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@lightninglabs/l402@portal:../../crates/l402-wasm/pkg::locator=l402-explorer%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@napi-rs/wasm-runtime@npm:^1.1.4":
   version: 1.2.6
@@ -3599,7 +3597,7 @@ __metadata:
     "@ai-sdk/openai": "npm:4.0.104"
     "@ai-sdk/react": "npm:4.0.159"
     "@ai-sdk/xai": "npm:5.0.32"
-    "@lightninglabs/l402-ai": "npm:^0.1.0"
+    "@lightninglabs/l402-ai": "npm:^0.2.0"
     "@tailwindcss/postcss": "npm:^4.3.3"
     "@tailwindcss/typography": "npm:^0.5.20"
     "@types/node": "npm:^26.6.5"

@@ -225,7 +225,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@lightninglabs/l402-ai@workspace:."
   dependencies:
-    "@lightninglabs/l402": "npm:^0.1.0"
+    "@lightninglabs/l402": "npm:^0.2.0"
     "@types/node": "npm:^26.6.5"
     ai: "npm:^7.0.155"
     eslint: "npm:^10.13.0"
@@ -240,12 +240,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@lightninglabs/l402@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@lightninglabs/l402@npm:0.1.0"
-  checksum: 10c0/c81a4122d2580c71a02c16d9e57f1aae73b13dd071fba9061091dc39adc0a3ffb492bf2cbe6886cc3c46c2d0043c94b074107c56fa42592f98a19f04ee326f17
+"@lightninglabs/l402@portal:../../crates/l402-wasm/pkg::locator=%40lightninglabs%2Fl402-ai%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@lightninglabs/l402@portal:../../crates/l402-wasm/pkg::locator=%40lightninglabs%2Fl402-ai%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@oxc-project/types@npm:=0.155.0":
   version: 0.155.0

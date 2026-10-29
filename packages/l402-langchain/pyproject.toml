@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "l402sdk-langchain"
-version = "0.1.0"
+version = "0.2.0"
 description = "LangChain integration for L402sdk — L402 Lightning payments in AI agents"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
@@ -26,7 +26,7 @@ classifiers = [
 ]
 keywords = ["l402", "lightning", "bitcoin", "langchain", "ai-agents", "payments"]
 dependencies = [
-    "L402sdk>=0.1.0",
+    "L402sdk>=0.2.0,<0.3",
     "langchain-core>=1.7.1,<2",
     "pydantic>=2.14.1,<3",
 ]

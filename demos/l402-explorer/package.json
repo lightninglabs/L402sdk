@@ -15,7 +15,7 @@
     "@ai-sdk/openai": "4.0.104",
     "@ai-sdk/react": "4.0.159",
     "@ai-sdk/xai": "5.0.32",
-    "@lightninglabs/l402-ai": "^0.1.0",
+    "@lightninglabs/l402-ai": "^0.2.0",
     "@tailwindcss/typography": "^0.5.20",
     "ai": "7.0.155",
     "katex": "^0.19.1",
@@ -43,6 +43,8 @@
     "@babel/core": "7.29.7",
     "@ungap/structured-clone": "1.4.0",
     "postcss-selector-parser": "6.1.5",
-    "katex": "0.19.1"
+    "katex": "0.19.1",
+    "@lightninglabs/l402": "portal:../../crates/l402-wasm/pkg",
+    "@lightninglabs/l402-ai": "portal:../../packages/l402-ai-sdk"
   }
 }

@@ -32,14 +32,20 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo doc --workspace --no-deps
 ```
 
-For the TypeScript package:
+For the TypeScript package, build the local WASM dependency first. Yarn
+resolves it from this checkout; published packages depend on the npm release.
 
 ```bash
+make wasm
 cd packages/l402-ai-sdk
 yarn install
 yarn typecheck
 yarn test
+yarn build
 ```
+
+The explorer demo and AI agent example also resolve these local packages.
+Build them with the commands above before installing the demo or example.
 
 Or use the Makefile shortcuts:
 

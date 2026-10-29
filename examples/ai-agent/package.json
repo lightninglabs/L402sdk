@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.104",
-    "@lightninglabs/l402": "^0.1.0",
-    "@lightninglabs/l402-ai": "^0.1.0",
+    "@lightninglabs/l402": "^0.2.0",
+    "@lightninglabs/l402-ai": "^0.2.0",
     "ai": "^7.0.155",
     "zod": "^4.6.7"
   },
@@ -19,5 +19,9 @@
     "@types/node": "^26.6.5",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "resolutions": {
+    "@lightninglabs/l402": "portal:../../crates/l402-wasm/pkg",
+    "@lightninglabs/l402-ai": "portal:../../packages/l402-ai-sdk"
   }
 }
