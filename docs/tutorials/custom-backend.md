@@ -93,6 +93,8 @@ This is the critical method. It must:
 ```rust
 #[async_trait]
 impl LnBackend for ClnBackend {
+    fn supports_fee_limit(&self) -> bool { true }
+
     async fn pay_invoice(
         &self,
         bolt11: &str,
@@ -107,8 +109,7 @@ impl LnBackend for ClnBackend {
                 "method": "pay",
                 "params": {
                     "bolt11": bolt11,
-                    "maxfeepercent": 0.5,
-                    "maxfee": max_fee_sats * 1000, // CLN uses millisatoshis
+                    "maxfee": max_fee_sats.saturating_mul(1000), // CLN uses millisatoshis
                 }
             }))
             .send()
@@ -132,10 +133,10 @@ impl LnBackend for ClnBackend {
                 .as_str().unwrap_or_default().to_string(),
             payment_hash: result["payment_hash"]
                 .as_str().unwrap_or_default().to_string(),
-            amount_sats: result["amount_sent_msat"]
-                .as_u64().unwrap_or(0) / 1000,
-            fee_sats: (result["amount_sent_msat"].as_u64().unwrap_or(0)
-                - result["amount_msat"].as_u64().unwrap_or(0)) / 1000,
+            amount_sats: result["amount_msat"]
+                .as_u64().unwrap_or(0).div_ceil(1000),
+            fee_sats: result["amount_sent_msat"].as_u64().unwrap_or(0)
+                .saturating_sub(result["amount_msat"].as_u64().unwrap_or(0)).div_ceil(1000),
         })
     }
 
@@ -265,10 +266,12 @@ If you need a new backend in JavaScript or TypeScript:
 
 ## Checklist for New Backends
 
-- [ ] Implement all three methods of `LnBackend`
+- [ ] Implement the three async methods of `LnBackend`
+- [ ] Implement `supports_fee_limit()` only when the server enforces the cap before settlement (including zero)
+- [ ] Return `PaymentRejected` only for confirmed non-settlement; ambiguous errors retain budget reservations
 - [ ] Map node-specific errors to `ClientError` variants
 - [ ] Handle both successful and failed payments gracefully
-- [ ] Return accurate `fee_sats` (not zero) for proper receipt tracking
+- [ ] Round amount and fee millisatoshis up to sats for conservative budget accounting
 - [ ] Add unit tests with mocked HTTP responses
 - [ ] Add integration tests using `l402-mock` for the L402Client flow
 - [ ] Add a WASM wrapper in `crates/l402-wasm` if the backend should be available from JS/TS

@@ -152,6 +152,10 @@ impl ClnGrpcBackend {
 
 #[async_trait]
 impl LnBackend for ClnGrpcBackend {
+    fn supports_fee_limit(&self) -> bool {
+        true
+    }
+
     async fn pay_invoice(
         &self,
         bolt11: &str,
@@ -186,8 +190,8 @@ impl LnBackend for ClnGrpcBackend {
         Ok(PaymentResult {
             preimage,
             payment_hash,
-            amount_sats: amount_msat / 1000,
-            fee_sats: fee_msat / 1000,
+            amount_sats: amount_msat.div_ceil(1000),
+            fee_sats: fee_msat.div_ceil(1000),
         })
     }
 

@@ -43,13 +43,14 @@
 //! # }
 //! ```
 
+use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use reqwest::header::{AUTHORIZATION, HeaderValue, WWW_AUTHENTICATE};
 use reqwest::{Client as HttpClient, StatusCode};
 use web_time::Instant;
 
-use l402_proto::{L402Challenge, L402Token, decode_bolt11_amount};
+use l402_proto::{L402Challenge, L402Token, PaymentResult, decode_bolt11_amount};
 
 use crate::budget::{Budget, BudgetTracker};
 use crate::receipt::Receipt;
@@ -140,6 +141,9 @@ impl<L, T> L402ClientBuilder<L, T> {
     }
 
     /// Set a custom HTTP client (useful for proxies, custom TLS, etc.).
+    ///
+    /// On native targets it must disable redirects to preserve credential isolation.
+    /// The SDK default disables redirects; a final-origin check also rejects redirected challenges.
     #[must_use]
     pub fn http_client(mut self, client: HttpClient) -> Self {
         self.http_client = Some(client);
@@ -154,14 +158,15 @@ impl<B: LnBackend + 'static, S: TokenStore + 'static> L402ClientBuilder<B, S> {
     ///
     /// Returns [`ClientError::Backend`] if the HTTP client cannot be constructed.
     pub fn build(self) -> Result<L402Client, ClientError> {
-        let http_client = match self.http_client {
-            Some(c) => c,
-            None => HttpClient::builder()
-                .user_agent(&self.config.user_agent)
-                .build()
-                .map_err(|e| ClientError::Backend {
-                    reason: format!("failed to build HTTP client: {e}"),
-                })?,
+        let http_client = if let Some(client) = self.http_client {
+            client
+        } else {
+            let builder = HttpClient::builder().user_agent(&self.config.user_agent);
+            #[cfg(not(target_arch = "wasm32"))]
+            let builder = builder.redirect(reqwest::redirect::Policy::none());
+            builder.build().map_err(|e| ClientError::Backend {
+                reason: format!("failed to build HTTP client: {e}"),
+            })?
         };
 
         let budget = self.budget.unwrap_or_else(Budget::unlimited);
@@ -173,6 +178,8 @@ impl<B: LnBackend + 'static, S: TokenStore + 'static> L402ClientBuilder<B, S> {
             config: self.config,
             http_client,
             receipts: Arc::new(RwLock::new(Vec::new())),
+            payments: RwLock::new(HashMap::new()),
+            unpersisted_tokens: RwLock::new(HashMap::new()),
         })
     }
 }
@@ -190,6 +197,9 @@ pub struct L402Client {
     config: L402ClientConfig,
     http_client: HttpClient,
     receipts: Arc<RwLock<Vec<Receipt>>>,
+    // None is in-flight/unknown, including a dropped payment future. Never retry it.
+    payments: RwLock<HashMap<String, Option<(PaymentResult, usize)>>>,
+    unpersisted_tokens: RwLock<HashMap<String, L402Token>>,
 }
 
 impl L402Client {
@@ -237,9 +247,22 @@ impl L402Client {
     ) -> Result<L402Response, ClientError> {
         let start = Instant::now();
 
-        // Check if we have a cached token for this endpoint
-        if let Some((macaroon, preimage)) = self.token_store.get(url).await? {
-            let token = L402Token::new(macaroon, preimage);
+        // A successful payment must remain usable if persistent token storage fails.
+        let token = self
+            .unpersisted_tokens
+            .read()
+            .expect("RwLock poisoned")
+            .get(url)
+            .cloned();
+        let token = if token.is_some() {
+            token
+        } else {
+            self.token_store
+                .get(url)
+                .await?
+                .map(|(macaroon, preimage)| L402Token::new(macaroon, preimage))
+        };
+        if let Some(token) = token {
             let response = self.send_with_auth(&method, url, body, &token).await?;
 
             // If the cached token is still valid, return the response
@@ -254,6 +277,10 @@ impl L402Client {
 
             // Token was rejected — remove it from cache and fall through
             tracing::debug!(url, "cached L402 token rejected, removing from cache");
+            self.unpersisted_tokens
+                .write()
+                .expect("RwLock poisoned")
+                .remove(url);
             self.token_store.remove(url).await?;
         }
 
@@ -274,9 +301,10 @@ impl L402Client {
         let challenge = Self::extract_challenge(&response)?;
 
         // Extract the domain for domain-specific budget checks
-        let domain = reqwest::Url::parse(url)
-            .ok()
-            .and_then(|u| u.host_str().map(String::from));
+        let domain = reqwest::Url::parse(url).ok().and_then(|u| {
+            u.host_str()
+                .map(|host| host.trim_end_matches('.').to_string())
+        });
 
         // Decode the invoice amount for budget enforcement.
         // Never authorize a payment whose amount cannot be checked.
@@ -286,61 +314,153 @@ impl L402Client {
             })?
             .satoshis();
 
-        // Check budget with the decoded amount before paying
-        self.budget_tracker
-            .check_and_record(invoice_amount_sats, domain.as_deref())
+        let (payment, receipt_index, newly_paid) = self
+            .pay_challenge(
+                &challenge.invoice,
+                invoice_amount_sats,
+                domain.as_deref(),
+                url,
+                start,
+            )
             .await?;
 
-        // Pay the invoice
-        let payment = self
-            .ln_backend
-            .pay_invoice(&challenge.invoice, self.config.max_fee_sats)
-            .await?;
-
-        // Store the token for future requests
-        self.token_store
-            .put(url, &challenge.macaroon, &payment.preimage)
-            .await?;
-
-        // Construct the authorization token
-        let token = L402Token::new(challenge.macaroon.clone(), payment.preimage.clone());
-
-        // Retry the request with the L402 authorization
+        let token = L402Token::new(challenge.macaroon, payment.preimage);
+        self.persist_token(url, &token).await?;
         let retry_response = self.send_with_auth(&method, url, body, &token).await?;
-
-        let latency_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-        let status = retry_response.status().as_u16();
-
-        // Record receipt
-        let receipt = Receipt::new(
-            url.to_string(),
-            payment.amount_sats,
-            payment.fee_sats,
-            payment.payment_hash,
-            payment.preimage,
-            status,
-            latency_ms,
-        );
-
-        // If the retry also returned 402 or a server error, the token might be invalid
+        let receipt = {
+            let mut receipts = self.receipts.write().expect("RwLock poisoned");
+            let receipt = &mut receipts[receipt_index];
+            receipt.response_status = retry_response.status().as_u16();
+            receipt.latency_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+            receipt.clone()
+        };
         if retry_response.status() == StatusCode::PAYMENT_REQUIRED {
+            self.unpersisted_tokens
+                .write()
+                .expect("RwLock poisoned")
+                .remove(url);
             self.token_store.remove(url).await?;
             return Err(ClientError::RetryFailed {
-                reason: "server returned 402 again after payment".to_string(),
+                reason: "server returned 402 again after payment; receipt retained".to_string(),
             });
         }
 
-        self.receipts
-            .write()
-            .expect("RwLock poisoned")
-            .push(receipt.clone());
-
         Ok(L402Response {
             inner: retry_response,
-            paid: true,
-            cached_token: false,
+            paid: newly_paid,
+            cached_token: !newly_paid,
             receipt: Some(receipt),
         })
+    }
+
+    async fn persist_token(&self, url: &str, token: &L402Token) -> Result<(), ClientError> {
+        // Retain proof before the first post-payment await, including cancellation.
+        self.unpersisted_tokens
+            .write()
+            .expect("RwLock poisoned")
+            .insert(url.to_string(), token.clone());
+        self.token_store
+            .put(url, &token.macaroon, &token.preimage)
+            .await?;
+        // Once persistence confirms the write, honor the configured store's eviction policy.
+        let mut tokens = self.unpersisted_tokens.write().expect("RwLock poisoned");
+        if tokens.get(url).is_some_and(|saved| {
+            saved.macaroon == token.macaroon && saved.preimage == token.preimage
+        }) {
+            tokens.remove(url);
+        }
+        Ok(())
+    }
+
+    async fn pay_challenge(
+        &self,
+        invoice: &str,
+        invoice_amount_sats: u64,
+        domain: Option<&str>,
+        url: &str,
+        start: Instant,
+    ) -> Result<(PaymentResult, usize, bool), ClientError> {
+        // Reserve and claim the invoice synchronously. No lock is held across an await.
+        // Invoice case is normalized because BOLT11 may be uppercase.
+        let invoice_key = invoice.to_ascii_lowercase();
+        let (known, reservation) = {
+            let mut payments = self.payments.write().expect("RwLock poisoned");
+            if let Some(previous) = payments.get(&invoice_key) {
+                let known = previous.clone().ok_or(ClientError::PaymentUncertain)?;
+                (Some(known), None)
+            } else {
+                if !self.ln_backend.supports_fee_limit() {
+                    return Err(ClientError::FeeLimitUnsupported);
+                }
+                let reservation = self.budget_tracker.reserve(
+                    invoice_amount_sats,
+                    self.config.max_fee_sats,
+                    domain,
+                )?;
+                payments.insert(invoice_key.clone(), None);
+                (None, Some(reservation))
+            }
+        };
+
+        let newly_paid = known.is_none();
+        let settled = if let Some(known) = known {
+            known
+        } else {
+            let reservation = reservation.expect("new payment has reservation");
+            let max_fee_sats = reservation.max_fee_sats;
+            let payment = match self.ln_backend.pay_invoice(invoice, max_fee_sats).await {
+                Ok(payment) => payment,
+                Err(error) => {
+                    if matches!(
+                        error,
+                        ClientError::PaymentRejected { .. } | ClientError::FeeLimitUnsupported
+                    ) {
+                        self.budget_tracker.release(reservation);
+                        self.payments
+                            .write()
+                            .expect("RwLock poisoned")
+                            .remove(&invoice_key);
+                    }
+                    // Transport errors, ambiguous failures and cancellation keep the reservation.
+                    return Err(error);
+                }
+            };
+            let receipt = Receipt::new(
+                url.to_string(),
+                payment.amount_sats,
+                payment.fee_sats,
+                payment.payment_hash.clone(),
+                payment.preimage.clone(),
+                0,
+                u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX),
+            );
+            let receipt_index = {
+                let mut receipts = self.receipts.write().expect("RwLock poisoned");
+                let index = receipts.len();
+                receipts.push(receipt);
+                index
+            };
+            let total = payment.amount_sats.checked_add(payment.fee_sats);
+            let violation = payment.amount_sats != invoice_amount_sats
+                || payment.fee_sats > max_fee_sats
+                || total.is_none();
+            let settlement = self.budget_tracker.settle_payment(
+                reservation,
+                total.unwrap_or(u64::MAX),
+                violation,
+            );
+            if violation {
+                return Err(ClientError::Backend { reason: "settled payment violated the authorized amount or fee cap; receipt retained and further payments disabled".to_string() });
+            }
+            settlement?;
+            self.payments
+                .write()
+                .expect("RwLock poisoned")
+                .insert(invoice_key, Some((payment.clone(), receipt_index)));
+            (payment, receipt_index)
+        };
+
+        Ok((settled.0, settled.1, newly_paid))
     }
 
     /// Send an HTTP request without authentication.
@@ -358,9 +478,18 @@ impl L402Client {
                 .body(body.to_string());
         }
 
-        builder.send().await.map_err(|e| ClientError::Http {
+        let response = builder.send().await.map_err(|e| ClientError::Http {
             reason: e.to_string(),
-        })
+        })?;
+        let requested = reqwest::Url::parse(url).map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })?;
+        if response.url().origin() != requested.origin() {
+            return Err(ClientError::Http {
+                reason: "cross-origin redirect refused".to_string(),
+            });
+        }
+        Ok(response)
     }
 
     /// Send an HTTP request with L402 authorization.
@@ -385,9 +514,18 @@ impl L402Client {
                 .body(body.to_string());
         }
 
-        builder.send().await.map_err(|e| ClientError::Http {
+        let response = builder.send().await.map_err(|e| ClientError::Http {
             reason: e.to_string(),
-        })
+        })?;
+        let requested = reqwest::Url::parse(url).map_err(|e| ClientError::Http {
+            reason: e.to_string(),
+        })?;
+        if response.url().origin() != requested.origin() {
+            return Err(ClientError::Http {
+                reason: "cross-origin redirect refused".to_string(),
+            });
+        }
+        Ok(response)
     }
 
     /// Extract an L402 challenge from a 402 response.
@@ -402,13 +540,14 @@ impl L402Client {
         Ok(L402Challenge::from_header(header_str)?)
     }
 
-    /// Get all recorded payment receipts.
+    /// Get all settled payment receipts, including payments whose persistence or HTTP retry failed.
+    /// A `response_status` of 0 means no paid HTTP response has been received.
     #[allow(clippy::unused_async, clippy::unused_async_trait_impl)] // Kept async for API consistency with total_spent()
     pub async fn receipts(&self) -> Vec<Receipt> {
         self.receipts.read().expect("RwLock poisoned").clone()
     }
 
-    /// Get the total amount spent (in satoshis) across all payments.
+    /// Get fee-inclusive spending plus outstanding reservations, including uncertain payments.
     pub async fn total_spent(&self) -> u64 {
         self.budget_tracker.total_spent().await
     }
@@ -533,6 +672,10 @@ mod tests {
 
     #[async_trait]
     impl LnBackend for MockLnBackend {
+        fn supports_fee_limit(&self) -> bool {
+            true
+        }
+
         async fn pay_invoice(
             &self,
             _bolt11: &str,
@@ -698,7 +841,7 @@ mod tests {
             hourly_max: None,
             daily_max: None,
             total_max: None,
-            domain_budgets: std::collections::HashMap::new(),
+            domain_budgets: HashMap::new(),
         };
 
         let result = budget.check(100);

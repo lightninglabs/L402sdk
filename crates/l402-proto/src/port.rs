@@ -21,10 +21,10 @@ pub struct PaymentResult {
     /// Hex-encoded payment hash.
     pub payment_hash: String,
 
-    /// Amount paid in satoshis (excluding fees).
+    /// Amount paid in satoshis (excluding fees), rounded up from millisatoshis.
     pub amount_sats: u64,
 
-    /// Routing fee paid in satoshis.
+    /// Routing fee paid in satoshis, rounded up from millisatoshis.
     pub fee_sats: u64,
 }
 
@@ -48,6 +48,15 @@ pub struct NodeInfo {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait LnBackend: Send + Sync {
+    /// Whether this adapter enforces the requested fee cap before settlement.
+    ///
+    /// Defaults to false: custom adapters must explicitly implement this contract.
+    /// Enforcement includes a zero fee cap; zero must never select a wallet default.
+    /// Amounts and fees in successful results must round up fractional satoshis.
+    fn supports_fee_limit(&self) -> bool {
+        false
+    }
+
     /// Pay a BOLT11 Lightning invoice.
     ///
     /// # Arguments
@@ -57,7 +66,10 @@ pub trait LnBackend: Send + Sync {
     ///
     /// # Errors
     ///
-    /// Returns [`ClientError::PaymentFailed`] if the payment cannot be completed.
+    /// Return [`ClientError::PaymentRejected`] only when non-settlement is confirmed.
+    /// Other errors may have an unknown outcome and must not authorize an automatic retry.
+    /// Backends unable to enforce the cap must return [`ClientError::FeeLimitUnsupported`]
+    /// without submitting a payment.
     async fn pay_invoice(
         &self,
         bolt11: &str,

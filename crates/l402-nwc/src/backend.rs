@@ -72,6 +72,33 @@ impl fmt::Debug for NwcBackend {
 }
 
 impl NwcBackend {
+    /// Pay using the wallet's own fee policy, without an SDK fee cap or budget.
+    ///
+    /// This is an explicit opt-in for callers managing payment policy themselves.
+    /// Automatic L402 payments reject this backend until it supports enforceable caps.
+    pub async fn pay_invoice_unbounded(&self, bolt11: &str) -> Result<PaymentResult, ClientError> {
+        debug!(invoice = %bolt11.chars().take(20).collect::<String>(), "paying invoice via NWC");
+
+        let request = PayInvoiceRequest::new(bolt11);
+
+        let response = self
+            .nwc
+            .pay_invoice(request)
+            .await
+            .map_err(NwcError::from)?;
+
+        let preimage = response.preimage;
+        let fee_sats = response.fees_paid.unwrap_or(0).div_ceil(1000);
+
+        Ok(PaymentResult {
+            preimage,
+            // NWC doesn't return payment_hash in pay_invoice response.
+            payment_hash: String::new(),
+            amount_sats: 0,
+            fee_sats,
+        })
+    }
+
     /// Connect to a wallet using a NWC connection URI.
     ///
     /// The URI format is:
@@ -120,29 +147,10 @@ impl NwcBackend {
 impl LnBackend for NwcBackend {
     async fn pay_invoice(
         &self,
-        bolt11: &str,
+        _bolt11: &str,
         _max_fee_sats: u64,
     ) -> Result<PaymentResult, ClientError> {
-        debug!(invoice = %bolt11.chars().take(20).collect::<String>(), "paying invoice via NWC");
-
-        let request = PayInvoiceRequest::new(bolt11);
-
-        let response = self
-            .nwc
-            .pay_invoice(request)
-            .await
-            .map_err(NwcError::from)?;
-
-        let preimage = response.preimage;
-        let fee_sats = response.fees_paid.unwrap_or(0) / 1000;
-
-        Ok(PaymentResult {
-            preimage,
-            // NWC doesn't return payment_hash in pay_invoice response.
-            payment_hash: String::new(),
-            amount_sats: 0,
-            fee_sats,
-        })
+        Err(ClientError::FeeLimitUnsupported)
     }
 
     async fn get_balance(&self) -> Result<u64, ClientError> {
@@ -205,5 +213,21 @@ mod tests {
     async fn new_invalid_uri() {
         let result = NwcBackend::new("not-a-valid-uri").await;
         assert!(result.is_err());
+    }
+    #[tokio::test]
+    async fn fee_cap_is_rejected_before_relay_submission() {
+        let uri = format!(
+            "nostr+walletconnect://{}?relay=ws://127.0.0.1:1&secret={}",
+            "11".repeat(32),
+            "22".repeat(32)
+        );
+        let backend = NwcBackend::new(&uri).await.unwrap();
+        assert!(!backend.supports_fee_limit());
+        for cap in [0, 1, u64::MAX] {
+            assert!(matches!(
+                backend.pay_invoice("lnbc1000n1test", cap).await,
+                Err(ClientError::FeeLimitUnsupported)
+            ));
+        }
     }
 }

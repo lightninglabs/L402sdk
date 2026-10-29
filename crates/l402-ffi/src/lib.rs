@@ -44,11 +44,11 @@ fn runtime() -> &'static tokio::runtime::Runtime {
 // ---------------------------------------------------------------------------
 
 thread_local! {
-    static LAST_ERROR: RefCell<Option<String>> = const { RefCell::new(None) };
+    static LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
 }
 
 fn set_error(msg: String) {
-    LAST_ERROR.with(|e| *e.borrow_mut() = Some(msg));
+    LAST_ERROR.with(|e| *e.borrow_mut() = Some(CString::new(msg).unwrap_or_default()));
 }
 
 fn clear_error() {
@@ -102,16 +102,9 @@ pub struct L402Endpoint {
 #[unsafe(no_mangle)]
 pub extern "C" fn l402_last_error_message() -> *const c_char {
     LAST_ERROR.with(|e| {
-        let borrow = e.borrow();
-        match borrow.as_ref() {
-            Some(msg) => {
-                // Leak a CString that lives until next error set
-                // This is intentional — caller reads but does not free
-                let cs = CString::new(msg.as_str()).unwrap_or_default();
-                cs.into_raw().cast_const()
-            }
-            None => std::ptr::null(),
-        }
+        e.borrow()
+            .as_ref()
+            .map_or(std::ptr::null(), |message| message.as_ptr())
     })
 }
 
@@ -154,7 +147,11 @@ pub unsafe extern "C" fn l402_mock_server_new(
     }
 
     let rt = runtime();
-    let eps = unsafe { std::slice::from_raw_parts(endpoints, count) };
+    let eps = if count == 0 {
+        &[]
+    } else {
+        unsafe { std::slice::from_raw_parts(endpoints, count) }
+    };
 
     let result = rt.block_on(async {
         let mut builder = MockL402Server::builder();
@@ -708,6 +705,29 @@ mod tests {
             l402_mock_server_free(std::ptr::null_mut());
             l402_response_free(std::ptr::null_mut());
             l402_string_free(std::ptr::null_mut());
+        }
+    }
+}
+
+#[cfg(test)]
+mod boundary_tests {
+    use super::*;
+
+    #[test]
+    fn empty_endpoint_array_and_error_message_ownership() {
+        // The ABI explicitly allows a null pointer when count is zero.
+        unsafe {
+            let server = l402_mock_server_new(std::ptr::null(), 0);
+            assert!(!server.is_null());
+            l402_mock_server_free(server);
+            assert!(l402_client_get(std::ptr::null_mut(), std::ptr::null()).is_null());
+            let error = l402_last_error_message();
+            assert!(!error.is_null());
+            assert_eq!(
+                CStr::from_ptr(error).to_str().unwrap(),
+                "null pointer argument"
+            );
+            assert_eq!(error, l402_last_error_message());
         }
     }
 }

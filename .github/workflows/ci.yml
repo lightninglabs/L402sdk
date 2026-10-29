@@ -255,6 +255,27 @@ jobs:
       - run: cargo generate-lockfile
       - run: cargo audit --deny warnings
 
+  fuzz:
+    name: Protocol parser fuzz smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: nightly-2026-10-28
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: fuzz
+      - run: cargo install cargo-fuzz --version 0.13.2 --locked
+      - run: cargo +nightly-2026-10-28 fuzz run protocol -- -max_total_time=30 -max_len=4096
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: fuzz-crashes
+          path: fuzz/artifacts
+          if-no-files-found: ignore
+
   demos:
     name: Node package (${{ matrix.directory }})
     runs-on: ubuntu-latest
@@ -288,7 +309,7 @@ jobs:
   check-npm-releases:
     name: Check NPM version bumps
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [fmt, clippy, test, doc, wasm, wasm-node-tests, typescript, audit, demos, msrv]
+    needs: [fmt, clippy, test, doc, wasm, wasm-node-tests, typescript, audit, demos, msrv, fuzz]
     uses: ./.github/workflows/check-npm-releases.yml
 
   publish-l402-wasm:
@@ -316,7 +337,7 @@ jobs:
   check-pypi-releases:
     name: Check PyPI version bumps
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [fmt, clippy, test, doc, python, langchain, audit, msrv]
+    needs: [fmt, clippy, test, doc, python, langchain, audit, msrv, fuzz]
     uses: ./.github/workflows/check-pypi-releases.yml
 
   publish-l402-python:

@@ -86,8 +86,8 @@ See the [l402-ai-sdk README](packages/l402-ai-sdk/README.md) for full TypeScript
 
 - **LND** — gRPC and REST
 - **Core Lightning (CLN)** — gRPC and REST
-- **Nostr Wallet Connect (NWC)** — NIP-47
-- **Numeraire SwissKnife** — REST
+- **Nostr Wallet Connect (NWC)** — NIP-47; explicit uncapped Rust payments only
+- **Numeraire SwissKnife** — REST; explicit uncapped Rust payments only
 - **Mock** — for testing without a real node
 - **Custom** — implement the `LnBackend` trait
 

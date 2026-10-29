@@ -576,46 +576,20 @@ class TestSwissKnifeL402Flow:
         balance = backend.get_balance()
         assert isinstance(balance, int)
 
-    def test_full_flow(self):
-        """GET request with automatic L402 payment via SwissKnife."""
-        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
+    def test_capped_payment_refused(self):
+        """The released server cannot guarantee a per-payment fee cap."""
+        backend = SwissKnifeBackend(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
+        before = backend.get_balance()
+        with pytest.raises(RuntimeError, match="cannot enforce a routing-fee limit"):
+            backend.pay_invoice("lnbc1000n1test", 0)
+        assert backend.get_balance() == before
 
-        response = client.get(f"{L402_SERVER_URL}/api/data")
-        assert response.status == 200
-        assert response.paid is True
-        assert response.receipt is not None
-        assert response.receipt.amount_sats == 100
-
-    def test_token_caching(self):
-        """Tokens are cached and reused."""
-        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
-
-        r1 = client.get(f"{L402_SERVER_URL}/api/data")
-        assert r1.paid is True
-
-        r2 = client.get(f"{L402_SERVER_URL}/api/data")
-        assert r2.paid is False
-        assert r2.cached_token is True
-
-    def test_budget_enforcement(self):
-        """Budget limits are enforced with SwissKnife backend."""
-        budget = Budget(per_request_max=50)
-        client = L402Client.with_swissknife(
-            SWISSKNIFE_API_URL,
-            SWISSKNIFE_API_KEY,
-            budget=budget,
-        )
-
-        with pytest.raises(ValueError, match="BudgetExceeded"):
-            client.get(f"{L402_SERVER_URL}/api/data")
-
-    def test_receipts(self):
-        """Receipt tracking works with SwissKnife backend."""
-        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY, wallet_id=SWISSKNIFE_WALLET_ID)
-
-        client.get(f"{L402_SERVER_URL}/api/cheap")
-        client.get(f"{L402_SERVER_URL}/api/data")
-
-        receipts = client.receipts()
-        assert len(receipts) == 2
-        assert client.total_spent() == 110
+    @pytest.mark.parametrize("budget", [Budget(), Budget(per_request_max=50)])
+    def test_automatic_payment_refused_without_receipt_or_spending(self, budget):
+        client = L402Client.with_swissknife(SWISSKNIFE_API_URL, SWISSKNIFE_API_KEY,
+                                          wallet_id=SWISSKNIFE_WALLET_ID, budget=budget)
+        for _ in range(2):
+            with pytest.raises(RuntimeError, match="cannot enforce a routing-fee limit"):
+                client.get(f"{L402_SERVER_URL}/api/data")
+        assert client.receipts() == []
+        assert client.total_spent() == 0

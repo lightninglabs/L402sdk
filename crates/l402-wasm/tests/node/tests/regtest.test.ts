@@ -180,7 +180,7 @@ describe("Regtest: SwissKnife backend via WASM", () => {
     }
   });
 
-  it("full L402 flow via SwissKnife", async () => {
+  it("rejects SwissKnife automatic payments without an enforceable fee cap", async () => {
     if (!available) return;
 
     const client = WasmL402Client.withSwissKnifeWallet(
@@ -191,11 +191,10 @@ describe("Regtest: SwissKnife backend via WASM", () => {
       BigInt(100),
     );
 
-    const response = await client.get(`${L402_SERVER_URL}/api/data`);
-    expect(response.status).toBe(200);
-    expect(response.paid).toBe(true);
-
-    const body = JSON.parse(response.body);
-    expect(body.ok).toBe(true);
+    await expect(client.get(`${L402_SERVER_URL}/api/data`)).rejects.toThrow(
+      /cannot enforce a routing-fee limit/,
+    );
+    expect(await client.totalSpent()).toBe(BigInt(0));
+    expect(await client.receipts()).toEqual([]);
   });
 });

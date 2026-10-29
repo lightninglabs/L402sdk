@@ -91,3 +91,56 @@ async fn unlimited_budget_allows_everything() {
         assert_eq!(response.status().as_u16(), 200);
     }
 }
+
+async fn assert_zero_fee_payment<B: l402_proto::LnBackend + 'static>(backend: B) {
+    let client = l402_core::L402Client::builder()
+        .ln_backend(backend)
+        .token_store(l402_core::cache::InMemoryTokenStore::default())
+        .config(l402_core::L402ClientConfig {
+            max_fee_sats: 0,
+            ..Default::default()
+        })
+        .budget(Budget {
+            total_max: Some(10),
+            ..Budget::unlimited()
+        })
+        .build()
+        .unwrap();
+    let response = client
+        .get(&format!("{}/api/cheap", l402_server_url()))
+        .await
+        .unwrap();
+    let receipt = response.receipt().unwrap();
+    assert_eq!(receipt.amount_sats, 10);
+    assert_eq!(receipt.fee_sats, 0);
+    assert_eq!(client.total_spent().await, 10);
+}
+
+#[tokio::test]
+async fn explicit_zero_fee_cap_works_on_lnd_and_cln_rest_and_grpc() {
+    skip_if_no_regtest!();
+    assert_zero_fee_payment(lnd_rest_backend()).await;
+    assert_zero_fee_payment(lnd_grpc_backend().await).await;
+    assert_zero_fee_payment(cln_rest_backend().await.expect("CLN REST required")).await;
+    assert_zero_fee_payment(cln_backend().await.expect("CLN gRPC required")).await;
+}
+
+#[tokio::test]
+async fn concurrent_funded_payments_cannot_overdraw_budget() {
+    skip_if_no_regtest!();
+    let client = build_l402_client_with_budget(
+        lnd_rest_backend(),
+        Budget {
+            total_max: Some(150),
+            ..Budget::unlimited()
+        },
+    );
+    let url = format!("{}/api/data", l402_server_url());
+    let (first, second) = tokio::join!(client.get(&url), client.get(&url));
+    // If a request observes the newly cached proof, it can succeed without paying.
+    assert!(first.is_ok() || second.is_ok());
+    let receipts = client.receipts().await;
+    assert_eq!(receipts.len(), 1);
+    assert_eq!(client.total_spent().await, receipts[0].total_cost_sats());
+    assert!(client.total_spent().await <= 150);
+}

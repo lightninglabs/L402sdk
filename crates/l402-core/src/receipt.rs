@@ -24,7 +24,7 @@ pub struct Receipt {
     /// Hex-encoded preimage (proof of payment).
     pub preimage: String,
 
-    /// HTTP response status code after presenting the L402 token.
+    /// HTTP response status after presenting the token, or 0 if no response arrived.
     pub response_status: u16,
 
     /// Total latency from initial request to final response (milliseconds).
@@ -61,7 +61,7 @@ impl Receipt {
 
     /// Get the total cost (amount + routing fee) in satoshis.
     pub fn total_cost_sats(&self) -> u64 {
-        self.amount_sats + self.fee_sats
+        self.amount_sats.saturating_add(self.fee_sats)
     }
 }
 

@@ -8,11 +8,28 @@ use crate::L402Error;
 /// Errors that can occur during L402 client operations.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
+    /// The backend cannot enforce a routing-fee cap; no payment was attempted.
+    #[error("backend cannot enforce a routing-fee limit")]
+    FeeLimitUnsupported,
+
+    /// The backend confirms the payment did not settle. Its reservation can be released.
+    #[error("payment rejected without settlement: {reason}")]
+    PaymentRejected {
+        /// Confirmed reason for rejection.
+        reason: String,
+    },
+
+    /// An earlier attempt may still settle. Retrying payment is unsafe.
+    #[error(
+        "payment is in progress or its outcome is unknown; reconcile with the wallet before retrying"
+    )]
+    PaymentUncertain,
+
     /// L402 protocol error (challenge parsing, token construction).
     #[error("L402 protocol error: {0}")]
     Protocol(#[from] L402Error),
 
-    /// Lightning payment failed.
+    /// Lightning payment failed or its outcome is unknown. This does not prove non-settlement.
     #[error("payment failed: {reason}")]
     PaymentFailed {
         /// Description of why the payment failed.
