@@ -1,6 +1,6 @@
 {
   "name": "@lightninglabs/l402-ai",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "L402 Lightning payment tools for the Vercel AI SDK. Let AI agents pay for APIs with Bitcoin.",
   "type": "module",
   "main": "dist/index.js",
@@ -50,7 +50,7 @@
     "zod": "^3.25.76 || ^4.1.8"
   },
   "dependencies": {
-    "@lightninglabs/l402": "^0.1.0"
+    "@lightninglabs/l402": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
@@ -63,6 +63,7 @@
     "zod": "^4.6.7"
   },
   "resolutions": {
-    "@humanfs/node": "0.16.8"
+    "@humanfs/node": "0.16.8",
+    "@lightninglabs/l402": "portal:../../crates/l402-wasm/pkg"
   }
 }

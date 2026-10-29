@@ -298,6 +298,21 @@ jobs:
         with:
           node-version: '26.13.0'
       - run: npm install --global corepack@0.36.0 && corepack enable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        if: matrix.directory != 'demos/comparison'
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        if: matrix.directory != 'demos/comparison'
+      - name: Build local SDK packages
+        if: matrix.directory != 'demos/comparison'
+        working-directory: .
+        run: |
+          bash scripts/install-wasm-pack.sh
+          make wasm
+          cd packages/l402-ai-sdk
+          yarn install --immutable
+          yarn build
       - run: yarn install --immutable
       - run: yarn npm audit --all --recursive
       - run: ${{ matrix.check }}
@@ -324,8 +339,12 @@ jobs:
 
   publish-l402-ai-sdk:
     name: Publish l402-ai-sdk
-    needs: check-npm-releases
-    if: needs.check-npm-releases.outputs.l402_ai_sdk == 'true'
+    needs: [check-npm-releases, publish-l402-wasm]
+    if: >-
+      always() && !cancelled() &&
+      needs.check-npm-releases.outputs.l402_ai_sdk == 'true' &&
+      (needs.publish-l402-wasm.result == 'success' ||
+       needs.publish-l402-wasm.result == 'skipped')
     permissions:
       contents: write
       id-token: write
@@ -352,8 +371,12 @@ jobs:
 
   publish-l402-langchain:
     name: Publish l402-langchain
-    needs: check-pypi-releases
-    if: needs.check-pypi-releases.outputs.l402_langchain == 'true'
+    needs: [check-pypi-releases, publish-l402-python]
+    if: >-
+      always() && !cancelled() &&
+      needs.check-pypi-releases.outputs.l402_langchain == 'true' &&
+      (needs.publish-l402-python.result == 'success' ||
+       needs.publish-l402-python.result == 'skipped')
     permissions:
       contents: write
       id-token: write
