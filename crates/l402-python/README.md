@@ -6,8 +6,8 @@
   </p>
 
   <p>
-    <a href="https://pypi.org/project/l402/"><img alt="PyPI" src="https://img.shields.io/pypi/v/L402sdk.svg"/></a>
-    <a href="https://pypi.org/project/l402/"><img alt="PyPI downloads" src="https://img.shields.io/pypi/dm/L402sdk.svg"/></a>
+    <a href="https://pypi.org/project/l402sdk/"><img alt="PyPI" src="https://img.shields.io/pypi/v/l402sdk.svg"/></a>
+    <a href="https://pypi.org/project/l402sdk/"><img alt="PyPI downloads" src="https://img.shields.io/pypi/dm/l402sdk.svg"/></a>
     <a href="https://github.com/lightninglabs/L402sdk/blob/main/LICENSE-MIT"><img alt="MIT or Apache-2.0 Licensed" src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg"/></a>
   </p>
 
@@ -18,7 +18,7 @@ Built in Rust via [PyO3](https://pyo3.rs). Supports LND, CLN, and SwissKnife Lig
 ## Install
 
 ```bash
-pip install l402
+pip install l402sdk
 ```
 
 ## Quick Start

@@ -1,6 +1,6 @@
 # Design: MPP Payment Scheme Support (Lightning Charge)
 
-**Issue:** #67  
+**Issue:** #20  
 **Author:** Toshi  
 **Date:** 2026-04-15  
 **Status:** Proposed
@@ -385,7 +385,7 @@ MPP `session` remains unsupported after Phase 1. That is intentional. It should 
 
 ## References
 
-- Issue #67, `feat: MPP (Machine Payments Protocol) support`
+- Issue #20, `feat: MPP (Machine Payments Protocol) support`
 - MPP overview: https://mpp.dev/overview
 - MPP challenges: https://mpp.dev/protocol/challenges
 - MPP credentials: https://mpp.dev/protocol/credentials

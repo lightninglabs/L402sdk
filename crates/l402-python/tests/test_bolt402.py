@@ -1,7 +1,7 @@
 """Tests for L402sdk Python bindings.
 
-Run with: pytest tests/test_L402sdk.py -v
-Requires: pip install l402 (or maturin develop)
+Run with: pytest tests/test_bolt402.py -v
+Requires: pip install l402sdk (or maturin develop)
 """
 
 import l402
