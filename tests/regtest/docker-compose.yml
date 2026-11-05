@@ -25,7 +25,7 @@ services:
 
   # LND Alice: PAYER node. L402sdk client connects here (gRPC + REST).
   lnd-alice:
-    image: lightninglabs/lnd:v0.21.5-beta@sha256:ca3477292ae8805d4d49d99c70f492c56bd001f2f464c482cd58de9443f56930
+    image: lightninglabs/lnd:v0.21.6-beta@sha256:54b3c87ad0bc3fea3fab8af23ace6421147ea97e6b56bf3911592d7853c185b8
     restart: unless-stopped
     depends_on:
       bitcoind:
@@ -45,7 +45,7 @@ services:
 
   # LND Bob: RECEIVER node. Aperture uses this to create invoices.
   lnd-bob:
-    image: lightninglabs/lnd:v0.21.5-beta@sha256:ca3477292ae8805d4d49d99c70f492c56bd001f2f464c482cd58de9443f56930
+    image: lightninglabs/lnd:v0.21.6-beta@sha256:54b3c87ad0bc3fea3fab8af23ace6421147ea97e6b56bf3911592d7853c185b8
     restart: unless-stopped
     depends_on:
       bitcoind:
