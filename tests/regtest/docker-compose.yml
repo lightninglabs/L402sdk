@@ -104,7 +104,7 @@ services:
   # using the Dockerfile at https://github.com/lightninglabs/aperture
   aperture:
     platform: linux/amd64
-    image: lightninglabs/aperture:v0.5.0@sha256:29e03e2c38dca0314f748cc07f483f03615dbf9876620c8e15b94b904fa16114
+    image: lightninglabs/aperture:v0.6.0@sha256:fe15525955df61af74ed6aab60f477e9282d777053a5ceff000c7f0c069d6057
     restart: unless-stopped
     depends_on:
       lnd-bob:
