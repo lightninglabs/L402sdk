@@ -128,7 +128,7 @@ services:
   # Connected to CLN via clnrest as the Lightning provider.
   # Provides REST API for l402-swissknife backend tests.
   swissknife:
-    image: bitcoinnumeraire/swissknife-server:0.3.0@sha256:10336286f4ec5dd132ead913e4301d096a710aedc38514b1b6a675c2b03b3893
+    image: bitcoinnumeraire/swissknife-server:0.3.2@sha256:c855d44815adffb9eadba927ae42c960fa2bbce515b0191487690a8dc5094a7e
     restart: unless-stopped
     depends_on:
       cln:
